@@ -69,18 +69,10 @@
         </header>
 
         <!-- Main Content Area -->
-        <main class="flex-1 w-full p-3.5 pb-20 overflow-y-auto">
+        <main class="flex-1 w-full p-3.5 pb-24 overflow-y-auto">
 
             <!-- TAB 1: 首頁 (Home) -->
-            <section id="tab-home" class="space-y-4">
-                <!-- Filter Pills -->
-                <div class="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none pt-1">
-                    <button onclick="filterComics('all')" id="filter-all" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-medium bg-emerald-700 text-white shadow transition whitespace-nowrap active:scale-95">全部</button>
-                    <button onclick="filterComics('reading')" id="filter-reading" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#084934] text-emerald-200 hover:bg-[#147a57] transition whitespace-nowrap active:scale-95">連載中</button>
-                    <button onclick="filterComics('completed')" id="filter-completed" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#084934] text-emerald-200 hover:bg-[#147a57] transition whitespace-nowrap active:scale-95">已完結</button>
-                    <button onclick="filterComics('wishlist')" id="filter-wishlist" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#084934] text-emerald-200 hover:bg-[#147a57] transition whitespace-nowrap active:scale-95">想看</button>
-                </div>
-
+            <section id="tab-home" class="space-y-3">
                 <!-- Comic List -->
                 <div class="space-y-2.5">
                     <div class="flex justify-between items-center px-1">
@@ -90,7 +82,11 @@
                         </h3>
                         <span id="comicCount" class="text-[11px] text-emerald-200/60 font-medium">共 0 部</span>
                     </div>
-                    <div id="comicListContainer" class="grid grid-cols-1 gap-2.5">
+                    
+                    <!-- Active Filter Banner -->
+                    <div id="filterBannerContainer"></div>
+
+                    <div id="comicListContainer" class="grid grid-cols-2 gap-3">
                         <!-- Dynamic Comics injected here -->
                     </div>
                 </div>
@@ -100,71 +96,28 @@
             <section id="tab-categories" class="hidden space-y-4">
                 <div class="bg-[#084934] rounded-xl p-4 shadow border border-[#147a57]/40">
                     <h2 class="text-base font-bold mb-1">漫畫分類瀏覽</h2>
-                    <p class="text-xs text-emerald-200/80">依據不同題材與狀態探索收藏作品</p>
+                    <p class="text-xs text-emerald-200/80">點擊下方分類標籤可快速篩選對應漫畫</p>
                 </div>
 
                 <!-- Genre Grid -->
                 <div class="grid grid-cols-2 gap-2.5" id="genreGrid">
-                    <div onclick="selectGenre('全部')" class="genre-card bg-[#084934] p-3 rounded-xl border border-emerald-600/30 hover:border-emerald-400 cursor-pointer transition flex items-center justify-between active:scale-[0.98]">
-                        <span class="font-bold text-xs">全部題材</span>
-                        <i class="fa-solid fa-layer-group text-emerald-400 text-xs"></i>
-                    </div>
-                    <div onclick="selectGenre('戀愛')" class="genre-card bg-[#084934] p-3 rounded-xl border border-emerald-600/30 hover:border-emerald-400 cursor-pointer transition flex items-center justify-between active:scale-[0.98]">
-                        <span class="font-bold text-xs">💕 戀愛 / 校園</span>
-                        <i class="fa-solid fa-chevron-right text-[10px] text-emerald-400"></i>
-                    </div>
-                    <div onclick="selectGenre('動作')" class="genre-card bg-[#084934] p-3 rounded-xl border border-emerald-600/30 hover:border-emerald-400 cursor-pointer transition flex items-center justify-between active:scale-[0.98]">
-                        <span class="font-bold text-xs">🔥 動作 / 冒險</span>
-                        <i class="fa-solid fa-chevron-right text-[10px] text-emerald-400"></i>
-                    </div>
-                    <div onclick="selectGenre('奇幻')" class="genre-card bg-[#084934] p-3 rounded-xl border border-emerald-600/30 hover:border-emerald-400 cursor-pointer transition flex items-center justify-between active:scale-[0.98]">
-                        <span class="font-bold text-xs">✨ 奇幻 / 異世界</span>
-                        <i class="fa-solid fa-chevron-right text-[10px] text-emerald-400"></i>
-                    </div>
-                    <div onclick="selectGenre('懸疑')" class="genre-card bg-[#084934] p-3 rounded-xl border border-emerald-600/30 hover:border-emerald-400 cursor-pointer transition flex items-center justify-between active:scale-[0.98]">
-                        <span class="font-bold text-xs">🔪 懸疑 / 驚悚</span>
-                        <i class="fa-solid fa-chevron-right text-[10px] text-emerald-400"></i>
-                    </div>
-                    <div onclick="selectGenre('搞笑')" class="genre-card bg-[#084934] p-3 rounded-xl border border-emerald-600/30 hover:border-emerald-400 cursor-pointer transition flex items-center justify-between active:scale-[0.98]">
-                        <span class="font-bold text-xs">😂 搞笑 / 日常</span>
-                        <i class="fa-solid fa-chevron-right text-[10px] text-emerald-400"></i>
-                    </div>
-                </div>
-
-                <!-- Filtered List per Genre with Sub-filters -->
-                <div class="space-y-2.5 pt-1">
-                    <div class="flex flex-col gap-2">
-                        <h3 id="genreTitle" class="font-bold text-xs text-emerald-100 flex items-center space-x-1.5">
-                            <i class="fa-solid fa-tag text-emerald-400 text-xs"></i>
-                            <span>分類檢視：全部題材</span>
-                        </h3>
-                        <!-- Secondary Status Filters (Sub-tabs) -->
-                        <div class="flex items-center space-x-1 overflow-x-auto pb-1 scrollbar-none">
-                            <button onclick="filterGenreStatus('all')" id="genre-sub-all" class="genre-sub-btn px-3 py-1 rounded-full text-[11px] font-medium bg-emerald-700 text-white shadow transition whitespace-nowrap active:scale-95">全部狀態</button>
-                            <button onclick="filterGenreStatus('reading')" id="genre-sub-reading" class="genre-sub-btn px-3 py-1 rounded-full text-[11px] font-medium bg-[#084934] text-emerald-200 hover:bg-[#147a57] transition whitespace-nowrap active:scale-95">連載中</button>
-                            <button onclick="filterGenreStatus('completed')" id="genre-sub-completed" class="genre-sub-btn px-3 py-1 rounded-full text-[11px] font-medium bg-[#084934] text-emerald-200 hover:bg-[#147a57] transition whitespace-nowrap active:scale-95">已完結</button>
-                            <button onclick="filterGenreStatus('wishlist')" id="genre-sub-wishlist" class="genre-sub-btn px-3 py-1 rounded-full text-[11px] font-medium bg-[#084934] text-emerald-200 hover:bg-[#147a57] transition whitespace-nowrap active:scale-95">想看</button>
-                        </div>
-                    </div>
-                    <div id="genreComicList" class="grid grid-cols-1 gap-2.5">
-                        <!-- Populated by JS -->
-                    </div>
+                    <!-- Dynamic categories -->
                 </div>
             </section>
 
             <!-- TAB 3: 新增 (Add) -->
-            <section id="tab-add" class="hidden space-y-4">
-                <div class="bg-[#084934] rounded-2xl p-4 shadow-lg border border-[#147a57]/50 flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-red-600/20 text-red-400 flex items-center justify-center text-lg border border-red-500/30 flex-shrink-0">
+            <section id="tab-add" class="hidden space-y-3.5">
+                <div class="bg-[#084934] rounded-xl p-3.5 shadow-lg border border-[#147a57]/50 flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-xl bg-red-600/20 text-red-400 flex items-center justify-center text-base border border-red-500/30 flex-shrink-0">
                         <i class="fa-solid fa-circle-plus"></i>
                     </div>
                     <div>
-                        <h2 class="text-sm font-black tracking-wide text-white">新增漫畫紀錄</h2>
-                        <p class="text-[11px] text-emerald-200/70">記錄漫畫名稱、作者、網址與封面</p>
+                        <h2 class="text-xs font-black tracking-wide text-white">新增漫畫紀錄</h2>
+                        <p class="text-[10px] text-emerald-200/70">記錄漫畫名稱、分類、狀態、網址與封面</p>
                     </div>
                 </div>
 
-                <form id="addComicForm" onsubmit="handleAddNewComic(event)" class="bg-[#084934] rounded-2xl p-4 shadow-lg border border-[#147a57]/50 space-y-3.5">
+                <form id="addComicForm" onsubmit="handleAddNewComic(event)" class="bg-[#084934] rounded-xl p-3.5 shadow-lg border border-[#147a57]/50 space-y-3">
                     <div>
                         <label class="block text-[11px] font-bold text-emerald-200 mb-1 flex items-center space-x-1">
                             <i class="fa-solid fa-book text-emerald-400 text-[10px]"></i>
@@ -175,10 +128,27 @@
 
                     <div>
                         <label class="block text-[11px] font-bold text-emerald-200 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-pen-nib text-emerald-400 text-[10px]"></i>
-                            <span>作者</span>
+                            <i class="fa-solid fa-tag text-emerald-400 text-[10px]"></i>
+                            <span>分類 *</span>
                         </label>
-                        <input type="text" id="inputAuthor" placeholder="例如：Chugong" class="w-full bg-[#0b5c42] border border-emerald-600/40 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-emerald-400/40 focus:outline-none focus:border-emerald-400 transition shadow-inner">
+                        <input type="text" id="inputGenre" required placeholder="例如：動作、戀愛、奇幻" class="w-full bg-[#0b5c42] border border-emerald-600/40 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-emerald-400/40 focus:outline-none focus:border-emerald-400 transition shadow-inner">
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-emerald-200 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-circle-dot text-emerald-400 text-[10px]"></i>
+                            <span>狀態 *</span>
+                        </label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="flex items-center justify-center space-x-1.5 bg-[#0b5c42] border border-emerald-600/40 rounded-xl py-2.5 text-xs cursor-pointer hover:bg-[#147a57] transition shadow-inner">
+                                <input type="radio" name="inputStatus" value="連載中" checked class="accent-emerald-500">
+                                <span class="text-white font-bold">連載中</span>
+                            </label>
+                            <label class="flex items-center justify-center space-x-1.5 bg-[#0b5c42] border border-emerald-600/40 rounded-xl py-2.5 text-xs cursor-pointer hover:bg-[#147a57] transition shadow-inner">
+                                <input type="radio" name="inputStatus" value="已完結" class="accent-emerald-500">
+                                <span class="text-white font-bold">已完結</span>
+                            </label>
+                        </div>
                     </div>
 
                     <div>
@@ -197,7 +167,7 @@
                         <input type="url" id="inputCoverUrl" placeholder="https://... (圖片連結)" class="w-full bg-[#0b5c42] border border-emerald-600/40 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-emerald-400/40 focus:outline-none focus:border-emerald-400 transition shadow-inner">
                     </div>
 
-                    <button type="submit" class="w-full bg-red-600 hover:bg-red-700 active:scale-95 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-xs">
+                    <button type="submit" class="w-full bg-red-600 hover:bg-red-700 active:scale-95 text-white font-bold py-2.5 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-xs">
                         <i class="fa-solid fa-plus text-xs"></i>
                         <span>確認新增漫畫</span>
                     </button>
@@ -205,51 +175,39 @@
             </section>
 
             <!-- TAB 4: 設定 (Settings) -->
-            <section id="tab-settings" class="hidden space-y-4">
-                <div class="bg-[#084934] rounded-xl p-4 shadow border border-[#147a57]/40">
-                    <h2 class="text-base font-bold mb-0.5">系統設定與管理</h2>
-                    <p class="text-xs text-emerald-200/80">管理您的漫畫紀錄資料與偏好設定</p>
+            <section id="tab-settings" class="hidden space-y-3.5">
+                <div class="bg-[#084934] rounded-xl p-3.5 shadow-lg border border-[#147a57]/50 flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-600/20 text-emerald-300 flex items-center justify-center text-base border border-emerald-500/30 flex-shrink-0">
+                        <i class="fa-solid fa-gear"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xs font-black tracking-wide text-white">設定與備份</h2>
+                        <p class="text-[10px] text-emerald-200/70">管理您的漫畫資料與備份</p>
+                    </div>
                 </div>
 
-                <div class="bg-[#084934] rounded-xl p-3.5 shadow border border-[#147a57]/40 space-y-2.5">
-                    <h3 class="font-bold text-emerald-200 border-b border-[#147a57] pb-1.5 text-xs">資料管理</h3>
-                    <button onclick="exportData()" class="w-full text-left px-3.5 py-2.5 bg-[#0b5c42] hover:bg-[#147a57] active:scale-[0.98] rounded-xl flex items-center justify-between transition text-xs">
-                        <div class="flex items-center space-x-2.5">
-                            <i class="fa-solid fa-file-arrow-down text-emerald-400"></i>
-                            <span>匯出備份 (JSON)</span>
+                <div class="bg-[#084934] rounded-xl p-3.5 shadow-lg border border-[#147a57]/50 space-y-3">
+                    <div class="space-y-2">
+                        <label class="block text-[11px] font-bold text-emerald-200">資料備份與還原</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="exportData()" class="bg-[#0b5c42] hover:bg-[#147a57] active:scale-95 text-white font-bold py-2.5 rounded-xl transition text-xs border border-emerald-600/40 flex items-center justify-center space-x-1.5">
+                                <i class="fa-solid fa-download text-xs text-emerald-300"></i>
+                                <span>匯出備份 (JSON)</span>
+                            </button>
+                            <label class="bg-[#0b5c42] hover:bg-[#147a57] active:scale-95 text-white font-bold py-2.5 rounded-xl transition text-xs border border-emerald-600/40 flex items-center justify-center space-x-1.5 cursor-pointer">
+                                <i class="fa-solid fa-upload text-xs text-emerald-300"></i>
+                                <span>還原備份</span>
+                                <input type="file" accept=".json" onchange="importData(event)" class="hidden">
+                            </label>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-[10px] text-emerald-400"></i>
-                    </button>
-                    <label class="w-full text-left px-3.5 py-2.5 bg-[#0b5c42] hover:bg-[#147a57] active:scale-[0.98] rounded-xl flex items-center justify-between transition cursor-pointer text-xs">
-                        <div class="flex items-center space-x-2.5">
-                            <i class="fa-solid fa-file-arrow-up text-emerald-400"></i>
-                            <span>匯入還原資料</span>
-                        </div>
-                        <input type="file" id="importFile" accept=".json" onchange="importData(event)" class="hidden">
-                        <i class="fa-solid fa-chevron-right text-[10px] text-emerald-400"></i>
-                    </label>
-                    <button onclick="clearAllData()" class="w-full text-left px-3.5 py-2.5 bg-[#0b5c42] hover:bg-red-800/40 active:scale-[0.98] rounded-xl flex items-center justify-between transition text-red-400 text-xs">
-                        <div class="flex items-center space-x-2.5">
-                            <i class="fa-solid fa-trash-can"></i>
-                            <span>清除所有資料</span>
-                        </div>
-                        <i class="fa-solid fa-chevron-right text-[10px]"></i>
-                    </button>
-                </div>
-
-                <div class="bg-[#084934] rounded-xl p-3.5 shadow border border-[#147a57]/40 space-y-2">
-                    <h3 class="font-bold text-emerald-200 border-b border-[#147a57] pb-1.5 text-xs">關於 TOPTOON 紀錄網</h3>
-                    <div class="text-[11px] text-emerald-200/80 space-y-1">
-                        <p>版本：v1.3.1 (Mobile Web Edition)</p>
-                        <p>特色：專為手機版深度優化的漫畫追蹤介面，隨時記錄喜愛作品。</p>
                     </div>
                 </div>
             </section>
 
         </main>
 
-        <!-- Bottom Navigation Bar (Floating with Rounded Corners) -->
-        <nav class="absolute bottom-2.5 left-3 right-3 bg-[#07422f] border border-white/20 z-40 max-w-[456px] mx-auto shadow-2xl rounded-2xl overflow-hidden flex-shrink-0">
+        <!-- Rounded Floating Bottom Navigation Bar -->
+        <nav class="absolute bottom-3 left-3 right-3 bg-[#07422f] border border-white/20 z-40 max-w-[456px] mx-auto shadow-2xl rounded-2xl overflow-hidden flex-shrink-0">
             <div class="grid grid-cols-4 h-14 text-center">
                 <!-- Tab 1: 首頁 -->
                 <button onclick="switchTab('home')" id="nav-home" class="nav-btn flex flex-col items-center justify-center border-r border-white/20 text-white font-bold transition active:bg-[#0a523a]">
@@ -286,7 +244,7 @@
                     </div>
                     <div>
                         <h3 id="modalTitle" class="text-base font-bold">漫畫名稱</h3>
-                        <p id="modalAuthor" class="text-[11px] text-emerald-200/80">作者</p>
+                        <p id="modalGenre" class="text-[11px] text-emerald-200/80">分類</p>
                     </div>
                 </div>
 
@@ -297,15 +255,79 @@
                     </a>
                 </div>
 
-                <div class="flex space-x-2 pt-2">
-                    <button onclick="deleteCurrentComic()" class="flex-1 bg-red-900/60 hover:bg-red-800 active:scale-95 text-red-200 py-2.5 rounded-lg font-bold transition text-xs flex items-center justify-center space-x-1 border border-red-700/40">
-                        <i class="fa-solid fa-trash-can text-xs"></i>
-                        <span>刪除紀錄</span>
+                <div class="grid grid-cols-2 gap-2 pt-2">
+                    <button onclick="openEditModal()" class="bg-emerald-700 hover:bg-emerald-600 active:scale-95 text-white py-2.5 rounded-lg font-bold transition text-xs flex items-center justify-center space-x-1 border border-emerald-600/40">
+                        <i class="fa-solid fa-pen text-xs"></i>
+                        <span>修改</span>
                     </button>
-                    <button onclick="closeComicModal()" class="flex-1 bg-[#0b5c42] hover:bg-[#147a57] active:scale-95 text-white py-2.5 rounded-lg font-bold transition text-xs border border-emerald-600/40">
-                        關閉
+                    <button onclick="deleteCurrentComic()" class="bg-red-900/60 hover:bg-red-800 active:scale-95 text-red-200 py-2.5 rounded-lg font-bold transition text-xs flex items-center justify-center space-x-1 border border-red-700/40">
+                        <i class="fa-solid fa-trash-can text-xs"></i>
+                        <span>刪除</span>
                     </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Edit Comic Modal -->
+        <div id="editModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+            <div class="bg-[#084934] border border-[#147a57] rounded-xl w-full max-w-xs p-3.5 shadow-2xl relative space-y-2.5 max-h-[90vh] overflow-y-auto">
+                <button onclick="closeEditModal()" class="absolute top-2.5 right-2.5 text-emerald-300 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+                <h3 class="text-xs font-black tracking-wide text-white mb-1.5 flex items-center space-x-1">
+                    <i class="fa-solid fa-pen-to-square text-emerald-400"></i>
+                    <span>修改漫畫紀錄</span>
+                </h3>
+                <form id="editComicForm" onsubmit="handleUpdateComic(event)" class="space-y-2.5">
+                    <div>
+                        <label class="block text-[11px] font-bold text-emerald-200 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-book text-emerald-400 text-[10px]"></i>
+                            <span>漫畫名稱 *</span>
+                        </label>
+                        <input type="text" id="editInputTitle" required class="w-full bg-[#0b5c42] border border-emerald-600/40 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-400 transition shadow-inner">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-emerald-200 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-tag text-emerald-400 text-[10px]"></i>
+                            <span>分類 *</span>
+                        </label>
+                        <input type="text" id="editInputGenre" required class="w-full bg-[#0b5c42] border border-emerald-600/40 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-400 transition shadow-inner">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-emerald-200 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-circle-dot text-emerald-400 text-[10px]"></i>
+                            <span>狀態 *</span>
+                        </label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="flex items-center justify-center space-x-1.5 bg-[#0b5c42] border border-emerald-600/40 rounded-xl py-2 text-xs cursor-pointer hover:bg-[#147a57] transition shadow-inner">
+                                <input type="radio" name="editInputStatus" value="連載中" class="accent-emerald-500">
+                                <span class="text-white font-bold">連載中</span>
+                            </label>
+                            <label class="flex items-center justify-center space-x-1.5 bg-[#0b5c42] border border-emerald-600/40 rounded-xl py-2 text-xs cursor-pointer hover:bg-[#147a57] transition shadow-inner">
+                                <input type="radio" name="editInputStatus" value="已完結" class="accent-emerald-500">
+                                <span class="text-white font-bold">已完結</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-emerald-200 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-link text-emerald-400 text-[10px]"></i>
+                            <span>網址</span>
+                        </label>
+                        <input type="url" id="editInputUrl" class="w-full bg-[#0b5c42] border border-emerald-600/40 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-400 transition shadow-inner">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-emerald-200 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-image text-emerald-400 text-[10px]"></i>
+                            <span>封面網址</span>
+                        </label>
+                        <input type="url" id="editInputCoverUrl" class="w-full bg-[#0b5c42] border border-emerald-600/40 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-400 transition shadow-inner">
+                    </div>
+                    <div class="flex space-x-2 pt-1">
+                        <button type="button" onclick="closeEditModal()" class="flex-1 bg-[#0b5c42] hover:bg-[#147a57] active:scale-95 text-white font-bold py-2 rounded-xl transition text-xs border border-emerald-600/40">取消</button>
+                        <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-bold py-2 rounded-xl shadow transition text-xs">儲存修改</button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -314,7 +336,7 @@
             <div class="bg-[#084934] border border-[#147a57] rounded-xl w-full max-w-sm p-4 shadow-2xl relative space-y-3">
                 <div class="flex items-center space-x-2.5 bg-[#0b5c42] px-3 py-2 rounded-lg border border-emerald-600/40">
                     <i class="fa-solid fa-search text-emerald-300 text-xs"></i>
-                    <input type="text" id="searchInput" oninput="handleSearchInput(event)" placeholder="輸入漫畫標題或作者搜尋..." class="w-full bg-transparent text-white placeholder-emerald-400/50 focus:outline-none text-xs">
+                    <input type="text" id="searchInput" oninput="handleSearchInput(event)" placeholder="輸入漫畫標題或分類搜尋..." class="w-full bg-transparent text-white placeholder-emerald-400/50 focus:outline-none text-xs">
                     <button onclick="closeSearchModal()" class="text-emerald-300 hover:text-white p-1">
                         <i class="fa-solid fa-xmark text-xs"></i>
                     </button>
@@ -340,165 +362,153 @@
     </div>
 
     <script>
-        // State Management (Starts completely empty)
         let comics = JSON.parse(localStorage.getItem('toptoon_comics')) || [];
-
-        let currentFilter = 'all';
-        let currentGenre = '全部';
-        let currentGenreStatus = 'all';
         let activeComicId = null;
+        let activeGenreFilter = '全部';
 
-        // Save to localStorage
+        function handleImgError(imgEl) {
+            const parent = imgEl.parentElement;
+            parent.innerHTML = '<div class="w-full h-full flex items-center justify-center text-3xl">📖</div>';
+        }
+
+        function handleImgErrorSmall(imgEl) {
+            const parent = imgEl.parentElement;
+            parent.innerHTML = '<span>📖</span>';
+        }
+
+        function handleImgErrorModal(imgEl) {
+            const parent = imgEl.parentElement;
+            parent.innerText = '📖';
+        }
+
         function saveComics() {
             localStorage.setItem('toptoon_comics', JSON.stringify(comics));
         }
 
-        // Tab Navigation
         function switchTab(tabName) {
             document.querySelectorAll('.app-container > main > section').forEach(sec => sec.classList.add('hidden'));
-            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            const targetSection = document.getElementById(`tab-${tabName}`);
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+            }
 
-            // Update bottom nav styling
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('text-white', 'font-bold');
                 btn.classList.add('text-emerald-300/70', 'font-medium');
             });
             const activeBtn = document.getElementById(`nav-${tabName}`);
-            activeBtn.classList.remove('text-emerald-300/70', 'font-medium');
-            activeBtn.classList.add('text-white', 'font-bold');
+            if (activeBtn) {
+                activeBtn.classList.remove('text-emerald-300/70', 'font-medium');
+                activeBtn.classList.add('text-white', 'font-bold');
+            }
 
-            // Render views if needed
             if(tabName === 'home') renderComics();
-            if(tabName === 'categories') renderGenreComics();
+            if(tabName === 'categories') renderCategories();
         }
 
-        // Render Home Comic List
-        function renderComics() {
-            const container = document.getElementById('comicListContainer');
-            let filtered = comics;
-
-            if (currentFilter !== 'all') {
-                filtered = comics.filter(c => c.status === currentFilter);
-            }
-
-            document.getElementById('comicCount').innerText = `共 ${filtered.length} 部`;
-
-            if (filtered.length === 0) {
-                container.innerHTML = `
-                    <div class="bg-[#084934] rounded-xl p-6 text-center border border-emerald-600/30 text-emerald-200/60 space-y-2">
-                        <i class="fa-solid fa-box-open text-2xl"></i>
-                        <p class="text-xs">目前沒有符合條件的漫畫紀錄</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = filtered.map(comic => {
-                const statusBadge = comic.status === 'reading' ? '<span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full font-medium">連載中</span>' :
-                                    comic.status === 'completed' ? '<span class="text-[10px] bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded-full font-medium">已完結</span>' :
-                                    '<span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-medium">想看</span>';
-
-                const coverDisplay = comic.coverUrl ? 
-                    `<img src="${comic.coverUrl}" class="w-12 h-12 object-cover rounded-lg border border-emerald-600/40 shadow-inner flex-shrink-0" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\'text-xl\'>📖</span>'">` :
-                    `<div class="w-12 h-12 bg-[#0b5c42] rounded-lg flex items-center justify-center text-xl border border-emerald-600/40 shadow-inner flex-shrink-0">${comic.emoji || '📖'}</div>`;
-
-                return `
-                    <div onclick="openComicModal('${comic.id}')" class="bg-[#084934] hover:bg-[#0a523a] border border-emerald-600/30 hover:border-emerald-400 p-3 rounded-xl shadow transition cursor-pointer flex items-center justify-between active:scale-[0.98]">
-                        <div class="flex items-center space-x-3">
-                            ${coverDisplay}
-                            <div class="space-y-0.5">
-                                <div class="flex items-center space-x-1.5 flex-wrap">
-                                    <h4 class="font-bold text-white text-xs">${comic.title}</h4>
-                                    ${statusBadge}
-                                </div>
-                                <p class="text-[10px] text-emerald-200/70">作者：${comic.author || '未填寫'}</p>
-                            </div>
-                        </div>
-                        <div class="text-emerald-400/70 px-1">
-                            <i class="fa-solid fa-chevron-right text-xs"></i>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+        function filterByGenre(genre) {
+            activeGenreFilter = genre;
+            switchTab('home');
         }
 
-        // Filter buttons on home
-        function filterComics(status) {
-            currentFilter = status;
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.className = "filter-btn px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#084934] text-emerald-200 hover:bg-[#147a57] transition whitespace-nowrap active:scale-95";
-            });
-            document.getElementById(`filter-${status}`).className = "filter-btn px-3.5 py-1.5 rounded-full text-xs font-medium bg-emerald-700 text-white shadow transition whitespace-nowrap active:scale-95";
+        function clearGenreFilter() {
+            activeGenreFilter = '全部';
             renderComics();
         }
 
-        // Categories handling
-        function selectGenre(genre) {
-            currentGenre = genre;
-            renderGenreComics();
-        }
+        function renderComics() {
+            const container = document.getElementById('comicListContainer');
+            const filterBannerContainer = document.getElementById('filterBannerContainer');
 
-        function filterGenreStatus(status) {
-            currentGenreStatus = status;
-            document.querySelectorAll('.genre-sub-btn').forEach(btn => {
-                btn.className = "genre-sub-btn px-3 py-1 rounded-full text-[11px] font-medium bg-[#084934] text-emerald-200 hover:bg-[#147a57] transition whitespace-nowrap active:scale-95";
-            });
-            document.getElementById(`genre-sub-${status}`).className = "genre-sub-btn px-3 py-1 rounded-full text-[11px] font-medium bg-emerald-700 text-white shadow transition whitespace-nowrap active:scale-95";
-            renderGenreComics();
-        }
-
-        function renderGenreComics() {
-            const container = document.getElementById('genreComicList');
-            let filtered = currentGenre === '全部' ? comics : comics.filter(c => c.genre === currentGenre);
-
-            if (currentGenreStatus !== 'all') {
-                filtered = filtered.filter(c => c.status === currentGenreStatus);
+            // Render filter banner if active filter
+            if (activeGenreFilter !== '全部') {
+                filterBannerContainer.innerHTML = `
+                    <div class="bg-[#0b5c42] border border-emerald-600/40 rounded-xl px-3 py-2 flex items-center justify-between text-xs shadow-inner">
+                        <span class="text-emerald-200">分類篩選：<strong class="text-white">${activeGenreFilter}</strong></span>
+                        <button onclick="clearGenreFilter()" class="text-red-400 hover:text-red-300 font-bold flex items-center space-x-1">
+                            <i class="fa-solid fa-xmark text-[10px]"></i>
+                            <span>顯示全部</span>
+                        </button>
+                    </div>
+                `;
+            } else {
+                filterBannerContainer.innerHTML = '';
             }
 
-            document.getElementById('genreTitle').innerHTML = `<i class="fa-solid fa-tag text-emerald-400 text-xs"></i><span>分類檢視：${currentGenre} (${filtered.length} 部)</span>`;
+            const filteredComics = activeGenreFilter === '全部' ? 
+                comics : 
+                comics.filter(c => ((c.genre && c.genre.trim() !== '') ? c.genre.trim() : '未分類') === activeGenreFilter);
 
-            if (filtered.length === 0) {
+            document.getElementById('comicCount').innerText = `共 ${filteredComics.length} 部`;
+
+            if (filteredComics.length === 0) {
                 container.innerHTML = `
-                    <div class="bg-[#084934] rounded-xl p-4 text-center border border-emerald-600/30 text-emerald-200/60 text-xs">
-                        此分類與狀態下尚無漫畫紀錄
+                    <div class="bg-[#084934] rounded-xl p-6 text-center border border-emerald-600/30 text-emerald-200/60 space-y-2 col-span-2">
+                        <i class="fa-solid fa-box-open text-2xl"></i>
+                        <p class="text-xs">目前沒有符合的漫畫紀錄</p>
                     </div>
                 `;
                 return;
             }
 
-            container.innerHTML = filtered.map(comic => {
+            container.className = "grid grid-cols-2 gap-3";
+
+            container.innerHTML = filteredComics.map(comic => {
                 const coverDisplay = comic.coverUrl ? 
-                    `<img src="${comic.coverUrl}" class="w-10 h-10 object-cover rounded-lg border border-emerald-600/40 shadow-inner flex-shrink-0" onerror="this.onerror=null; this.parentElement.innerHTML='<span>📖</span>'">` :
-                    `<span class="text-lg">${comic.emoji || '📖'}</span>`;
+                    `<div class="w-full h-40 bg-[#0b5c42] rounded-t-xl overflow-hidden relative border-b border-emerald-600/30">
+                        <img src="${comic.coverUrl}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="handleImgError(this)">
+                     </div>` :
+                    `<div class="w-full h-40 bg-[#0b5c42] rounded-t-xl flex items-center justify-center text-3xl border-b border-emerald-600/30 relative">
+                        📖
+                     </div>`;
+
+                const genreBadge = comic.genre ? `<span class="inline-block text-[9px] bg-[#0b5c42] text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-600/30 w-fit">${comic.genre}</span>` : '';
+                const statusBadge = comic.status ? `<span class="inline-block text-[9px] ${comic.status === '連載中' ? 'bg-emerald-600/50 text-emerald-200' : 'bg-red-900/50 text-red-200'} px-1.5 py-0.5 rounded border border-emerald-600/30 w-fit">${comic.status}</span>` : '';
 
                 return `
-                    <div onclick="openComicModal('${comic.id}')" class="bg-[#084934] hover:bg-[#0a523a] border border-emerald-600/30 p-3 rounded-xl shadow cursor-pointer flex items-center justify-between active:scale-[0.98]">
-                        <div class="flex items-center space-x-2.5">
-                            ${coverDisplay}
-                            <div>
-                                <h5 class="font-bold text-white text-xs">${comic.title}</h5>
-                                <p class="text-[10px] text-emerald-200/70">作者：${comic.author || '未填寫'}</p>
+                    <div onclick="openComicModal('${comic.id}')" class="group bg-[#084934] hover:bg-[#0a523a] border border-emerald-600/30 hover:border-emerald-400 rounded-xl shadow transition cursor-pointer overflow-hidden flex flex-col active:scale-[0.98]">
+                        ${coverDisplay}
+                        <div class="p-2.5 flex flex-col justify-between flex-1 space-y-1.5">
+                            <h4 class="font-bold text-white text-xs line-clamp-1">${comic.title}</h4>
+                            <div class="flex items-center space-x-1 flex-wrap gap-1">
+                                ${genreBadge}
+                                ${statusBadge}
                             </div>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-xs text-emerald-300"></i>
                     </div>
                 `;
             }).join('');
         }
 
-        // Add new comic
+        function renderCategories() {
+            const genreGrid = document.getElementById('genreGrid');
+            const uniqueGenres = [...new Set(comics.map(c => (c.genre && c.genre.trim() !== '') ? c.genre.trim() : '未分類'))];
+            const genres = ['全部', ...uniqueGenres];
+
+            genreGrid.innerHTML = genres.map(g => {
+                const count = g === '全部' ? comics.length : comics.filter(c => ((c.genre && c.genre.trim() !== '') ? c.genre.trim() : '未分類') === g).length;
+                const isSelected = activeGenreFilter === g;
+                const activeStyle = isSelected ? 'border-emerald-400 bg-[#0a523a] ring-1 ring-emerald-400/50' : 'border-emerald-600/30 hover:border-emerald-400';
+                
+                return `
+                    <div onclick="filterByGenre('${g}')" class="genre-card bg-[#084934] ${activeStyle} p-3.5 rounded-xl border flex items-center justify-between shadow cursor-pointer transition active:scale-[0.98]">
+                        <span class="font-bold text-xs text-white">${g}</span>
+                        <span class="text-xs bg-[#0b5c42] px-2 py-0.5 rounded-full text-emerald-200 border border-emerald-600/40">${count} 部</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
         function handleAddNewComic(e) {
             e.preventDefault();
+            const statusInput = document.querySelector('input[name="inputStatus"]:checked');
             const newComic = {
                 id: Date.now().toString(),
-                title: document.getElementById('inputTitle').value,
-                author: document.getElementById('inputAuthor').value,
-                url: document.getElementById('inputUrl').value,
-                coverUrl: document.getElementById('inputCoverUrl').value,
-                genre: '動作',
-                status: 'reading',
-                rating: '5',
-                emoji: '📖'
+                title: document.getElementById('inputTitle').value.trim(),
+                genre: document.getElementById('inputGenre').value.trim(),
+                status: statusInput ? statusInput.value : '連載中',
+                url: document.getElementById('inputUrl').value.trim(),
+                coverUrl: document.getElementById('inputCoverUrl').value.trim()
             };
 
             comics.unshift(newComic);
@@ -508,7 +518,6 @@
             switchTab('home');
         }
 
-        // Comic Modal Details
         function openComicModal(id) {
             activeComicId = id;
             const comic = comics.find(c => c.id === id);
@@ -516,13 +525,13 @@
 
             const modalEmojiContainer = document.getElementById('modalEmojiContainer');
             if (comic.coverUrl) {
-                modalEmojiContainer.innerHTML = `<img src="${comic.coverUrl}" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='📖'">`;
+                modalEmojiContainer.innerHTML = `<img src="${comic.coverUrl}" class="w-full h-full object-cover" onerror="handleImgErrorModal(this)">`;
             } else {
-                modalEmojiContainer.innerText = comic.emoji || '📖';
+                modalEmojiContainer.innerText = '📖';
             }
 
             document.getElementById('modalTitle').innerText = comic.title;
-            document.getElementById('modalAuthor').innerText = `作者：${comic.author || '未填寫'}`;
+            document.getElementById('modalGenre').innerText = `分類：${comic.genre || '未分類'} | 狀態：${comic.status || '連載中'}`;
 
             const urlBox = document.getElementById('modalUrlBox');
             const urlLink = document.getElementById('modalUrlLink');
@@ -542,14 +551,56 @@
             renderComics();
         }
 
+        function openEditModal() {
+            const comic = comics.find(c => c.id === activeComicId);
+            if (!comic) return;
+            document.getElementById('editInputTitle').value = comic.title || '';
+            document.getElementById('editInputGenre').value = comic.genre || '';
+            
+            const statusRadios = document.querySelectorAll('input[name="editInputStatus"]');
+            statusRadios.forEach(r => {
+                if (r.value === (comic.status || '連載中')) {
+                    r.checked = true;
+                }
+            });
+
+            document.getElementById('editInputUrl').value = comic.url || '';
+            document.getElementById('editInputCoverUrl').value = comic.coverUrl || '';
+            document.getElementById('comicModal').classList.add('hidden');
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        function handleUpdateComic(e) {
+            e.preventDefault();
+            const comic = comics.find(c => c.id === activeComicId);
+            if (!comic) return;
+
+            comic.title = document.getElementById('editInputTitle').value.trim();
+            comic.genre = document.getElementById('editInputGenre').value.trim();
+            const editStatusInput = document.querySelector('input[name="editInputStatus"]:checked');
+            comic.status = editStatusInput ? editStatusInput.value : '連載中';
+            comic.url = document.getElementById('editInputUrl').value.trim();
+            comic.coverUrl = document.getElementById('editInputCoverUrl').value.trim();
+
+            saveComics();
+            closeEditModal();
+            renderComics();
+            renderCategories();
+            showMsg('修改成功', '漫畫資訊已成功更新！');
+        }
+
         function deleteCurrentComic() {
             comics = comics.filter(c => c.id !== activeComicId);
             saveComics();
             closeComicModal();
+            renderCategories();
             showMsg('刪除成功', '已從清單中移除該漫畫。');
         }
 
-        // Search Modal
         function openSearchModal() {
             document.getElementById('searchModal').classList.remove('hidden');
             document.getElementById('searchInput').focus();
@@ -566,7 +617,7 @@
 
         function renderSearchResults(keyword) {
             const container = document.getElementById('searchResults');
-            const filtered = comics.filter(c => c.title.toLowerCase().includes(keyword) || (c.author && c.author.toLowerCase().includes(keyword)));
+            const filtered = comics.filter(c => c.title.toLowerCase().includes(keyword) || (c.genre && c.genre.toLowerCase().includes(keyword)));
 
             if (filtered.length === 0) {
                 container.innerHTML = `<div class="text-center text-emerald-200/60 py-3 text-xs">找不到相關漫畫</div>`;
@@ -575,8 +626,8 @@
 
             container.innerHTML = filtered.map(comic => {
                 const coverDisplay = comic.coverUrl ? 
-                    `<img src="${comic.coverUrl}" class="w-8 h-8 object-cover rounded-lg border border-emerald-600/40 shadow-inner flex-shrink-0" onerror="this.onerror=null; this.parentElement.innerHTML='<span>📖</span>'">` :
-                    `<span class="text-lg">${comic.emoji || '📖'}</span>`;
+                    `<img src="${comic.coverUrl}" class="w-8 h-8 object-cover rounded-lg border border-emerald-600/40 shadow-inner flex-shrink-0" onerror="handleImgErrorSmall(this)">` :
+                    `<span class="text-lg">📖</span>`;
 
                 return `
                     <div onclick="closeSearchModal(); openComicModal('${comic.id}');" class="bg-[#0b5c42] hover:bg-[#147a57] p-2.5 rounded-lg cursor-pointer flex items-center justify-between transition active:scale-[0.98]">
@@ -584,7 +635,7 @@
                             ${coverDisplay}
                             <div>
                                 <h5 class="font-bold text-xs">${comic.title}</h5>
-                                <p class="text-[10px] text-emerald-200/70">作者：${comic.author || '未填寫'}</p>
+                                <span class="inline-block text-[9px] bg-[#074732] text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-600/30 mt-0.5">${comic.genre || '未分類'}</span>
                             </div>
                         </div>
                         <i class="fa-solid fa-chevron-right text-[10px] text-emerald-300"></i>
@@ -593,7 +644,6 @@
             }).join('');
         }
 
-        // Notification Modal
         function openNotificationModal() {
             showMsg('系統通知', '目前沒有未讀的漫畫更新通知。');
         }
@@ -608,15 +658,17 @@
             document.getElementById('msgModal').classList.add('hidden');
         }
 
-        // Settings Data Functions
         function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(comics, null, 2));
+            const dataStr = JSON.stringify(comics, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
             const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", "toptoon_backup.json");
+            downloadAnchor.href = url;
+            downloadAnchor.download = "toptoon_backup.json";
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
-            downloadAnchor.remove();
+            document.body.removeChild(downloadAnchor);
+            URL.revokeObjectURL(url);
             showMsg('匯出成功', '漫畫紀錄備份檔案已成功下載！');
         }
 
@@ -631,6 +683,7 @@
                         comics = parsed;
                         saveComics();
                         renderComics();
+                        renderCategories();
                         showMsg('還原成功', '已成功載入備份資料！');
                     } else {
                         showMsg('格式錯誤', '檔案格式不符，無法還原。');
@@ -642,16 +695,6 @@
             reader.readAsText(file);
         }
 
-        function clearAllData() {
-            if (confirm("確定要清除所有漫畫紀錄嗎？此動作無法復原。") !== false) {
-                comics = [];
-                saveComics();
-                renderComics();
-                showMsg('清除完成', '所有漫畫紀錄已被清空。');
-            }
-        }
-
-        // Initialize on load
         window.onload = function() {
             renderComics();
         }
