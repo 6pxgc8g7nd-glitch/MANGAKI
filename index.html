@@ -51,20 +51,11 @@
 
         <!-- Top Header -->
         <header class="w-full py-3 px-4 bg-[#094c36] shadow-md flex items-center justify-between flex-shrink-0 z-50 border-b border-[#147a57]/50">
-            <div class="flex items-center space-x-2">
+            <div onclick="switchTab('home')" class="flex items-center space-x-2 cursor-pointer active:opacity-80 transition">
                 <h1 class="text-xl font-black tracking-wider">
                     <span class="text-red-600">TOP</span><span class="text-white">TOON</span>
                 </h1>
                 <span class="text-[10px] bg-[#147a57] px-2 py-0.5 rounded-full text-emerald-200 font-medium">漫畫追蹤</span>
-            </div>
-            <div class="flex items-center space-x-2.5">
-                <button onclick="openSearchModal()" class="w-8 h-8 rounded-full bg-[#0b5c42] flex items-center justify-center hover:bg-[#147a57] active:scale-95 transition">
-                    <i class="fa-solid fa-search text-emerald-200 text-xs"></i>
-                </button>
-                <button onclick="openNotificationModal()" class="w-8 h-8 rounded-full bg-[#0b5c42] flex items-center justify-center hover:bg-[#147a57] active:scale-95 transition relative">
-                    <i class="fa-solid fa-bell text-emerald-200 text-xs"></i>
-                    <span id="notifBadge" class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full hidden"></span>
-                </button>
             </div>
         </header>
 
@@ -359,14 +350,60 @@
             </div>
         </div>
 
+        <!-- Notification Modal (Bell) -->
+        <div id="notificationModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+            <div class="bg-[#084934] border border-[#147a57] rounded-xl w-full max-w-sm p-4 shadow-2xl relative space-y-3 max-h-[85vh] overflow-y-auto">
+                <div class="flex items-center justify-between pb-2 border-b border-emerald-600/30">
+                    <h3 class="font-bold text-sm text-white flex items-center space-x-1.5">
+                        <i class="fa-solid fa-bell text-emerald-300"></i>
+                        <span>最新通知與更新</span>
+                    </h3>
+                    <button onclick="closeNotificationModal()" class="text-emerald-300 hover:text-white p-1">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+                <div class="space-y-2.5">
+                    <div class="bg-[#0b5c42] p-3 rounded-xl border border-emerald-600/30 space-y-1">
+                        <div class="flex justify-between items-center text-[10px] text-emerald-300/80">
+                            <span>系統通知</span>
+                            <span>今天</span>
+                        </div>
+                        <p class="text-xs text-white font-bold">歡迎使用 TOPTOON 漫畫紀錄網！</p>
+                        <p class="text-[11px] text-emerald-100/70">您可以在此新增追蹤清單、管理分類與備份還原資料。</p>
+                    </div>
+                </div>
+                <button onclick="closeNotificationModal()" class="w-full bg-emerald-700 hover:bg-emerald-600 active:scale-95 text-white font-bold py-2 rounded-lg transition text-xs">關閉通知</button>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        let comics = JSON.parse(localStorage.getItem('toptoon_comics')) || [];
+        let comics = JSON.parse(localStorage.getItem('toptoon_comics')) || [
+            {
+                id: '1710000000001',
+                title: '我獨自升級',
+                genre: '動作, 奇幻',
+                status: '已完結',
+                url: 'https://toptoon.com/',
+                coverUrl: 'https://placehold.co/300x400/0b5c42/ffffff?text=Solo+Leveling'
+            },
+            {
+                id: '1710000000002',
+                title: '女神降臨',
+                genre: '愛情, 校園',
+                status: '連載中',
+                url: 'https://toptoon.com/',
+                coverUrl: 'https://placehold.co/300x400/0b5c42/ffffff?text=True+Beauty'
+            }
+        ];
+        if (!localStorage.getItem('toptoon_comics')) {
+            localStorage.setItem('toptoon_comics', JSON.stringify(comics));
+        }
+
         let activeComicId = null;
         let activeGenreFilter = '全部';
 
-        // Helper function to parse genres separated by commas (half-width or full-width)
         function parseGenres(genreStr) {
             if (!genreStr || genreStr.trim() === '') return ['未分類'];
             return genreStr.split(/[,，]/).map(g => g.trim()).filter(g => g.length > 0);
@@ -377,18 +414,18 @@
             parent.innerHTML = '<div class="w-full h-full flex items-center justify-center text-3xl">📖</div>';
         }
 
-        function handleImgErrorSmall(imgEl) {
-            const parent = imgEl.parentElement;
-            parent.innerHTML = '<span>📖</span>';
-        }
-
-        function handleImgErrorModal(imgEl) {
-            const parent = imgEl.parentElement;
-            parent.innerText = '📖';
-        }
-
         function saveComics() {
             localStorage.setItem('toptoon_comics', JSON.stringify(comics));
+        }
+
+        function showMsg(title, text) {
+            document.getElementById('msgTitle').innerText = title;
+            document.getElementById('msgText').innerText = text;
+            document.getElementById('msgModal').classList.remove('hidden');
+        }
+
+        function closeMsgModal() {
+            document.getElementById('msgModal').classList.add('hidden');
         }
 
         function switchTab(tabName) {
@@ -426,7 +463,6 @@
             const container = document.getElementById('comicListContainer');
             const filterBannerContainer = document.getElementById('filterBannerContainer');
 
-            // Render filter banner if active filter
             if (activeGenreFilter !== '全部') {
                 filterBannerContainer.innerHTML = `
                     <div class="bg-[#0b5c42] border border-emerald-600/40 rounded-xl px-3 py-2 flex items-center justify-between text-xs shadow-inner mb-2.5">
@@ -536,13 +572,13 @@
 
             const modalEmojiContainer = document.getElementById('modalEmojiContainer');
             if (comic.coverUrl) {
-                modalEmojiContainer.innerHTML = `<img src="${comic.coverUrl}" class="w-full h-full object-cover" onerror="handleImgErrorModal(this)">`;
+                modalEmojiContainer.innerHTML = `<img src="${comic.coverUrl}" class="w-full h-full object-cover" onerror="this.parentElement.innerText='📖'">`;
             } else {
                 modalEmojiContainer.innerText = '📖';
             }
 
             document.getElementById('modalTitle').innerText = comic.title;
-            document.getElementById('modalGenre').innerText = `分類：${comic.genre || '未分類'} | 狀態：${comic.status || '連載中'}`;
+            document.getElementById('modalGenre').innerText = `分類：${comic.genre} | 狀態：${comic.status || '連載中'}`;
 
             const urlBox = document.getElementById('modalUrlBox');
             const urlLink = document.getElementById('modalUrlLink');
@@ -558,26 +594,23 @@
 
         function closeComicModal() {
             document.getElementById('comicModal').classList.add('hidden');
-            activeComicId = null;
-            renderComics();
         }
 
         function openEditModal() {
+            closeComicModal();
             const comic = comics.find(c => c.id === activeComicId);
             if (!comic) return;
-            document.getElementById('editInputTitle').value = comic.title || '';
-            document.getElementById('editInputGenre').value = comic.genre || '';
-            
-            const statusRadios = document.querySelectorAll('input[name="editInputStatus"]');
-            statusRadios.forEach(r => {
-                if (r.value === (comic.status || '連載中')) {
-                    r.checked = true;
-                }
-            });
 
+            document.getElementById('editInputTitle').value = comic.title;
+            document.getElementById('editInputGenre').value = comic.genre;
             document.getElementById('editInputUrl').value = comic.url || '';
             document.getElementById('editInputCoverUrl').value = comic.coverUrl || '';
-            document.getElementById('comicModal').classList.add('hidden');
+
+            const statusRadios = document.querySelectorAll('input[name="editInputStatus"]');
+            statusRadios.forEach(radio => {
+                radio.checked = (radio.value === (comic.status || '連載中'));
+            });
+
             document.getElementById('editModal').classList.remove('hidden');
         }
 
@@ -587,35 +620,35 @@
 
         function handleUpdateComic(e) {
             e.preventDefault();
-            const comic = comics.find(c => c.id === activeComicId);
-            if (!comic) return;
+            const comicIndex = comics.findIndex(c => c.id === activeComicId);
+            if (comicIndex === -1) return;
 
-            comic.title = document.getElementById('editInputTitle').value.trim();
-            comic.genre = document.getElementById('editInputGenre').value.trim();
-            const editStatusInput = document.querySelector('input[name="editInputStatus"]:checked');
-            comic.status = editStatusInput ? editStatusInput.value : '連載中';
-            comic.url = document.getElementById('editInputUrl').value.trim();
-            comic.coverUrl = document.getElementById('editInputCoverUrl').value.trim();
+            const statusInput = document.querySelector('input[name="editInputStatus"]:checked');
+            comics[comicIndex].title = document.getElementById('editInputTitle').value.trim();
+            comics[comicIndex].genre = document.getElementById('editInputGenre').value.trim();
+            comics[comicIndex].status = statusInput ? statusInput.value : '連載中';
+            comics[comicIndex].url = document.getElementById('editInputUrl').value.trim();
+            comics[comicIndex].coverUrl = document.getElementById('editInputCoverUrl').value.trim();
 
             saveComics();
             closeEditModal();
-            renderComics();
-            renderCategories();
             showMsg('修改成功', '漫畫資訊已成功更新！');
+            renderComics();
         }
 
         function deleteCurrentComic() {
             comics = comics.filter(c => c.id !== activeComicId);
             saveComics();
             closeComicModal();
-            renderCategories();
-            showMsg('刪除成功', '已從清單中移除該漫畫。');
+            showMsg('刪除成功', '已從追蹤清單移除該漫畫。');
+            renderComics();
         }
 
         function openSearchModal() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchResults').innerHTML = '<p class="text-xs text-emerald-200/50 text-center py-2">請輸入關鍵字搜尋</p>';
             document.getElementById('searchModal').classList.remove('hidden');
-            document.getElementById('searchInput').focus();
-            renderSearchResults('');
+            setTimeout(() => document.getElementById('searchInput').focus(), 100);
         }
 
         function closeSearchModal() {
@@ -623,92 +656,84 @@
         }
 
         function handleSearchInput(e) {
-            renderSearchResults(e.target.value.toLowerCase());
-        }
+            const query = e.target.value.trim().toLowerCase();
+            const resultsContainer = document.getElementById('searchResults');
 
-        function renderSearchResults(keyword) {
-            const container = document.getElementById('searchResults');
-            const filtered = comics.filter(c => c.title.toLowerCase().includes(keyword) || (c.genre && c.genre.toLowerCase().includes(keyword)));
-
-            if (filtered.length === 0) {
-                container.innerHTML = `<div class="text-center text-emerald-200/60 py-3 text-xs">找不到相關漫畫</div>`;
+            if (!query) {
+                resultsContainer.innerHTML = '<p class="text-xs text-emerald-200/50 text-center py-2">請輸入關鍵字搜尋</p>';
                 return;
             }
 
-            container.innerHTML = filtered.map(comic => {
-                const coverDisplay = comic.coverUrl ? 
-                    `<img src="${comic.coverUrl}" class="w-8 h-8 object-cover rounded-lg border border-emerald-600/40 shadow-inner flex-shrink-0" onerror="handleImgErrorSmall(this)">` :
-                    `<span class="text-lg">📖</span>`;
+            const matched = comics.filter(c => 
+                c.title.toLowerCase().includes(query) || 
+                c.genre.toLowerCase().includes(query)
+            );
 
-                return `
-                    <div onclick="closeSearchModal(); openComicModal('${comic.id}');" class="bg-[#0b5c42] hover:bg-[#147a57] p-2.5 rounded-lg cursor-pointer flex items-center justify-between transition active:scale-[0.98]">
-                        <div class="flex items-center space-x-2.5">
-                            ${coverDisplay}
-                            <div>
-                                <h5 class="font-bold text-xs">${comic.title}</h5>
-                                <span class="inline-block text-[9px] bg-[#074732] text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-600/30 mt-0.5">${comic.genre || '未分類'}</span>
-                            </div>
+            if (matched.length === 0) {
+                resultsContainer.innerHTML = '<p class="text-xs text-emerald-200/60 text-center py-2">找不到符合的漫畫</p>';
+                return;
+            }
+
+            resultsContainer.innerHTML = matched.map(comic => `
+                <div onclick="closeSearchModal(); openComicModal('${comic.id}');" class="bg-[#0b5c42] hover:bg-[#147a57] p-2.5 rounded-lg border border-emerald-600/40 flex items-center justify-between cursor-pointer transition">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-base">📖</span>
+                        <div>
+                            <h5 class="text-xs font-bold text-white">${comic.title}</h5>
+                            <span class="text-[10px] text-emerald-200/70">${comic.genre}</span>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-[10px] text-emerald-300"></i>
                     </div>
-                `;
-            }).join('');
+                    <i class="fa-solid fa-chevron-right text-xs text-emerald-300"></i>
+                </div>
+            `).join('');
         }
 
         function openNotificationModal() {
-            showMsg('系統通知', '目前沒有未讀的漫畫更新通知。');
+            document.getElementById('notificationModal').classList.remove('hidden');
         }
 
-        function showMsg(title, text) {
-            document.getElementById('msgTitle').innerText = title;
-            document.getElementById('msgText').innerText = text;
-            document.getElementById('msgModal').classList.remove('hidden');
-        }
-
-        function closeMsgModal() {
-            document.getElementById('msgModal').classList.add('hidden');
+        function closeNotificationModal() {
+            document.getElementById('notificationModal').classList.add('hidden');
         }
 
         function exportData() {
-            const dataStr = JSON.stringify(comics, null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.href = url;
-            downloadAnchor.download = "toptoon_backup.json";
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            document.body.removeChild(downloadAnchor);
-            URL.revokeObjectURL(url);
-            showMsg('匯出成功', '漫畫紀錄備份檔案已成功下載！');
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(comics, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", "toptoon_comics_backup.json");
+            document.body.appendChild(dlAnchorElem);
+            dlAnchorElem.click();
+            dlAnchorElem.remove();
+            showMsg('匯出成功', '已成功下載漫畫資料備份檔案！');
         }
 
         function importData(e) {
             const file = e.target.files[0];
             if (!file) return;
+
             const reader = new FileReader();
             reader.onload = function(event) {
                 try {
-                    const parsed = JSON.parse(event.target.result);
-                    if (Array.isArray(parsed)) {
-                        comics = parsed;
+                    const imported = JSON.parse(event.target.result);
+                    if (Array.isArray(imported)) {
+                        comics = imported;
                         saveComics();
                         renderComics();
-                        renderCategories();
-                        showMsg('還原成功', '已成功載入備份資料！');
+                        showMsg('還原成功', `已成功還原 ${comics.length} 部漫畫紀錄！`);
                     } else {
-                        showMsg('格式錯誤', '檔案格式不符，無法還原。');
+                        showMsg('格式錯誤', '備份檔案格式不正確。');
                     }
                 } catch(err) {
-                    showMsg('解析失敗', 'JSON 檔案解析發生錯誤。');
+                    showMsg('讀取失敗', '無法解析備份 JSON 檔案。');
                 }
             };
             reader.readAsText(file);
         }
 
+        // Initialize on load
         window.onload = function() {
             renderComics();
-        }
+        };
     </script>
 </body>
 </html>
