@@ -129,9 +129,9 @@
                     <div>
                         <label class="block text-[11px] font-bold text-emerald-200 mb-1 flex items-center space-x-1">
                             <i class="fa-solid fa-tag text-emerald-400 text-[10px]"></i>
-                            <span>分類 *</span>
+                            <span>分類 (多個分類可用逗號分隔) *</span>
                         </label>
-                        <input type="text" id="inputGenre" required placeholder="例如：動作、戀愛、奇幻" class="w-full bg-[#0b5c42] border border-emerald-600/40 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-emerald-400/40 focus:outline-none focus:border-emerald-400 transition shadow-inner">
+                        <input type="text" id="inputGenre" required placeholder="例如：動作, 奇幻" class="w-full bg-[#0b5c42] border border-emerald-600/40 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-emerald-400/40 focus:outline-none focus:border-emerald-400 transition shadow-inner">
                     </div>
 
                     <div>
@@ -289,7 +289,7 @@
                     <div>
                         <label class="block text-[11px] font-bold text-emerald-200 mb-1 flex items-center space-x-1">
                             <i class="fa-solid fa-tag text-emerald-400 text-[10px]"></i>
-                            <span>分類 *</span>
+                            <span>分類 (多個分類可用逗號分隔) *</span>
                         </label>
                         <input type="text" id="editInputGenre" required class="w-full bg-[#0b5c42] border border-emerald-600/40 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-400 transition shadow-inner">
                     </div>
@@ -366,6 +366,12 @@
         let activeComicId = null;
         let activeGenreFilter = '全部';
 
+        // Helper function to parse genres separated by commas (half-width or full-width)
+        function parseGenres(genreStr) {
+            if (!genreStr || genreStr.trim() === '') return ['未分類'];
+            return genreStr.split(/[,，]/).map(g => g.trim()).filter(g => g.length > 0);
+        }
+
         function handleImgError(imgEl) {
             const parent = imgEl.parentElement;
             parent.innerHTML = '<div class="w-full h-full flex items-center justify-center text-3xl">📖</div>';
@@ -423,7 +429,7 @@
             // Render filter banner if active filter
             if (activeGenreFilter !== '全部') {
                 filterBannerContainer.innerHTML = `
-                    <div class="bg-[#0b5c42] border border-emerald-600/40 rounded-xl px-3 py-2 flex items-center justify-between text-xs shadow-inner">
+                    <div class="bg-[#0b5c42] border border-emerald-600/40 rounded-xl px-3 py-2 flex items-center justify-between text-xs shadow-inner mb-2.5">
                         <span class="text-emerald-200">分類篩選：<strong class="text-white">${activeGenreFilter}</strong></span>
                         <button onclick="clearGenreFilter()" class="text-red-400 hover:text-red-300 font-bold flex items-center space-x-1">
                             <i class="fa-solid fa-xmark text-[10px]"></i>
@@ -437,7 +443,7 @@
 
             const filteredComics = activeGenreFilter === '全部' ? 
                 comics : 
-                comics.filter(c => ((c.genre && c.genre.trim() !== '') ? c.genre.trim() : '未分類') === activeGenreFilter);
+                comics.filter(c => parseGenres(c.genre).includes(activeGenreFilter));
 
             document.getElementById('comicCount').innerText = `共 ${filteredComics.length} 部`;
 
@@ -462,7 +468,8 @@
                         📖
                      </div>`;
 
-                const genreBadge = comic.genre ? `<span class="inline-block text-[9px] bg-[#0b5c42] text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-600/30 w-fit">${comic.genre}</span>` : '';
+                const genres = parseGenres(comic.genre);
+                const genreBadges = genres.map(g => `<span class="inline-block text-[9px] bg-[#0b5c42] text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-600/30 w-fit">${g}</span>`).join('');
                 const statusBadge = comic.status ? `<span class="inline-block text-[9px] ${comic.status === '連載中' ? 'bg-emerald-600/50 text-emerald-200' : 'bg-red-900/50 text-red-200'} px-1.5 py-0.5 rounded border border-emerald-600/30 w-fit">${comic.status}</span>` : '';
 
                 return `
@@ -471,7 +478,7 @@
                         <div class="p-2.5 flex flex-col justify-between flex-1 space-y-1.5">
                             <h4 class="font-bold text-white text-xs line-clamp-1">${comic.title}</h4>
                             <div class="flex items-center space-x-1 flex-wrap gap-1">
-                                ${genreBadge}
+                                ${genreBadges}
                                 ${statusBadge}
                             </div>
                         </div>
@@ -482,11 +489,15 @@
 
         function renderCategories() {
             const genreGrid = document.getElementById('genreGrid');
-            const uniqueGenres = [...new Set(comics.map(c => (c.genre && c.genre.trim() !== '') ? c.genre.trim() : '未分類'))];
+            let allGenresSet = new Set();
+            comics.forEach(c => {
+                parseGenres(c.genre).forEach(g => allGenresSet.add(g));
+            });
+            const uniqueGenres = [...allGenresSet];
             const genres = ['全部', ...uniqueGenres];
 
             genreGrid.innerHTML = genres.map(g => {
-                const count = g === '全部' ? comics.length : comics.filter(c => ((c.genre && c.genre.trim() !== '') ? c.genre.trim() : '未分類') === g).length;
+                const count = g === '全部' ? comics.length : comics.filter(c => parseGenres(c.genre).includes(g)).length;
                 const isSelected = activeGenreFilter === g;
                 const activeStyle = isSelected ? 'border-emerald-400 bg-[#0a523a] ring-1 ring-emerald-400/50' : 'border-emerald-600/30 hover:border-emerald-400';
                 
