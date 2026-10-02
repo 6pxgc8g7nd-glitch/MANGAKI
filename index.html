@@ -14,17 +14,22 @@
             color: #ffffff;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
         }
         /* Mobile App Frame Styling */
         .app-container {
             max-width: 480px;
+            width: 100%;
+            height: 100dvh;
             margin: 0 auto;
-            min-height: 100vh;
             background-color: #0b5c42;
             box-shadow: 0 0 25px rgba(0,0,0,0.5);
             display: flex;
             flex-direction: column;
             position: relative;
+            overflow: hidden;
         }
         /* Custom scrollbar */
         ::-webkit-scrollbar {
@@ -40,12 +45,12 @@
         }
     </style>
 </head>
-<body class="bg-[#074732] flex justify-center">
+<body class="bg-[#074732] flex justify-center items-center h-[100dvh]">
 
     <div class="app-container">
 
         <!-- Top Header -->
-        <header class="w-full py-3.5 px-4 bg-[#094c36] shadow-md flex items-center justify-between sticky top-0 z-50 border-b border-[#147a57]/50">
+        <header class="w-full py-3 px-4 bg-[#094c36] shadow-md flex items-center justify-between flex-shrink-0 z-50 border-b border-[#147a57]/50">
             <div class="flex items-center space-x-2">
                 <h1 class="text-xl font-black tracking-wider">
                     <span class="text-red-600">TOP</span><span class="text-white">TOON</span>
@@ -64,7 +69,7 @@
         </header>
 
         <!-- Main Content Area -->
-        <main class="flex-1 w-full p-3.5 pb-28 overflow-y-auto">
+        <main class="flex-1 w-full p-3.5 pb-20 overflow-y-auto">
 
             <!-- TAB 1: 首頁 (Home) -->
             <section id="tab-home" class="space-y-4">
@@ -235,7 +240,7 @@
                 <div class="bg-[#084934] rounded-xl p-3.5 shadow border border-[#147a57]/40 space-y-2">
                     <h3 class="font-bold text-emerald-200 border-b border-[#147a57] pb-1.5 text-xs">關於 TOPTOON 紀錄網</h3>
                     <div class="text-[11px] text-emerald-200/80 space-y-1">
-                        <p>版本：v1.3.0 (Mobile Web Edition)</p>
+                        <p>版本：v1.3.1 (Mobile Web Edition)</p>
                         <p>特色：專為手機版深度優化的漫畫追蹤介面，隨時記錄喜愛作品。</p>
                     </div>
                 </div>
@@ -244,7 +249,7 @@
         </main>
 
         <!-- Bottom Navigation Bar (Floating with Rounded Corners) -->
-        <nav class="absolute bottom-3 left-3 right-3 bg-[#07422f] border border-white/20 z-40 max-w-[480px] mx-auto shadow-2xl rounded-2xl overflow-hidden">
+        <nav class="absolute bottom-2.5 left-3 right-3 bg-[#07422f] border border-white/20 z-40 max-w-[456px] mx-auto shadow-2xl rounded-2xl overflow-hidden flex-shrink-0">
             <div class="grid grid-cols-4 h-14 text-center">
                 <!-- Tab 1: 首頁 -->
                 <button onclick="switchTab('home')" id="nav-home" class="nav-btn flex flex-col items-center justify-center border-r border-white/20 text-white font-bold transition active:bg-[#0a523a]">
