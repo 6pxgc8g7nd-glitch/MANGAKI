@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToonVerse -人氣漫畫天天看</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        toptoon: {
+                            red: '#ff3b30',
+                            orange: '#ff9500',
+                            blue: '#007aff',
+                            dark: '#1c1c1e',
+                            gray: '#8e8e93',
+                            light: '#f2f2f7'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 2px;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-[#0b5c3b] text-white font-sans antialiased selection:bg-red-500 selection:text-white min-h-screen flex flex-col">
+
+    <!-- Top Header Navigation (Matched Wireframe Style) -->
+    <header class="sticky top-0 z-50 bg-[#0b5c3b] border-b border-[#0f7a50] shadow-sm">
+        <div class="max-w-md mx-auto px-4 pt-3 pb-2 flex items-center justify-between">
+            <div class="flex items-center space-x-1 cursor-pointer" onclick="switchTab('home')">
+                <span class="text-2xl font-black tracking-tight text-red-500">TOP</span>
+                <span class="text-2xl font-black tracking-tight text-black">TOON</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="openUploadModal()" class="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition" title="上傳漫畫">
+                    <i class="fa-solid fa-plus text-xs"></i>
+                </button>
+                <button onclick="openSearchModal()" class="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition" title="搜尋">
+                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                </button>
+            </div>
+        </div>
+        <!-- 3-Column Tabs: 連載, 完結, 分類 -->
+        <div class="max-w-md mx-auto grid grid-cols-3 border-t border-[#0f7a50] text-center">
+            <button onclick="switchCategory('serial')" id="cat-serial" class="py-3 text-sm font-bold text-white border-b-2 border-white bg-white/5 transition">連載</button>
+            <button onclick="switchCategory('completed')" id="cat-completed" class="py-3 text-sm font-medium text-white/70 hover:text-white transition">完結</button>
+            <button onclick="switchCategory('category')" id="cat-category" class="py-3 text-sm font-medium text-white/70 hover:text-white transition">分類</button>
+        </div>
+    </header>
+
+    <!-- Main Container with 2-Column Grid Card Layout -->
+    <main id="app-container" class="flex-1 max-w-md w-full mx-auto p-4 pb-24">
+        <!-- Dynamic views injected here -->
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 z-50 bg-[#094a30] border-t border-[#0f7a50] max-w-md mx-auto shadow-2xl">
+        <div class="flex justify-around items-center h-14 px-2">
+            <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center justify-center w-full py-1 text-red-400 transition">
+                <i class="fa-solid fa-star text-base mb-0.5"></i>
+                <span class="text-[10px] font-bold">推薦免費</span>
+            </button>
+            <button onclick="switchTab('originals')" id="nav-originals" class="flex flex-col items-center justify-center w-full py-1 text-white/60 hover:text-white transition">
+                <i class="fa-solid fa-fire text-base mb-0.5"></i>
+                <span class="text-[10px] font-medium">人氣排行</span>
+            </button>
+            <button onclick="switchTab('library')" id="nav-library" class="flex flex-col items-center justify-center w-full py-1 text-white/60 hover:text-white transition">
+                <i class="fa-solid fa-bookmark text-base mb-0.5"></i>
+                <span class="text-[10px] font-medium">書架</span>
+            </button>
+            <button onclick="switchTab('profile')" id="nav-profile" class="flex flex-col items-center justify-center w-full py-1 text-white/60 hover:text-white transition">
+                <i class="fa-solid fa-user text-base mb-0.5"></i>
+                <span class="text-[10px] font-medium">我的</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Firebase SDK Setup -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables provided by environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-comic-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyDummyKeyForPreviewModeOnly12345",
+            authDomain: "dummy-project.firebaseapp.com",
+            projectId: "dummy-project",
+            storageBucket: "dummy-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef"
+        };
+
+        let app, db, auth;
+        let userId = null;
+
+        // Default local comics if cloud is empty or offline
+        window.defaultComics = [
+            {
+                id: 1,
+                title: "秘密教學(全年齡版)",
+                author: "WAN / JIN",
+                genre: "愛情 / 劇情",
+                rating: "9.95",
+                reads: "371萬",
+                badge: "獨家",
+                tagColor: "bg-red-500",
+                cover: "https://placehold.co/300x400/ffe4e6/be123c?text=Secret+Class",
+                banner: "https://placehold.co/800x450/3b82f6/ffffff?text=FREE+COUPON+EVENT",
+                description: "寄住在叔叔家的高中生，與溫柔親切的阿姨以及青梅竹馬展開了意想不到的同居生活……",
+                chapters: [
+                    { id: 101, num: 51, title: "第 51 話：突如其來的雨", date: "2026-06-01", free: true },
+                    { id: 102, num: 52, title: "第 52 話：微妙的距離", date: "2026-06-08", free: true },
+                    { id: 103, num: 53, title: "第 53 話：秘密的約定", date: "2026-06-15", free: false },
+                    { id: 104, num: 54, title: "第 54 話：深夜的訪客", date: "2026-06-22", free: false },
+                ]
+            },
+            {
+                id: 2,
+                title: "韶恩(全年齡版)",
+                author: "Studio L",
+                genre: "都市 / 懸疑",
+                rating: "9.88",
+                reads: "5.6萬",
+                badge: "獨家",
+                tagColor: "bg-blue-500",
+                cover: "https://placehold.co/300x400/e0f2fe/0369a1?text=Shao+En",
+                banner: "https://placehold.co/800x450/1e293b/ffffff?text=Shao+En+Banner",
+                description: "知名女主播背後隱藏著不為人知的黑歷史與復仇計畫，當麥克風開啟的那一刻，真相逐漸浮現。",
+                chapters: [
+                    { id: 201, num: 3, title: "第 3 話：直播間的雜音", date: "2026-05-10", free: true },
+                    { id: 202, num: 4, title: "第 4 話：匿名威脅", date: "2026-05-17", free: true },
+                    { id: 203, num: 5, title: "第 5 話：墜落的偶像", date: "2026-05-24", free: true },
+                ]
+            },
+            {
+                id: 3,
+                title: "監獄女囚(全年齡版)",
+                author: "Black Box",
+                genre: "動作 / 冒險",
+                rating: "9.79",
+                reads: "5.6萬",
+                badge: "獨家",
+                tagColor: "bg-red-500",
+                cover: "https://placehold.co/300x400/f3f4f6/374151?text=Prison+Inmate",
+                banner: "https://placehold.co/800x450/475569/ffffff?text=Prison+Banner",
+                description: "在戒備森嚴的極惡監獄中，天才女特工必須運用智慧與身手，在權力鬥爭中活到最後。",
+                chapters: [
+                    { id: 301, num: 8, title: "第 8 話：放風時間的衝突", date: "2026-06-03", free: true },
+                    { id: 302, num: 9, title: "第 9 話：地下交易", date: "2026-06-10", free: true },
+                    { id: 303, num: 10, title: "第 10 話：暴動前夕", date: "2026-06-17", free: false },
+                ]
+            },
+            {
+                id: 4,
+                title: "繼母與繼姐(全年齡版)",
+                author: "Kim / Park",
+                genre: "家庭 / 劇情",
+                rating: "9.82",
+                reads: "8.1萬",
+                badge: "小說改編",
+                tagColor: "bg-emerald-600",
+                cover: "https://placehold.co/300x400/ecfdf5/047857?text=Stepmother",
+                banner: "https://placehold.co/800x450/065f46/ffffff?text=Family+Banner",
+                description: "父親再婚後迎來的全新家庭，表面上其樂融融，背地裡卻各自懷揣著不可告人的秘密。",
+                chapters: [
+                    { id: 401, num: 9, title: "第 9 話：家宴上的暗湧", date: "2026-05-20", free: true },
+                    { id: 402, num: 10, title: "第 10 話：深夜談心", date: "2026-05-27", free: true },
+                ]
+            },
+            {
+                id: 5,
+                title: "Setup!排球少女(全年齡版)",
+                author: "Spike Studio",
+                genre: "校園 / 熱血",
+                rating: "9.91",
+                reads: "8.1萬",
+                badge: "新作",
+                tagColor: "bg-blue-600",
+                cover: "https://placehold.co/300x400/eff6ff/1d4ed8?text=Volleyball+Girls",
+                banner: "https://placehold.co/800x450/1e40af/ffffff?text=Volleyball+Banner",
+                description: "廢社邊緣的高中女子排球社，迎來了一位轉學而來的超級天才二傳手，誓言打進全國大赛！",
+                chapters: [
+                    { id: 501, num: 9, title: "第 9 話：背水一戰的發球", date: "2026-05-25", free: true },
+                    { id: 502, num: 10, title: "第 10 話：完美的扣殺", date: "2026-06-01", free: true },
+                ]
+            },
+            {
+                id: 6,
+                title: "誰說理組沒正妹?(全年齡版)",
+                author: "Geek Master",
+                genre: "校園 / 戀愛",
+                rating: "9.75",
+                reads: "25萬",
+                badge: "獨家",
+                tagColor: "bg-red-500",
+                cover: "https://placehold.co/300x400/fdf2f8/db2777?text=Science+Girl",
+                banner: "https://placehold.co/800x450/9d174d/ffffff?text=Science+Banner",
+                description: "誰說資訊工程系的女生都是宅女？校花級學霸在實驗室與程式碼之間，展開一場爆笑浪漫的戀愛攻防戰。",
+                chapters: [
+                    { id: 601, num: 20, title: "第 20 話：除錯與心跳", date: "2026-05-15", free: true },
+                    { id: 602, num: 21, title: "第 21 話：程式碼裡的告白", date: "2026-05-22", free: true },
+                ]
+            }
+        ];
+
+        window.comics = [...window.defaultComics];
+        window.state = {
+            currentTab: 'home',
+            currentCategory: 'serial',
+            currentComicId: null,
+            currentChapterId: null,
+            library: [1, 2]
+        };
+
+        window.openComicDetail = function(comicId) {
+            state.currentComicId = comicId;
+            state.currentTab = 'detail';
+            renderView();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.openChapter = function(chapterId) {
+            state.currentChapterId = chapterId;
+            state.currentTab = 'reader';
+            renderView();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.goBackToDetail = function() {
+            state.currentTab = 'detail';
+            renderView();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        async function initFirebase() {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                userId = auth.currentUser?.uid || crypto.randomUUID();
+                console.log("Firebase initialized. User ID:", userId);
+
+                // Load cloud data
+                loadCloudComics();
+                loadCloudLibrary();
+            } catch (e) {
+                console.warn("Firebase offline or initialization fallback:", e);
+                if (!userId) userId = "local-user-" + Math.floor(Math.random() * 10000);
+            }
+            if (typeof renderView === 'function') renderView();
+        }
+
+        async function loadCloudComics() {
+            if (!db) return;
+            try {
+                const q = collection(db, 'artifacts', appId, 'public', 'data', 'comics');
+                onSnapshot(q, (snapshot) => {
+                    const cloudComics = [];
+                    snapshot.forEach((docSnap) => {
+                        cloudComics.push({ docId: docSnap.id, ...docSnap.data() });
+                    });
+                    if (cloudComics.length > 0) {
+                        window.comics = [...cloudComics, ...window.defaultComics];
+                        renderView();
+                    }
+                }, (error) => {
+                    console.error("Error reading comics:", error);
+                });
+            } catch (e) {
+                console.error("Cloud comics load failed:", e);
+            }
+        }
+
+        window.deleteComicFromCloud = async function(comicId, docId) {
+            if (!db) {
+                window.comics = window.comics.filter(c => c.id !== comicId);
+                renderView();
+                return;
+            }
+            try {
+                if (docId) {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'comics', docId));
+                }
+                window.comics = window.comics.filter(c => c.id !== comicId);
+                renderView();
+                alertBox("已成功刪除該漫畫！");
+            } catch (e) {
+                console.error("Failed to delete comic:", e);
+                alertBox("刪除失敗，請稍後再試。");
+            }
+        };
+
+        async function loadCloudLibrary() {
+            if (!db || !userId) return;
+            try {
+                const q = collection(db, 'artifacts', appId, 'users', userId, 'library');
+                onSnapshot(q, (snapshot) => {
+                    const savedIds = [];
+                    snapshot.forEach((docSnap) => {
+                        if (docSnap.data().comicId) savedIds.push(docSnap.data().comicId);
+                    });
+                    if (savedIds.length > 0) {
+                        window.state.library = savedIds;
+                        renderView();
+                    }
+                }, (error) => {
+                    console.error("Error reading library:", error);
+                });
+            } catch (e) {
+                console.error("Cloud library load failed:", e);
+            }
+        }
+
+        window.saveComicToCloud = async function(newComic) {
+            if (!db) {
+                window.comics.unshift(newComic);
+                return;
+            }
+            try {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'comics'), newComic);
+            } catch (e) {
+                console.error("Failed to save comic to cloud:", e);
+            }
+        };
+
+        window.saveLibraryToCloud = async function(comicId, isAdd) {
+            if (!db || !userId) return;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'library', String(comicId));
+                if (isAdd) {
+                    await setDoc(docRef, { comicId: comicId, timestamp: Date.now() });
+                } else {
+                    await deleteDoc(docRef);
+                }
+            } catch (e) {
+                console.error("Failed to update cloud library:", e);
+            }
+        };
+
+        window.onload = function() {
+            initFirebase();
+            renderView();
+        };
+    </script>
+
+    <script>
+        function switchTab(tabName) {
+            state.currentTab = tabName;
+            
+            ['home', 'originals', 'library', 'profile'].forEach(t => {
+                const el = document.getElementById(`nav-${t}`);
+                if (el) {
+                    if (t === tabName) {
+                        el.className = "flex flex-col items-center justify-center w-full py-1 text-red-400 transition";
+                    } else {
+                        el.className = "flex flex-col items-center justify-center w-full py-1 text-white/60 hover:text-white transition";
+                    }
+                }
+            });
+
+            renderView();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function switchCategory(cat) {
+            state.currentCategory = cat;
+            ['serial', 'completed', 'category'].forEach(c => {
+                const btn = document.getElementById(`cat-${c}`);
+                if (btn) {
+                    if (c === cat) {
+                        btn.className = "py-3 text-sm font-bold text-white border-b-2 border-white bg-white/5 transition";
+                    } else {
+                        btn.className = "py-3 text-sm font-medium text-white/70 hover:text-white transition";
+                    }
+                }
+            });
+            if(state.currentTab === 'home') {
+                renderView();
+            } else {
+                switchTab('home');
+            }
+        }
+
+        function renderView() {
+            const container = document.getElementById('app-container');
+            if (!container) return;
+
+            if (state.currentTab === 'home') {
+                container.innerHTML = renderHomeView();
+            } else if (state.currentTab === 'originals') {
+                container.innerHTML = renderOriginalsView();
+            } else if (state.currentTab === 'library') {
+                container.innerHTML = renderLibraryView();
+            } else if (state.currentTab === 'profile') {
+                container.innerHTML = renderProfileView();
+            } else if (state.currentTab === 'detail') {
+                container.innerHTML = renderDetailView(state.currentComicId);
+            } else if (state.currentTab === 'reader') {
+                container.innerHTML = renderReaderView(state.currentChapterId);
+            }
+        }
+
+        function renderHomeView() {
+            let list = window.comics;
+            if (state.currentCategory === 'completed') {
+                list = window.comics.filter(c => c.genre && c.genre.includes('完結'));
+            } else if (state.currentCategory === 'category') {
+                return `
+                    <div class="space-y-4">
+                        <h2 class="text-base font-bold text-white px-1">漫畫分類探索</h2>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div onclick="alertBox('已切換至：愛情劇情')" class="bg-[#094a30] border border-[#0f7a50] p-4 rounded-2xl cursor-pointer hover:bg-[#0f7a50] transition text-center shadow-md">
+                                <i class="fa-solid fa-heart text-red-400 text-xl mb-2"></i>
+                                <h3 class="font-bold text-sm">愛情 / 劇情</h3>
+                            </div>
+                            <div onclick="alertBox('已切換至：動作冒險')" class="bg-[#094a30] border border-[#0f7a50] p-4 rounded-2xl cursor-pointer hover:bg-[#0f7a50] transition text-center shadow-md">
+                                <i class="fa-solid fa-bolt text-yellow-400 text-xl mb-2"></i>
+                                <h3 class="font-bold text-sm">動作 / 冒險</h3>
+                            </div>
+                            <div onclick="alertBox('已切換至：校園戀愛')" class="bg-[#094a30] border border-[#0f7a50] p-4 rounded-2xl cursor-pointer hover:bg-[#0f7a50] transition text-center shadow-md">
+                                <i class="fa-solid fa-graduation-cap text-blue-400 text-xl mb-2"></i>
+                                <h3 class="font-bold text-sm">校園 / 熱血</h3>
+                            </div>
+                            <div onclick="alertBox('已切換至：都市懸疑')" class="bg-[#094a30] border border-[#0f7a50] p-4 rounded-2xl cursor-pointer hover:bg-[#0f7a50] transition text-center shadow-md">
+                                <i class="fa-solid fa-user-secret text-purple-400 text-xl mb-2"></i>
+                                <h3 class="font-bold text-sm">都市 / 懸疑</h3>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        ${list.map(comic => `
+                            <div class="bg-[#d1d5db] text-zinc-900 rounded-3xl overflow-hidden shadow-lg flex flex-col relative group">
+                                <button onclick="event.stopPropagation(); deleteComicFromCloud(${comic.id}, '${comic.docId || ''}')" class="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700 shadow transition" title="刪除漫畫">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                                <div onclick="openComicDetail(${comic.id})" class="w-full h-52 bg-zinc-300 relative overflow-hidden cursor-pointer">
+                                    <img src="${comic.cover}" class="w-full h-full object-cover" alt="${comic.title}">
+                                    <span class="absolute top-2 left-2 px-2 py-0.5 ${comic.tagColor || 'bg-red-500'} text-white text-[10px] font-black rounded shadow">${comic.badge}</span>
+                                </div>
+                                <div onclick="openComicDetail(${comic.id})" class="p-3.5 flex flex-col justify-between flex-1 space-y-1 cursor-pointer">
+                                    <h3 class="font-black text-xs text-zinc-900 line-clamp-1">${comic.title}</h3>
+                                    <div class="flex items-center justify-between text-[10px] text-zinc-600 font-semibold">
+                                        <span>${comic.author}</span>
+                                        <span class="text-amber-700"><i class="fa-solid fa-star mr-0.5"></i>${comic.rating}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderDetailView(comicId) {
+            const comic = window.comics.find(c => c.id === comicId) || window.comics[0];
+            const isSaved = state.library.includes(comic.id);
+            const chapters = comic.chapters || [
+                { id: comic.id * 100 + 1, num: 1, title: "第 1 話：序章", date: "2026-06-01", free: true }
+            ];
+
+            return `
+                <div class="space-y-5 pb-10">
+                    <div class="flex items-center justify-between">
+                        <button onclick="switchTab('home')" class="text-white/80 hover:text-white flex items-center space-x-1.5 text-xs font-bold">
+                            <i class="fa-solid fa-arrow-left"></i><span>返回推薦列表</span>
+                        </button>
+                        <button onclick="deleteComicFromCloud(${comic.id}, '${comic.docId || ''}')" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition shadow">
+                            <i class="fa-solid fa-trash-can"></i><span>刪除此漫畫</span>
+                        </button>
+                    </div>
+                    <div class="bg-[#094a30] border border-[#0f7a50] rounded-3xl p-5 shadow-xl space-y-4">
+                        <div class="flex space-x-4 items-center">
+                            <img src="${comic.cover}" class="w-28 h-36 rounded-2xl object-cover shadow-md">
+                            <div class="space-y-2 flex-1 min-w-0">
+                                <span class="px-2 py-0.5 ${comic.tagColor || 'bg-red-500'} text-white text-[10px] font-black rounded">${comic.badge}</span>
+                                <h2 class="font-black text-base text-white truncate">${comic.title}</h2>
+                                <p class="text-xs text-white/70">${comic.author} · ${comic.genre}</p>
+                                <div class="flex items-center space-x-2 text-amber-400 text-xs font-bold">
+                                    <span><i class="fa-solid fa-star mr-1"></i>${comic.rating}</span>
+                                    <span class="text-white/40">|</span>
+                                    <span class="text-white/70 font-normal">人氣 ${comic.reads || '10萬'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-white/80 leading-relaxed">${comic.description}</p>
+                        <div class="grid grid-cols-2 gap-3 pt-2">
+                            <button onclick="openChapter(${chapters[0].id})" class="py-3 bg-red-500 hover:bg-red-600 text-white font-bold text-xs rounded-2xl shadow-lg transition text-center">
+                                <i class="fa-solid fa-book-open mr-1.5"></i>開始閱讀
+                            </button>
+                            <button onclick="toggleLibrary(${comic.id})" class="py-3 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-2xl border border-white/20 transition text-center">
+                                <i class="fa-solid ${isSaved ? 'fa-bookmark text-red-400' : 'fa-regular fa-bookmark'} mr-1.5"></i>${isSaved ? '已在書架' : '加入書架'}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bg-[#094a30] border border-[#0f7a50] rounded-3xl p-5 shadow-xl space-y-3">
+                        <h3 class="font-bold text-sm text-white">章節列表 (${chapters.length} 話)</h3>
+                        <div class="space-y-2 max-h-72 overflow-y-auto pr-1">
+                            ${chapters.map((ch, idx) => `
+                                <div onclick="openChapter(${ch.id})" class="p-3 bg-white/5 hover:bg-white/10 rounded-2xl flex items-center justify-between cursor-pointer transition">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="w-6 text-center text-xs font-bold text-white/60">#${idx+1}</span>
+                                        <div>
+                                            <h4 class="text-xs font-bold text-white">${ch.title}</h4>
+                                            <span class="text-[10px] text-white/50">${ch.date}</span>
+                                        </div>
+                                    </div>
+                                    <span class="px-2.5 py-1 text-[10px] font-bold ${ch.free ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'} rounded-xl">
+                                        ${ch.free ? '免費' : 'VIP'}
+                                    </span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderOriginalsView() {
+            return `
+                <div class="space-y-3">
+                    <h2 class="text-base font-bold text-white px-1">🔥 人氣排行榜單</h2>
+                    <div class="space-y-2">
+                        ${window.comics.map((comic, idx) => `
+                            <div class="bg-[#d1d5db] text-zinc-900 rounded-2xl p-3 flex items-center space-x-3 shadow relative">
+                                <span class="w-6 text-center font-black text-sm ${idx < 3 ? 'text-red-600' : 'text-zinc-600'}">#${idx + 1}</span>
+                                <img src="${comic.cover}" onclick="openComicDetail(${comic.id})" class="w-12 h-16 rounded-xl object-cover shadow cursor-pointer">
+                                <div onclick="openComicDetail(${comic.id})" class="flex-1 min-w-0 cursor-pointer">
+                                    <h4 class="font-black text-xs text-zinc-900 truncate">${comic.title}</h4>
+                                    <p class="text-[10px] text-zinc-600 mt-0.5">${comic.genre} · ${comic.reads || '10萬'}人氣</p>
+                                </div>
+                                <div class="flex items-center space-x-1.5">
+                                    <button onclick="openComicDetail(${comic.id})" class="px-2.5 py-1 bg-red-600 text-white text-[10px] font-bold rounded-xl shadow">閱讀</button>
+                                    <button onclick="deleteComicFromCloud(${comic.id}, '${comic.docId || ''}')" class="w-7 h-7 bg-zinc-800 text-white text-xs rounded-xl flex items-center justify-center shadow hover:bg-red-600 transition" title="刪除">
+                                        <i class="fa-solid fa-trash-can text-[10px]"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderLibraryView() {
+            const savedComics = window.comics.filter(c => state.library.includes(c.id));
+            return `
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between px-1">
+                        <h2 class="text-base font-bold text-white">我的書架 (${savedComics.length})</h2>
+                        <span class="text-xs text-white/70">自動同步雲端</span>
+                    </div>
+                    ${savedComics.length === 0 ? `
+                        <div class="text-center py-20 text-white/70 space-y-3">
+                            <i class="fa-regular fa-bookmark text-4xl text-white/40"></i>
+                            <p class="text-xs">書架目前空空如也，快去發掘喜愛的漫畫吧！</p>
+                        </div>
+                    ` : `
+                        <div class="grid grid-cols-2 gap-4">
+                            ${savedComics.map(comic => `
+                                <div class="bg-[#d1d5db] text-zinc-900 rounded-3xl overflow-hidden shadow-lg flex flex-col relative">
+                                    <button onclick="event.stopPropagation(); deleteComicFromCloud(${comic.id}, '${comic.docId || ''}')" class="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700 shadow transition" title="刪除漫畫">
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
+                                    </button>
+                                    <div onclick="openComicDetail(${comic.id})" class="w-full h-52 bg-zinc-300 relative overflow-hidden cursor-pointer">
+                                        <img src="${comic.cover}" class="w-full h-full object-cover">
+                                    </div>
+                                    <div onclick="openComicDetail(${comic.id})" class="p-3.5 flex flex-col justify-between flex-1 space-y-1 cursor-pointer">
+                                        <h3 class="font-black text-xs text-zinc-900 line-clamp-1">${comic.title}</h3>
+                                        <p class="text-[10px] text-zinc-600 font-medium">已加入書架</p>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        function renderProfileView() {
+            return `
+                <div class="space-y-4">
+                    <div class="bg-[#094a30] border border-[#0f7a50] p-5 rounded-3xl text-center space-y-3 shadow-lg">
+                        <div class="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center mx-auto text-2xl font-black shadow-md">
+                            <i class="fa-solid fa-user-ninja"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-black text-base">VIP 漫畫會員</h3>
+                            <p class="text-[11px] text-white/70 mt-0.5">ID: ${userId ? userId.substring(0, 12) + '...' : 'Guest'}</p>
+                        </div>
+                    </div>
+                    <div class="bg-[#094a30] border border-[#0f7a50] rounded-3xl overflow-hidden shadow-lg divide-y divide-[#0f7a50]">
+                        <button onclick="openUploadModal()" class="w-full px-5 py-4 text-left text-xs font-bold flex items-center justify-between hover:bg-[#0f7a50] transition">
+                            <span class="flex items-center space-x-3"><i class="fa-solid fa-cloud-arrow-up text-red-400"></i><span>上傳並新增漫畫到雲端</span></span>
+                            <i class="fa-solid fa-chevron-right text-[10px] text-white/40"></i>
+                        </button>
+                        <button onclick="alertBox('清除暫存成功！')" class="w-full px-5 py-4 text-left text-xs font-bold flex items-center justify-between hover:bg-[#0f7a50] transition">
+                            <span class="flex items-center space-x-3"><i class="fa-solid fa-trash-can text-red-400"></i><span>清除快取與離線暫存</span></span>
+                            <i class="fa-solid fa-chevron-right text-[10px] text-white/40"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderReaderView(chapterId) {
+            let currentComic = window.comics[0];
+            let currentChapter = null;
+            for(let c of window.comics) {
+                if(c.chapters) {
+                    let found = c.chapters.find(ch => ch.id === chapterId);
+                    if(found) {
+                        currentComic = c;
+                        currentChapter = found;
+                        break;
+                    }
+                }
+            }
+            if(!currentChapter && currentComic.chapters) currentChapter = currentComic.chapters[0];
+
+            return `
+                <div class="bg-zinc-950 text-white min-h-screen pb-20 -mx-4 -mt-4 p-4">
+                    <div class="sticky top-0 z-50 bg-zinc-900/95 backdrop-blur-md border-b border-zinc-800 px-4 h-12 flex items-center justify-between -mx-4 -mt-4 mb-4">
+                        <button onclick="goBackToDetail()" class="text-zinc-300 hover:text-white flex items-center space-x-1 text-xs font-bold">
+                            <i class="fa-solid fa-arrow-left"></i><span>返回</span>
+                        </button>
+                        <span class="text-xs font-bold truncate max-w-[200px]">${currentChapter ? currentChapter.title : '閱讀中'}</span>
+                        <button onclick="openCommentsModal()" class="text-zinc-300 hover:text-white text-xs">
+                            <i class="fa-regular fa-comment-dots text-base"></i>
+                        </button>
+                    </div>
+                    <div class="max-w-md mx-auto flex flex-col items-center">
+                        <div class="w-full py-10 text-center bg-zinc-900/55 border-b border-zinc-800/80 mb-4 px-4 rounded-2xl">
+                            <span class="text-xs text-red-400 font-bold">${currentComic.title}</span>
+                            <h2 class="text-lg font-black mt-1">${currentChapter ? currentChapter.title : ''}</h2>
+                            <p class="text-[10px] text-zinc-400 mt-1">Webtoon 直式流暢捲動模式</p>
+                        </div>
+                        <div class="w-full space-y-2 px-2">
+                            <img src="${currentComic.banner}" class="w-full rounded-xl shadow-lg" alt="panel 1">
+                            <img src="${currentComic.cover}" class="w-full rounded-xl shadow-lg" alt="panel 2">
+                            <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl text-center space-y-3 my-6">
+                                <p class="text-xs text-zinc-300">本話已讀完，喜歡請點讚支持作者！</p>
+                                <button onclick="likeChapter()" class="px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-xl shadow-lg transition">
+                                    ❤️ 給予愛心支持
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.toggleLibrary = function(comicId) {
+            const index = state.library.indexOf(comicId);
+            let isAdd = false;
+            if(index > -1) {
+                state.library.splice(index, 1);
+                alertBox("已從書架移除");
+            } else {
+                state.library.push(comicId);
+                isAdd = true;
+                alertBox("已成功加入書架！");
+            }
+            saveLibraryToCloud(comicId, isAdd);
+            renderView();
+        };
+
+        function openSearchModal() {
+            alertBox("搜尋功能：可輸入漫畫名稱或作者以快速查找作品。");
+        }
+
+        function openCommentsModal() {
+            alertBox("留言板：讀者可以在各話下方即時發表評論與討論劇情！");
+        }
+
+        function likeChapter() {
+            alertBox("感謝點讚！您的支持是作者創作的最大動力 ❤️");
+        }
+
+        function openUploadModal() {
+            const modal = document.createElement('div');
+            modal.className = "fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs px-4 overflow-y-auto py-10";
+            modal.innerHTML = `
+                <div class="bg-white border border-zinc-200 rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl my-auto text-left">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-black text-base text-zinc-900 flex items-center space-x-2">
+                            <i class="fa-solid fa-cloud-arrow-up text-red-500"></i>
+                            <span>上架新漫畫並儲存至雲端</span>
+                        </h3>
+                        <button onclick="this.closest('.fixed').remove()" class="text-zinc-400 hover:text-zinc-700"><i class="fa-solid fa-xmark text-lg"></i></button>
+                    </div>
+                    <form onsubmit="handleUploadComic(event)" class="space-y-3">
+                        <div>
+                            <label class="block text-[11px] font-bold text-zinc-600 mb-1">漫畫名稱</label>
+                            <input type="text" id="up-title" required placeholder="例如：我的異世界冒險" class="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-3 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-red-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-zinc-600 mb-1">作者名稱</label>
+                            <input type="text" id="up-author" required placeholder="例如：漫畫家小明" class="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-3 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-red-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-zinc-600 mb-1">作品標籤/類型</label>
+                            <select id="up-badge" class="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-3 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-red-500">
+                                <option value="獨家">獨家 (紅標)</option>
+                                <option value="新作">新作 (藍標)</option>
+                                <option value="小說改編">小說改編 (綠標)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-zinc-600 mb-1">封面圖片網址 (URL)</label>
+                            <input type="url" id="up-cover" placeholder="https://placehold.co/300x400/..." class="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-3 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-red-500">
+                            <span class="text-[10px] text-zinc-400 mt-1 block">若留空將自動產生精美封面</span>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-zinc-600 mb-1">作品簡介</label>
+                            <textarea id="up-desc" rows="3" required placeholder="請輸入吸引人的劇情簡介..." class="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-3 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-red-500"></textarea>
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-red-500 hover:bg-red-600 text-white font-bold text-xs rounded-2xl shadow-lg shadow-red-500/30 transition">
+                            確認上架並同步
+                        </button>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        async function handleUploadComic(event) {
+            event.preventDefault();
+            const title = document.getElementById('up-title').value;
+            const author = document.getElementById('up-author').value;
+            const badge = document.getElementById('up-badge').value;
+            const coverInput = document.getElementById('up-cover').value.trim();
+            const description = document.getElementById('up-desc').value;
+
+            let tagColor = "bg-red-500";
+            if(badge === '新作') tagColor = "bg-blue-600";
+            if(badge === '小說改編') tagColor = "bg-emerald-600";
+
+            const newId = Date.now();
+            const cover = coverInput !== "" ? coverInput : `https://placehold.co/300x400/fee2e2/dc2626?text=${encodeURIComponent(title)}`;
+            const banner = `https://placehold.co/800x450/1e293b/ffffff?text=${encodeURIComponent(title)}+Banner`;
+
+            const newComic = {
+                id: newId,
+                title: title,
+                author: author,
+                genre: "原創漫畫",
+                rating: "10.0",
+                reads: "1萬",
+                badge: badge,
+                tagColor: tagColor,
+                cover: cover,
+                banner: banner,
+                description: description,
+                chapters: [
+                    { id: newId + 1, num: 1, title: "第 1 話：全新連載的起點", date: "2026-06-06", free: true }
+                ]
+            };
+
+            await window.saveComicToCloud(newComic);
+            document.querySelector('.fixed').remove();
+            alertBox(`成功上架漫畫《${title}》並已儲存至雲端資料庫！`);
+            switchTab('home');
+        }
+
+        function alertBox(message) {
+            const modal = document.createElement('div');
+            modal.className = "fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs px-4";
+            modal.innerHTML = `
+                <div class="bg-white border border-zinc-200 rounded-3xl p-6 max-w-xs w-full text-center space-y-4 shadow-2xl">
+                    <div class="w-12 h-12 rounded-full bg-red-100 text-red-500 flex items-center justify-center mx-auto text-xl font-black">
+                        <i class="fa-solid fa-bell"></i>
+                    </div>
+                    <p class="text-sm text-zinc-700 leading-relaxed font-medium">${message}</p>
+                    <button onclick="this.closest('.fixed').remove()" class="w-full py-3 bg-red-500 hover:bg-red-600 text-white font-bold text-xs rounded-2xl transition shadow-md">
+                        確定
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+    </script>
+</body>
+</html>
