@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <link rel="icon" type="image/png" href="icon.PNG">
-    <link rel="apple-touch-icon" href="icon.PNG">
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="TOPTOON">
     <meta name="theme-color" content="#d1fae5">
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TOPTOON 漫畫紀錄網</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -326,21 +326,7 @@
             </div>
         </div>
 
-        <!-- Search Modal -->
-        <div id="searchModal" class="fixed inset-0 bg-emerald-950/40 backdrop-blur-sm z-50 hidden flex items-start justify-center pt-12 p-3">
-            <div class="bg-[#ffffff] border border-[#a7f3d0] rounded-xl w-full max-w-sm p-4 shadow-2xl relative space-y-3">
-                <div class="flex items-center space-x-2.5 bg-[#f0fdf4] px-3 py-2 rounded-lg border border-emerald-300">
-                    <i class="fa-solid fa-search text-emerald-600 text-xs"></i>
-                    <input type="text" id="searchInput" oninput="handleSearchInput(event)" placeholder="輸入漫畫標題或分類搜尋..." class="w-full bg-transparent text-emerald-950 placeholder-emerald-400/50 focus:outline-none text-xs">
-                    <button onclick="closeSearchModal()" class="text-emerald-600 hover:text-emerald-950 p-1">
-                        <i class="fa-solid fa-xmark text-xs"></i>
-                    </button>
-                </div>
-                <div id="searchResults" class="space-y-1.5 max-h-[50vh] overflow-y-auto">
-                    <!-- Search results -->
-                </div>
-            </div>
-        </div>
+        
 
         <!-- Notification / Message Box Modal -->
         <div id="msgModal" class="fixed inset-0 bg-emerald-950/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
@@ -351,32 +337,6 @@
                 <h3 id="msgTitle" class="font-bold text-sm">提示訊息</h3>
                 <p id="msgText" class="text-xs text-emerald-800">操作成功</p>
                 <button onclick="closeMsgModal()" class="w-full bg-red-400 hover:bg-red-500 active:scale-95 text-white font-bold py-2 rounded-lg transition text-xs">確定</button>
-            </div>
-        </div>
-
-        <!-- Notification Modal (Bell) -->
-        <div id="notificationModal" class="fixed inset-0 bg-emerald-950/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
-            <div class="bg-[#ffffff] border border-[#a7f3d0] rounded-xl w-full max-w-sm p-4 shadow-2xl relative space-y-3 max-h-[85vh] overflow-y-auto">
-                <div class="flex items-center justify-between pb-2 border-b border-emerald-300">
-                    <h3 class="font-bold text-sm text-emerald-950 flex items-center space-x-1.5">
-                        <i class="fa-solid fa-bell text-emerald-600"></i>
-                        <span>最新通知與更新</span>
-                    </h3>
-                    <button onclick="closeNotificationModal()" class="text-emerald-600 hover:text-emerald-950 p-1">
-                        <i class="fa-solid fa-xmark text-lg"></i>
-                    </button>
-                </div>
-                <div class="space-y-2.5">
-                    <div class="bg-[#f0fdf4] p-3 rounded-xl border border-emerald-300 space-y-1">
-                        <div class="flex justify-between items-center text-[10px] text-emerald-600/80">
-                            <span>系統通知</span>
-                            <span>今天</span>
-                        </div>
-                        <p class="text-xs text-emerald-950 font-bold">歡迎使用 TOPTOON 漫畫紀錄網！</p>
-                        <p class="text-[11px] text-emerald-700">您可以在此新增追蹤清單、管理分類與備份還原資料。</p>
-                    </div>
-                </div>
-                <button onclick="closeNotificationModal()" class="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold py-2 rounded-lg transition text-xs">關閉通知</button>
             </div>
         </div>
 
@@ -507,9 +467,7 @@
                     `<div class="w-full h-40 bg-[#f0fdf4] rounded-t-xl flex items-center justify-center text-3xl border-b border-emerald-300 relative">
                         📖
                      </div>`;
-
                 
-    
                 const statusBadge = comic.status ? `<span class="inline-block text-[9px] ${comic.status === '連載中' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-700'} px-1.5 py-0.5 rounded border border-emerald-300 w-fit">${comic.status}</span>` : '';
 
                 return `
@@ -648,68 +606,11 @@
             renderComics();
         }
 
-        function openSearchModal() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('searchResults').innerHTML = '<p class="text-xs text-emerald-800/50 text-center py-2">請輸入關鍵字搜尋</p>';
-            document.getElementById('searchModal').classList.remove('hidden');
-            setTimeout(() => document.getElementById('searchInput').focus(), 100);
-        }
-
-        function closeSearchModal() {
-            document.getElementById('searchModal').classList.add('hidden');
-        }
-
-        function handleSearchInput(e) {
-            const query = e.target.value.trim().toLowerCase();
-            const resultsContainer = document.getElementById('searchResults');
-
-            if (!query) {
-                resultsContainer.innerHTML = '<p class="text-xs text-emerald-800/50 text-center py-2">請輸入關鍵字搜尋</p>';
-                return;
-            }
-
-            const matched = comics.filter(c => 
-                c.title.toLowerCase().includes(query) || 
-                c.genre.toLowerCase().includes(query)
-            );
-
-            if (matched.length === 0) {
-                resultsContainer.innerHTML = '<p class="text-xs text-emerald-800 text-center py-2">找不到符合的漫畫</p>';
-                return;
-            }
-
-            resultsContainer.innerHTML = matched.map(comic => `
-                <div onclick="closeSearchModal(); openComicModal('${comic.id}');" class="bg-[#f0fdf4] hover:bg-[#a7f3d0] p-2.5 rounded-lg border border-emerald-300 flex items-center justify-between cursor-pointer transition">
-                    <div class="flex items-center space-x-2">
-                        <span class="text-base">📖</span>
-                        <div>
-                            <h5 class="text-xs font-bold text-emerald-950">${comic.title}</h5>
-                            <span class="text-[10px] text-emerald-800">${comic.genre}</span>
-                        </div>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-xs text-emerald-600"></i>
-                </div>
-            `).join('');
-        }
-
-        function openNotificationModal() {
-            document.getElementById('notificationModal').classList.remove('hidden');
-        }
-
-        function closeNotificationModal() {
-            document.getElementById('notificationModal').classList.add('hidden');
-        }
 // ================================
 // 資料備份功能
 // ================================
 
-function updateBackupCount() {
-    const countElement = document.getElementById('backupComicCount');
 
-    if (countElement) {
-        countElement.innerText = `${comics.length} 部`;
-    }
-}
 
 
 // 產生備份檔案名稱
@@ -985,7 +886,7 @@ function importData(e) {
             // 更新畫面
             renderComics();
             renderCategories();
-            updateBackupCount();
+            
 
             // 清除 file input
             e.target.value = '';
@@ -1030,50 +931,6 @@ function importData(e) {
 }
 
 
-// ================================
-// 清除全部漫畫
-// ================================
-
-function clearAllComics() {
-
-    if (comics.length === 0) {
-
-        showMsg(
-            '沒有資料',
-            '目前沒有漫畫資料可以刪除。'
-        );
-
-        return;
-    }
-
-
-    const confirmed = confirm(
-        `確定要清除全部 ${comics.length} 部漫畫嗎？\n\n` +
-        `這個操作會刪除目前瀏覽器中的漫畫資料。\n` +
-        `如果之後還需要這些資料，請先匯出備份。`
-    );
-
-
-    if (!confirmed) {
-        return;
-    }
-
-
-    comics = [];
-
-    saveComics();
-
-    activeGenreFilter = '全部';
-
-    renderComics();
-    renderCategories();
-    updateBackupCount();
-
-    showMsg(
-        '清除完成',
-        '所有漫畫資料已從本機移除。'
-    );
-}
 
         // Initialize on load
         window.onload = function() {
