@@ -164,7 +164,7 @@
                         <input type="url" id="inputCoverUrl" placeholder="" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
                     </div>
 
-                    <button type="submit" class="w-full bg-[#a6051a] hover:bg-[#8a0416] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-xs">
+                    <button type="submit" class="w-full bg-[#a6051a] hover:bg-[#8a0416] active:scale-95 text-white font-bold py-2.5 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-xs">
                         <i class="fa-solid fa-plus text-xs"></i>
                         <span>確認新增漫畫</span>
                     </button>
@@ -246,14 +246,14 @@
                 </div>
 
                 <div id="modalUrlBox" class="hidden">
-                    <a id="modalUrlLink" href="#" target="_blank" class="w-full bg-[#a6051a] hover:bg-[#8a0416] active:scale-95 text-neutral-900 py-2.5 rounded-lg font-bold transition text-xs flex items-center justify-center space-x-2 shadow">
+                    <a id="modalUrlLink" href="#" target="_blank" class="w-full bg-[#a6051a] hover:bg-[#8a0416] active:scale-95 text-white py-2.5 rounded-lg font-bold transition text-xs flex items-center justify-center space-x-2 shadow">
                         <i class="fa-solid fa-external-link-alt text-xs"></i>
                         <span>前往漫畫網站閱讀</span>
                     </a>
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 pt-2">
-                    <button onclick="openEditModal()" class="bg-gray-700 hover:bg-gray-600 active:scale-95 text-neutral-900 py-2.5 rounded-lg font-bold transition text-xs flex items-center justify-center space-x-1 border border-[#a6051a]/40">
+                    <button onclick="openEditModal()" class="bg-gray-700 hover:bg-gray-600 active:scale-95 text-white py-2.5 rounded-lg font-bold transition text-xs flex items-center justify-center space-x-1 border border-[#a6051a]/40">
                         <i class="fa-solid fa-pen text-xs"></i>
                         <span>修改</span>
                     </button>
@@ -322,7 +322,7 @@
                     </div>
                     <div class="flex space-x-2 pt-1">
                         <button type="button" onclick="closeEditModal()" class="flex-1 bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2 rounded-xl transition text-xs border border-[#a6051a]/40">取消</button>
-                        <button type="submit" class="flex-1 bg-[#a6051a] hover:bg-[#8a0416] active:scale-95 text-neutral-900 font-bold py-2 rounded-xl shadow transition text-xs">儲存修改</button>
+                        <button type="submit" class="flex-1 bg-[#a6051a] hover:bg-[#8a0416] active:scale-95 text-white font-bold py-2 rounded-xl shadow transition text-xs">儲存修改</button>
                     </div>
                 </form>
             </div>
@@ -338,7 +338,7 @@
                 </div>
                 <h3 id="msgTitle" class="font-bold text-sm">提示訊息</h3>
                 <p id="msgText" class="text-xs text-neutral-600">操作成功</p>
-                <button onclick="closeMsgModal()" class="w-full bg-[#a6051a] hover:bg-[#8a0416] active:scale-95 text-neutral-900 font-bold py-2 rounded-lg transition text-xs">確定</button>
+                <button onclick="closeMsgModal()" class="w-full bg-[#a6051a] hover:bg-[#8a0416] active:scale-95 text-white font-bold py-2 rounded-lg transition text-xs">確定</button>
             </div>
         </div>
 
@@ -405,11 +405,11 @@
 
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('text-white', 'font-bold');
-                btn.classList.add('ext-white/50', 'font-medium');
+                btn.classList.add('text-white/50', 'font-medium');
             });
             const activeBtn = document.getElementById(`nav-${tabName}`);
             if (activeBtn) {
-                activeBtn.classList.remove('ext-white/50', 'font-medium');
+                activeBtn.classList.remove('text-white/50', 'font-medium');
                 activeBtn.classList.add('text-white', 'font-bold');
             }
 
