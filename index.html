@@ -344,6 +344,7 @@
     </div>
 
     <script>
+        let comics = JSON.parse(localStorage.getItem('toptoon_comics')) || [];
         if (!localStorage.getItem('toptoon_comics')) {
             localStorage.setItem('toptoon_comics', JSON.stringify(comics));
         }
