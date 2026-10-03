@@ -7,7 +7,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="TOPTOON">
-    <meta name="theme-color" content="#fecaca">
+    <meta name="theme-color" content="#ffffff">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TOPTOON 漫畫紀錄網</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,8 +16,8 @@
     <style>
         body {
             font-family: 'Noto Sans TC', sans-serif;
-            background-color: #fef2f2;
-            color: #450a0a;
+            background-color: #f5f5f5;
+            color: #171717;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
             margin: 0;
@@ -30,7 +30,7 @@
             width: 100%;
             height: 100dvh;
             margin: 0 auto;
-            background-color: #fff5f5;
+            background-color: #fafafa;
             box-shadow: 0 0 25px rgba(0,0,0,0.5);
             display: flex;
             flex-direction: column;
@@ -43,23 +43,23 @@
             height: 4px;
         }
         ::-webkit-scrollbar-track {
-            background: #fee2e2;
+            background: #f0f0f0;
         }
         ::-webkit-scrollbar-thumb {
-            background: #fca5a5;
+            background: #e5e5e5;
             border-radius: 2px;
         }
     </style>
 </head>
-<body class="bg-[#fef2f2] flex justify-center items-center h-[100dvh]">
+<body class="bg-[#f5f5f5] flex justify-center items-center h-[100dvh]">
 
     <div class="app-container">
 
         <!-- Top Header -->
-        <header class="w-full py-3 px-4 bg-[#fecaca] shadow-md flex items-center justify-between flex-shrink-0 z-50 border-b border-[#fca5a5]/50">
+        <header class="w-full py-3 px-4 bg-[#ffffff] shadow-md flex items-center justify-between flex-shrink-0 z-50 border-b border-[#e5e5e5]/50">
             <div onclick="switchTab('home')" class="flex items-center space-x-2 cursor-pointer active:opacity-80 transition">
                 <h1 class="text-xl font-black tracking-wider">
-                    <span class="text-red-600">TOP</span><span class="text-red-950">TOON</span>
+                    <span class="text-[#a6051a]">TOP</span><span class="text-neutral-900">TOON</span>
                 </h1>
             </div>
         </header>
@@ -72,11 +72,11 @@
                 <!-- Comic List -->
                 <div class="space-y-2.5">
                     <div class="flex justify-between items-center px-1">
-                        <h3 class="font-bold text-xs text-red-900 flex items-center space-x-1.5 uppercase tracking-wide">
-                            <i class="fa-solid fa-bookmark text-red-600 text-xs"></i>
+                        <h3 class="font-bold text-xs text-neutral-600 flex items-center space-x-1.5 uppercase tracking-wide">
+                            <i class="fa-solid fa-bookmark text-[#a6051a] text-xs"></i>
                             <span>漫畫清單</span>
                         </h3>
-                        <span id="comicCount" class="text-[11px] text-red-900 font-medium">共 0 部</span>
+                        <span id="comicCount" class="text-[11px] text-neutral-600 font-medium">共 0 部</span>
                     </div>
                     
                     <!-- Active Filter Banner -->
@@ -90,9 +90,9 @@
 
             <!-- TAB 2: 分類 (Categories) -->
             <section id="tab-categories" class="hidden space-y-4">
-                <div class="bg-[#ffffff] rounded-xl p-4 shadow border border-[#fca5a5]/40">
+                <div class="bg-[#ffffff] rounded-xl p-4 shadow border border-[#e5e5e5]/40">
                     <h2 class="text-base font-bold mb-1">漫畫分類瀏覽</h2>
-                    <p class="text-xs text-red-900">點擊下方分類標籤可快速篩選對應漫畫</p>
+                    <p class="text-xs text-neutral-600">點擊下方分類標籤可快速篩選對應漫畫</p>
                 </div>
 
                 <!-- Genre Grid -->
@@ -103,67 +103,67 @@
 
             <!-- TAB 3: 新增 (Add) -->
             <section id="tab-add" class="hidden space-y-3.5">
-                <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#fca5a5]/50 flex items-center space-x-3">
-                    <div class="w-9 h-9 rounded-xl bg-red-600/20 text-red-600 flex items-center justify-center text-base border border-red-600/30 flex-shrink-0">
+                <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-xl bg-[#a6051a]/10 text-[#a6051a] flex items-center justify-center text-base border border-[#a6051a]/30 flex-shrink-0">
                         <i class="fa-solid fa-circle-plus"></i>
                     </div>
                     <div>
-                        <h2 class="text-xs font-black tracking-wide text-red-950">新增漫畫</h2>
-                        <p class="text-[10px] text-red-900">記錄漫畫名稱、分類、狀態、網址與封面</p>
+                        <h2 class="text-xs font-black tracking-wide text-neutral-900">新增漫畫</h2>
+                        <p class="text-[10px] text-neutral-600">記錄漫畫名稱、分類、狀態、網址與封面</p>
                     </div>
                 </div>
 
-                <form id="addComicForm" onsubmit="handleAddNewComic(event)" class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#fca5a5]/50 space-y-3">
+                <form id="addComicForm" onsubmit="handleAddNewComic(event)" class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 space-y-3">
                     <div>
-                        <label class="block text-[11px] font-bold text-red-900 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-book text-red-600 text-[10px]"></i>
+                        <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-book text-[#a6051a] text-[10px]"></i>
                             <span>漫畫名稱 *</span>
                         </label>
-                        <input type="text" id="inputTitle" required placeholder="例如：我獨自升級" class="w-full bg-[#fff5f5] border border-red-300 rounded-xl px-3.5 py-2.5 text-xs text-red-950 placeholder-red-400/40 focus:outline-none focus:border-red-400 transition shadow-inner">
+                        <input type="text" id="inputTitle" required placeholder="例如：我獨自升級" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
                     </div>
 
                     <div>
-                        <label class="block text-[11px] font-bold text-red-900 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-tag text-red-600 text-[10px]"></i>
+                        <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-tag text-[#a6051a] text-[10px]"></i>
                             <span>分類 (多個分類可用逗號分隔) *</span>
                         </label>
-                        <input type="text" id="inputGenre" required placeholder="例如：動作, 奇幻" class="w-full bg-[#fff5f5] border border-red-300 rounded-xl px-3.5 py-2.5 text-xs text-red-950 placeholder-red-400/40 focus:outline-none focus:border-red-400 transition shadow-inner">
+                        <input type="text" id="inputGenre" required placeholder="例如：動作, 奇幻" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
                     </div>
 
                     <div>
-                        <label class="block text-[11px] font-bold text-red-900 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-circle-dot text-red-600 text-[10px]"></i>
+                        <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-circle-dot text-[#a6051a] text-[10px]"></i>
                             <span>狀態 *</span>
                         </label>
                         <div class="grid grid-cols-2 gap-2">
-                            <label class="flex items-center justify-center space-x-1.5 bg-[#fff5f5] border border-red-300 rounded-xl py-2.5 text-xs cursor-pointer hover:bg-[#fca5a5] transition shadow-inner">
-                                <input type="radio" name="inputStatus" value="連載中" checked class="accent-red-500">
-                                <span class="text-red-950 font-bold">連載中</span>
+                            <label class="flex items-center justify-center space-x-1.5 bg-[#fafafa] border border-[#a6051a]/40 rounded-xl py-2.5 text-xs cursor-pointer hover:bg-[#e5e5e5] transition shadow-inner">
+                                <input type="radio" name="inputStatus" value="連載中" checked class="accent-[#a6051a]">
+                                <span class="text-neutral-900 font-bold">連載中</span>
                             </label>
-                            <label class="flex items-center justify-center space-x-1.5 bg-[#fff5f5] border border-red-300 rounded-xl py-2.5 text-xs cursor-pointer hover:bg-[#fca5a5] transition shadow-inner">
-                                <input type="radio" name="inputStatus" value="已完結" class="accent-red-500">
-                                <span class="text-red-950 font-bold">已完結</span>
+                            <label class="flex items-center justify-center space-x-1.5 bg-[#fafafa] border border-[#a6051a]/40 rounded-xl py-2.5 text-xs cursor-pointer hover:bg-[#e5e5e5] transition shadow-inner">
+                                <input type="radio" name="inputStatus" value="已完結" class="accent-[#a6051a]">
+                                <span class="text-neutral-900 font-bold">已完結</span>
                             </label>
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-[11px] font-bold text-red-900 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-link text-red-600 text-[10px]"></i>
+                        <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-link text-[#a6051a] text-[10px]"></i>
                             <span>網址</span>
                         </label>
-                        <input type="url" id="inputUrl" placeholder="https://..." class="w-full bg-[#fff5f5] border border-red-300 rounded-xl px-3.5 py-2.5 text-xs text-red-950 placeholder-red-400/40 focus:outline-none focus:border-red-400 transition shadow-inner">
+                        <input type="url" id="inputUrl" placeholder="https://..." class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
                     </div>
 
                     <div>
-                        <label class="block text-[11px] font-bold text-red-900 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-image text-red-600 text-[10px]"></i>
+                        <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-image text-[#a6051a] text-[10px]"></i>
                             <span>封面網址</span>
                         </label>
-                        <input type="url" id="inputCoverUrl" placeholder="https://... (圖片連結)" class="w-full bg-[#fff5f5] border border-red-300 rounded-xl px-3.5 py-2.5 text-xs text-red-950 placeholder-red-400/40 focus:outline-none focus:border-red-400 transition shadow-inner">
+                        <input type="url" id="inputCoverUrl" placeholder="https://... (圖片連結)" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
                     </div>
 
-                    <button type="submit" class="w-full bg-red-600 hover:bg-red-700 active:scale-95 text-white font-bold py-2.5 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-xs">
+                    <button type="submit" class="w-full bg-[#a6051a] hover:bg-[#8a0416] active:scale-95 text-white font-bold py-2.5 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-xs">
                         <i class="fa-solid fa-plus text-xs"></i>
                         <span>確認新增漫畫</span>
                     </button>
@@ -172,26 +172,26 @@
 
             <!-- TAB 4: 設定 (Settings) -->
             <section id="tab-settings" class="hidden space-y-3.5">
-                <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#fca5a5]/50 flex items-center space-x-3">
-                    <div class="w-9 h-9 rounded-xl bg-red-600/20 text-red-600 flex items-center justify-center text-base border border-red-500/30 flex-shrink-0">
+                <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-xl bg-[#a6051a]/10 text-[#a6051a] flex items-center justify-center text-base border border-[#a6051a]/30 flex-shrink-0">
                         <i class="fa-solid fa-gear"></i>
                     </div>
                     <div>
-                        <h2 class="text-xs font-black tracking-wide text-red-950">設定與備份</h2>
-                        <p class="text-[10px] text-red-900">管理您的漫畫資料與備份</p>
+                        <h2 class="text-xs font-black tracking-wide text-neutral-900">設定與備份</h2>
+                        <p class="text-[10px] text-neutral-600">管理您的漫畫資料與備份</p>
                     </div>
                 </div>
 
-                <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#fca5a5]/50 space-y-3">
+                <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 space-y-3">
                     <div class="space-y-2">
-                        <label class="block text-[11px] font-bold text-red-900">資料備份與還原</label>
+                        <label class="block text-[11px] font-bold text-neutral-600">資料備份與還原</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <button onclick="exportData()" class="bg-[#fff5f5] hover:bg-[#fca5a5] active:scale-95 text-red-950 font-bold py-2.5 rounded-xl transition text-xs border border-red-300 flex items-center justify-center space-x-1.5">
-                                <i class="fa-solid fa-download text-xs text-red-600"></i>
+                            <button onclick="exportData()" class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40 flex items-center justify-center space-x-1.5">
+                                <i class="fa-solid fa-download text-xs text-[#a6051a]"></i>
                                 <span>匯出備份</span>
                             </button>
-                            <label class="bg-[#fff5f5] hover:bg-[#fca5a5] active:scale-95 text-red-950 font-bold py-2.5 rounded-xl transition text-xs border border-red-300 flex items-center justify-center space-x-1.5 cursor-pointer">
-                                <i class="fa-solid fa-upload text-xs text-red-600"></i>
+                            <label class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40 flex items-center justify-center space-x-1.5 cursor-pointer">
+                                <i class="fa-solid fa-upload text-xs text-[#a6051a]"></i>
                                 <span>還原備份</span>
                                 <input type="file" accept=".json" onchange="importData(event)" class="hidden">
                             </label>
@@ -203,25 +203,25 @@
         </main>
 
         <!-- Rounded Floating Bottom Navigation Bar -->
-        <nav class="absolute bottom-3 left-3 right-3 bg-[#fecaca] border border-red-200 z-40 max-w-[456px] mx-auto shadow-2xl rounded-2xl overflow-hidden flex-shrink-0">
+        <nav class="absolute bottom-3 left-3 right-3 bg-[#ffffff] border border-[#a6051a]/40 z-40 max-w-[456px] mx-auto shadow-2xl rounded-2xl overflow-hidden flex-shrink-0">
             <div class="grid grid-cols-4 h-14 text-center">
                 <!-- Tab 1: 首頁 -->
-                <button onclick="switchTab('home')" id="nav-home" class="nav-btn flex flex-col items-center justify-center border-r border-red-200 text-red-950 font-bold transition active:bg-[#fee2e2]">
+                <button onclick="switchTab('home')" id="nav-home" class="nav-btn flex flex-col items-center justify-center border-r border-[#a6051a]/40 text-neutral-900 font-bold transition active:bg-[#f0f0f0]">
                     <i class="fa-solid fa-house text-sm mb-0.5"></i>
                     <span class="text-[10px]">首頁</span>
                 </button>
                 <!-- Tab 2: 分類 -->
-                <button onclick="switchTab('categories')" id="nav-categories" class="nav-btn flex flex-col items-center justify-center border-r border-red-200 text-red-600/70 font-medium transition active:bg-[#fee2e2]">
+                <button onclick="switchTab('categories')" id="nav-categories" class="nav-btn flex flex-col items-center justify-center border-r border-[#a6051a]/40 text-[#a6051a]/60 font-medium transition active:bg-[#f0f0f0]">
                     <i class="fa-solid fa-compass text-sm mb-0.5"></i>
                     <span class="text-[10px]">分類</span>
                 </button>
                 <!-- Tab 3: 新增 -->
-                <button onclick="switchTab('add')" id="nav-add" class="nav-btn flex flex-col items-center justify-center border-r border-red-200 text-red-600/70 font-medium transition active:bg-[#fee2e2]">
+                <button onclick="switchTab('add')" id="nav-add" class="nav-btn flex flex-col items-center justify-center border-r border-[#a6051a]/40 text-[#a6051a]/60 font-medium transition active:bg-[#f0f0f0]">
                     <i class="fa-solid fa-circle-plus text-sm mb-0.5"></i>
                     <span class="text-[10px]">新增</span>
                 </button>
                 <!-- Tab 4: 設定 -->
-                <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn flex flex-col items-center justify-center text-red-600/70 font-medium transition active:bg-[#fee2e2]">
+                <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn flex flex-col items-center justify-center text-[#a6051a]/60 font-medium transition active:bg-[#f0f0f0]">
                     <i class="fa-solid fa-gear text-sm mb-0.5"></i>
                     <span class="text-[10px]">設定</span>
                 </button>
@@ -229,34 +229,34 @@
         </nav>
 
         <!-- Comic Detail Modal -->
-        <div id="comicModal" class="fixed inset-0 bg-red-950/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
-            <div class="bg-[#ffffff] border border-[#fca5a5] rounded-xl w-full max-w-sm p-4 shadow-2xl relative space-y-3 max-h-[85vh] overflow-y-auto">
-                <button onclick="closeComicModal()" class="absolute top-3 right-3 text-red-600 hover:text-red-950 p-1">
+        <div id="comicModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+            <div class="bg-[#ffffff] border border-[#e5e5e5] rounded-xl w-full max-w-sm p-4 shadow-2xl relative space-y-3 max-h-[85vh] overflow-y-auto">
+                <button onclick="closeComicModal()" class="absolute top-3 right-3 text-[#a6051a] hover:text-[#8a0416] p-1">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
                 <div class="flex items-center space-x-3 pr-6">
-                    <div id="modalEmojiContainer" class="w-12 h-12 bg-[#fff5f5] rounded-xl flex items-center justify-center text-2xl border border-red-300 shadow-inner flex-shrink-0 overflow-hidden">
+                    <div id="modalEmojiContainer" class="w-12 h-12 bg-[#fafafa] rounded-xl flex items-center justify-center text-2xl border border-[#a6051a]/40 shadow-inner flex-shrink-0 overflow-hidden">
                         📖
                     </div>
                     <div>
                         <h3 id="modalTitle" class="text-base font-bold">漫畫名稱</h3>
-                        <p id="modalGenre" class="text-[11px] text-red-900">分類</p>
+                        <p id="modalGenre" class="text-[11px] text-neutral-600">分類</p>
                     </div>
                 </div>
 
                 <div id="modalUrlBox" class="hidden">
-                    <a id="modalUrlLink" href="#" target="_blank" class="w-full bg-red-600 hover:bg-red-700 active:scale-95 text-white py-2.5 rounded-lg font-bold transition text-xs flex items-center justify-center space-x-2 shadow">
+                    <a id="modalUrlLink" href="#" target="_blank" class="w-full bg-[#a6051a] hover:bg-[#8a0416] active:scale-95 text-white py-2.5 rounded-lg font-bold transition text-xs flex items-center justify-center space-x-2 shadow">
                         <i class="fa-solid fa-external-link-alt text-xs"></i>
                         <span>前往漫畫網站閱讀</span>
                     </a>
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 pt-2">
-                    <button onclick="openEditModal()" class="bg-gray-700 hover:bg-gray-600 active:scale-95 text-white py-2.5 rounded-lg font-bold transition text-xs flex items-center justify-center space-x-1 border border-red-300">
+                    <button onclick="openEditModal()" class="bg-gray-700 hover:bg-gray-600 active:scale-95 text-white py-2.5 rounded-lg font-bold transition text-xs flex items-center justify-center space-x-1 border border-[#a6051a]/40">
                         <i class="fa-solid fa-pen text-xs"></i>
                         <span>修改</span>
                     </button>
-                    <button onclick="deleteCurrentComic()" class="bg-white hover:bg-red-50 hover:bg-red-200 active:scale-95 text-red-700 py-2.5 rounded-lg font-bold transition text-xs flex items-center justify-center space-x-1 border border-red-300">
+                    <button onclick="deleteCurrentComic()" class="bg-white hover:bg-neutral-100 active:scale-95 text-[#a6051a] py-2.5 rounded-lg font-bold transition text-xs flex items-center justify-center space-x-1 border border-[#a6051a]/40">
                         <i class="fa-solid fa-trash-can text-xs"></i>
                         <span>刪除</span>
                     </button>
@@ -265,63 +265,63 @@
         </div>
 
         <!-- Edit Comic Modal -->
-        <div id="editModal" class="fixed inset-0 bg-red-950/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
-            <div class="bg-[#ffffff] border border-[#fca5a5] rounded-xl w-full max-w-xs p-3.5 shadow-2xl relative space-y-2.5 max-h-[90vh] overflow-y-auto">
-                <button onclick="closeEditModal()" class="absolute top-2.5 right-2.5 text-red-600 hover:text-red-950 p-1">
+        <div id="editModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+            <div class="bg-[#ffffff] border border-[#e5e5e5] rounded-xl w-full max-w-xs p-3.5 shadow-2xl relative space-y-2.5 max-h-[90vh] overflow-y-auto">
+                <button onclick="closeEditModal()" class="absolute top-2.5 right-2.5 text-[#a6051a] hover:text-[#8a0416] p-1">
                     <i class="fa-solid fa-xmark text-base"></i>
                 </button>
-                <h3 class="text-xs font-black tracking-wide text-red-950 mb-1.5 flex items-center space-x-1">
-                    <i class="fa-solid fa-pen-to-square text-red-600"></i>
+                <h3 class="text-xs font-black tracking-wide text-neutral-900 mb-1.5 flex items-center space-x-1">
+                    <i class="fa-solid fa-pen-to-square text-[#a6051a]"></i>
                     <span>修改漫畫紀錄</span>
                 </h3>
                 <form id="editComicForm" onsubmit="handleUpdateComic(event)" class="space-y-2.5">
                     <div>
-                        <label class="block text-[11px] font-bold text-red-900 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-book text-red-600 text-[10px]"></i>
+                        <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-book text-[#a6051a] text-[10px]"></i>
                             <span>漫畫名稱 *</span>
                         </label>
-                        <input type="text" id="editInputTitle" required class="w-full bg-[#fff5f5] border border-red-300 rounded-xl px-3.5 py-2.5 text-xs text-red-950 focus:outline-none focus:border-red-400 transition shadow-inner">
+                        <input type="text" id="editInputTitle" required class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-red-900 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-tag text-red-600 text-[10px]"></i>
+                        <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-tag text-[#a6051a] text-[10px]"></i>
                             <span>分類 (多個分類可用逗號分隔) *</span>
                         </label>
-                        <input type="text" id="editInputGenre" required class="w-full bg-[#fff5f5] border border-red-300 rounded-xl px-3.5 py-2.5 text-xs text-red-950 focus:outline-none focus:border-red-400 transition shadow-inner">
+                        <input type="text" id="editInputGenre" required class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-red-900 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-circle-dot text-red-600 text-[10px]"></i>
+                        <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-circle-dot text-[#a6051a] text-[10px]"></i>
                             <span>狀態 *</span>
                         </label>
                         <div class="grid grid-cols-2 gap-2">
-                            <label class="flex items-center justify-center space-x-1.5 bg-[#fff5f5] border border-red-300 rounded-xl py-2 text-xs cursor-pointer hover:bg-[#fca5a5] transition shadow-inner">
-                                <input type="radio" name="editInputStatus" value="連載中" class="accent-red-500">
-                                <span class="text-red-950 font-bold">連載中</span>
+                            <label class="flex items-center justify-center space-x-1.5 bg-[#fafafa] border border-[#a6051a]/40 rounded-xl py-2 text-xs cursor-pointer hover:bg-[#e5e5e5] transition shadow-inner">
+                                <input type="radio" name="editInputStatus" value="連載中" class="accent-[#a6051a]">
+                                <span class="text-neutral-900 font-bold">連載中</span>
                             </label>
-                            <label class="flex items-center justify-center space-x-1.5 bg-[#fff5f5] border border-red-300 rounded-xl py-2 text-xs cursor-pointer hover:bg-[#fca5a5] transition shadow-inner">
-                                <input type="radio" name="editInputStatus" value="已完結" class="accent-red-500">
-                                <span class="text-red-950 font-bold">已完結</span>
+                            <label class="flex items-center justify-center space-x-1.5 bg-[#fafafa] border border-[#a6051a]/40 rounded-xl py-2 text-xs cursor-pointer hover:bg-[#e5e5e5] transition shadow-inner">
+                                <input type="radio" name="editInputStatus" value="已完結" class="accent-[#a6051a]">
+                                <span class="text-neutral-900 font-bold">已完結</span>
                             </label>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-red-900 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-link text-red-600 text-[10px]"></i>
+                        <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-link text-[#a6051a] text-[10px]"></i>
                             <span>網址</span>
                         </label>
-                        <input type="url" id="editInputUrl" class="w-full bg-[#fff5f5] border border-red-300 rounded-xl px-3.5 py-2.5 text-xs text-red-950 focus:outline-none focus:border-red-400 transition shadow-inner">
+                        <input type="url" id="editInputUrl" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-red-900 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-image text-red-600 text-[10px]"></i>
+                        <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-image text-[#a6051a] text-[10px]"></i>
                             <span>封面網址</span>
                         </label>
-                        <input type="url" id="editInputCoverUrl" class="w-full bg-[#fff5f5] border border-red-300 rounded-xl px-3.5 py-2.5 text-xs text-red-950 focus:outline-none focus:border-red-400 transition shadow-inner">
+                        <input type="url" id="editInputCoverUrl" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
                     </div>
                     <div class="flex space-x-2 pt-1">
-                        <button type="button" onclick="closeEditModal()" class="flex-1 bg-[#fff5f5] hover:bg-[#fca5a5] active:scale-95 text-red-950 font-bold py-2 rounded-xl transition text-xs border border-red-300">取消</button>
-                        <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-bold py-2 rounded-xl shadow transition text-xs">儲存修改</button>
+                        <button type="button" onclick="closeEditModal()" class="flex-1 bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2 rounded-xl transition text-xs border border-[#a6051a]/40">取消</button>
+                        <button type="submit" class="flex-1 bg-[#a6051a] hover:bg-[#8a0416] active:scale-95 text-white font-bold py-2 rounded-xl shadow transition text-xs">儲存修改</button>
                     </div>
                 </form>
             </div>
@@ -330,14 +330,14 @@
         
 
         <!-- Notification / Message Box Modal -->
-        <div id="msgModal" class="fixed inset-0 bg-red-950/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
-            <div class="bg-[#ffffff] border border-[#fca5a5] rounded-xl w-full max-w-[280px] p-4 shadow-2xl text-center space-y-3">
-                <div id="msgIcon" class="w-10 h-10 rounded-full bg-emerald-600/30 text-emerald-600 flex items-center justify-center mx-auto text-base">
+        <div id="msgModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+            <div class="bg-[#ffffff] border border-[#e5e5e5] rounded-xl w-full max-w-[280px] p-4 shadow-2xl text-center space-y-3">
+                <div id="msgIcon" class="w-10 h-10 rounded-full bg-[#a6051a]/10 text-[#a6051a] flex items-center justify-center mx-auto text-base">
                     <i class="fa-solid fa-check"></i>
                 </div>
                 <h3 id="msgTitle" class="font-bold text-sm">提示訊息</h3>
-                <p id="msgText" class="text-xs text-red-900">操作成功</p>
-                <button onclick="closeMsgModal()" class="w-full bg-red-600 hover:bg-red-700 active:scale-95 text-white font-bold py-2 rounded-lg transition text-xs">確定</button>
+                <p id="msgText" class="text-xs text-neutral-600">操作成功</p>
+                <button onclick="closeMsgModal()" class="w-full bg-[#a6051a] hover:bg-[#8a0416] active:scale-95 text-white font-bold py-2 rounded-lg transition text-xs">確定</button>
             </div>
         </div>
 
@@ -401,13 +401,13 @@
             }
 
             document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('text-red-950', 'font-bold');
-                btn.classList.add('text-red-600/70', 'font-medium');
+                btn.classList.remove('text-neutral-900', 'font-bold');
+                btn.classList.add('text-[#a6051a]/60', 'font-medium');
             });
             const activeBtn = document.getElementById(`nav-${tabName}`);
             if (activeBtn) {
-                activeBtn.classList.remove('text-red-600/70', 'font-medium');
-                activeBtn.classList.add('text-red-950', 'font-bold');
+                activeBtn.classList.remove('text-[#a6051a]/60', 'font-medium');
+                activeBtn.classList.add('text-neutral-900', 'font-bold');
             }
 
             if(tabName === 'home') renderComics();
@@ -430,9 +430,9 @@
         
             if (activeGenreFilter !== '全部') {
                 filterBannerContainer.innerHTML = `
-                    <div class="bg-[#fff5f5] border border-red-300 rounded-xl px-3 py-2 flex items-center justify-between text-xs shadow-inner mb-2.5">
-                        <span class="text-red-900">分類篩選：<strong class="text-red-950">${escapeHtml(activeGenreFilter)}</strong></span>
-                        <button onclick="clearGenreFilter()" class="text-red-600 hover:text-red-700 font-bold flex items-center space-x-1">
+                    <div class="bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3 py-2 flex items-center justify-between text-xs shadow-inner mb-2.5">
+                        <span class="text-neutral-600">分類篩選：<strong class="text-neutral-900">${escapeHtml(activeGenreFilter)}</strong></span>
+                        <button onclick="clearGenreFilter()" class="text-[#a6051a] hover:text-[#8a0416] font-bold flex items-center space-x-1">
                             <i class="fa-solid fa-xmark text-[10px]"></i>
                             <span>顯示全部</span>
                         </button>
@@ -450,7 +450,7 @@
         
             if (filteredComics.length === 0) {
                 container.innerHTML = `
-                    <div class="bg-[#ffffff] rounded-xl p-6 text-center border border-red-300 text-red-900 space-y-2 col-span-2">
+                    <div class="bg-[#ffffff] rounded-xl p-6 text-center border border-[#a6051a]/40 text-neutral-600 space-y-2 col-span-2">
                         <i class="fa-solid fa-box-open text-2xl"></i>
                         <p class="text-xs">目前沒有符合的漫畫紀錄</p>
                     </div>
@@ -463,20 +463,20 @@
             container.innerHTML = filteredComics.map(comic => {
                 const coverSrc = safeUrl(comic.coverUrl);
                 const coverDisplay = coverSrc ?
-                    `<div class="w-full h-40 bg-[#fff5f5] rounded-t-xl overflow-hidden relative border-b border-red-300">
+                    `<div class="w-full h-40 bg-[#fafafa] rounded-t-xl overflow-hidden relative border-b border-[#a6051a]/40">
                         <img src="${escapeHtml(coverSrc)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="handleImgError(this)">
                      </div>` :
-                    `<div class="w-full h-40 bg-[#fff5f5] rounded-t-xl flex items-center justify-center text-3xl border-b border-red-300 relative">
+                    `<div class="w-full h-40 bg-[#fafafa] rounded-t-xl flex items-center justify-center text-3xl border-b border-[#a6051a]/40 relative">
                         📖
                      </div>`;
         
-                const statusBadge = comic.status ? `<span class="inline-block text-[9px] ${comic.status === '連載中' ? 'bg-white hover:bg-red-50 text-red-900' : 'bg-gray-200 text-gray-700'} px-1.5 py-0.5 rounded border border-red-300 w-fit">${escapeHtml(comic.status)}</span>` : '';
+                const statusBadge = comic.status ? `<span class="inline-block text-[9px] ${comic.status === '連載中' ? 'bg-[#a6051a]/10 text-[#a6051a]' : 'bg-gray-200 text-gray-700'} px-1.5 py-0.5 rounded border border-[#a6051a]/40 w-fit">${escapeHtml(comic.status)}</span>` : '';
         
                 return `
-                    <div data-id="${escapeHtml(comic.id)}" onclick="openComicModal(this.dataset.id)" class="group bg-[#ffffff] hover:bg-[#fee2e2] border border-red-300 hover:border-red-400 rounded-xl shadow transition cursor-pointer overflow-hidden flex flex-col active:scale-[0.98]">
+                    <div data-id="${escapeHtml(comic.id)}" onclick="openComicModal(this.dataset.id)" class="group bg-[#ffffff] hover:bg-[#f0f0f0] border border-[#a6051a]/40 hover:border-[#a6051a] rounded-xl shadow transition cursor-pointer overflow-hidden flex flex-col active:scale-[0.98]">
                         ${coverDisplay}
                         <div class="p-2.5 flex flex-col justify-between flex-1 space-y-1.5">
-                            <h4 class="font-bold text-red-950 text-xs line-clamp-1">${escapeHtml(comic.title)}</h4>
+                            <h4 class="font-bold text-neutral-900 text-xs line-clamp-1">${escapeHtml(comic.title)}</h4>
                             <div class="flex items-center space-x-1 flex-wrap gap-1">
                                 ${statusBadge}
                             </div>
@@ -497,12 +497,12 @@
             genreGrid.innerHTML = genres.map(g => {
                 const count = g === '全部' ? comics.length : comics.filter(c => parseGenres(c.genre).includes(g)).length;
                 const isSelected = activeGenreFilter === g;
-                const activeStyle = isSelected ? 'border-red-400 bg-[#fee2e2] ring-1 ring-red-400/50' : 'border-red-300 hover:border-red-400';
+                const activeStyle = isSelected ? 'border-[#a6051a] bg-[#f0f0f0] ring-1 ring-[#a6051a]/40' : 'border-[#a6051a]/40 hover:border-[#a6051a]';
         
                 return `
                     <div data-genre="${escapeHtml(g)}" onclick="filterByGenre(this.dataset.genre)" class="genre-card bg-[#ffffff] ${activeStyle} p-3.5 rounded-xl border flex items-center justify-between shadow cursor-pointer transition active:scale-[0.98]">
-                        <span class="font-bold text-xs text-red-950">${escapeHtml(g)}</span>
-                        <span class="text-xs bg-[#fff5f5] px-2 py-0.5 rounded-full text-red-900 border border-red-300">${count} 部</span>
+                        <span class="font-bold text-xs text-neutral-900">${escapeHtml(g)}</span>
+                        <span class="text-xs bg-[#fafafa] px-2 py-0.5 rounded-full text-neutral-600 border border-[#a6051a]/40">${count} 部</span>
                     </div>
                 `;
             }).join('');
