@@ -504,8 +504,8 @@
                         📖
                      </div>`;
 
-                const genres = parseGenres(comic.genre);
-                const genreBadges = genres.map(g => `<span class="inline-block text-[9px] bg-[#0b5c42] text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-600/30 w-fit">${g}</span>`).join('');
+                
+    
                 const statusBadge = comic.status ? `<span class="inline-block text-[9px] ${comic.status === '連載中' ? 'bg-emerald-600/50 text-emerald-200' : 'bg-red-900/50 text-red-200'} px-1.5 py-0.5 rounded border border-emerald-600/30 w-fit">${comic.status}</span>` : '';
 
                 return `
