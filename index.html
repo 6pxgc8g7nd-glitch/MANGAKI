@@ -672,6 +672,11 @@
         }
 
         function deleteCurrentComic() {
+            const comic = comics.find(c => c.id === activeComicId);
+            if (!comic) return;
+        
+            if (!confirm(`確定要刪除「${comic.title}」嗎？\n\n刪除後無法復原。`)) return;
+        
             comics = comics.filter(c => c.id !== activeComicId);
             saveComics();
             closeComicModal();
