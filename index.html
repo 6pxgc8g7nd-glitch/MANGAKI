@@ -404,13 +404,13 @@
             }
 
             document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('text-neutral-900', 'font-bold');
-                btn.classList.add('text-neutral-900/50', 'font-medium');
+                btn.classList.remove('text-white', 'font-bold');
+                btn.classList.add('ext-white/50', 'font-medium');
             });
             const activeBtn = document.getElementById(`nav-${tabName}`);
             if (activeBtn) {
-                activeBtn.classList.remove('text-neutral-900/50', 'font-medium');
-                activeBtn.classList.add('text-neutral-900', 'font-bold');
+                activeBtn.classList.remove('ext-white/50', 'font-medium');
+                activeBtn.classList.add('text-white', 'font-bold');
             }
 
             if(tabName === 'home') renderComics();
