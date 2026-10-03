@@ -367,7 +367,24 @@
 
         let activeComicId = null;
         let activeGenreFilter = '全部';
+        function escapeHtml(str) {
+            return String(str ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
 
+        function safeUrl(url) {
+            if (!url) return '';
+            try {
+                const parsed = new URL(url, location.href);
+                return (parsed.protocol === 'http:' || parsed.protocol === 'https:') ? parsed.href : '';
+            } catch (e) {
+                return '';
+            }
+        }
         function parseGenres(genreStr) {
             if (!genreStr || genreStr.trim() === '') return ['未分類'];
             return genreStr.split(/[,，]/).map(g => g.trim()).filter(g => g.length > 0);
