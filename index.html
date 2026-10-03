@@ -5,7 +5,7 @@
     <link rel="apple-touch-icon" href="Blue White Cute Simple Doodle iOS Icon - 13.PNG">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="TOPTOON">
-    <meta name="theme-color" content="#fbcfe8">
+    <meta name="theme-color" content="#d1fae5">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TOPTOON 漫畫紀錄網</title>
@@ -15,8 +15,8 @@
     <style>
         body {
             font-family: 'Noto Sans TC', sans-serif;
-            background-color: #fce7f1;
-            color: #500724;
+            background-color: #ecfdf5;
+            color: #022c22;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
             margin: 0;
@@ -29,7 +29,7 @@
             width: 100%;
             height: 100dvh;
             margin: 0 auto;
-            background-color: #fdf2f8;
+            background-color: #f0fdf4;
             box-shadow: 0 0 25px rgba(0,0,0,0.5);
             display: flex;
             flex-direction: column;
@@ -42,23 +42,23 @@
             height: 4px;
         }
         ::-webkit-scrollbar-track {
-            background: #fce7f3;
+            background: #dcfce7;
         }
         ::-webkit-scrollbar-thumb {
-            background: #f9a8d4;
+            background: #a7f3d0;
             border-radius: 2px;
         }
     </style>
 </head>
-<body class="bg-[#fce7f1] flex justify-center items-center h-[100dvh]">
+<body class="bg-[#ecfdf5] flex justify-center items-center h-[100dvh]">
 
     <div class="app-container">
 
         <!-- Top Header -->
-        <header class="w-full py-3 px-4 bg-[#fbcfe8] shadow-md flex items-center justify-between flex-shrink-0 z-50 border-b border-[#f9a8d4]/50">
+        <header class="w-full py-3 px-4 bg-[#d1fae5] shadow-md flex items-center justify-between flex-shrink-0 z-50 border-b border-[#a7f3d0]/50">
             <div onclick="switchTab('home')" class="flex items-center space-x-2 cursor-pointer active:opacity-80 transition">
                 <h1 class="text-xl font-black tracking-wider">
-                    <span class="text-red-400">TOP</span><span class="text-pink-950">TOON</span>
+                    <span class="text-red-400">TOP</span><span class="text-emerald-950">TOON</span>
                 </h1>
             </div>
         </header>
@@ -71,11 +71,11 @@
                 <!-- Comic List -->
                 <div class="space-y-2.5">
                     <div class="flex justify-between items-center px-1">
-                        <h3 class="font-bold text-xs text-pink-200/90 flex items-center space-x-1.5 uppercase tracking-wide">
+                        <h3 class="font-bold text-xs text-emerald-800 flex items-center space-x-1.5 uppercase tracking-wide">
                             <i class="fa-solid fa-bookmark text-red-400 text-xs"></i>
                             <span>漫畫清單</span>
                         </h3>
-                        <span id="comicCount" class="text-[11px] text-pink-200/60 font-medium">共 0 部</span>
+                        <span id="comicCount" class="text-[11px] text-emerald-800 font-medium">共 0 部</span>
                     </div>
                     
                     <!-- Active Filter Banner -->
@@ -89,9 +89,9 @@
 
             <!-- TAB 2: 分類 (Categories) -->
             <section id="tab-categories" class="hidden space-y-4">
-                <div class="bg-[#ffffff] rounded-xl p-4 shadow border border-[#f9a8d4]/40">
+                <div class="bg-[#ffffff] rounded-xl p-4 shadow border border-[#a7f3d0]/40">
                     <h2 class="text-base font-bold mb-1">漫畫分類瀏覽</h2>
-                    <p class="text-xs text-pink-200/80">點擊下方分類標籤可快速篩選對應漫畫</p>
+                    <p class="text-xs text-emerald-800">點擊下方分類標籤可快速篩選對應漫畫</p>
                 </div>
 
                 <!-- Genre Grid -->
@@ -102,67 +102,67 @@
 
             <!-- TAB 3: 新增 (Add) -->
             <section id="tab-add" class="hidden space-y-3.5">
-                <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#f9a8d4]/50 flex items-center space-x-3">
+                <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#a7f3d0]/50 flex items-center space-x-3">
                     <div class="w-9 h-9 rounded-xl bg-red-400/20 text-red-400 flex items-center justify-center text-base border border-red-400/30 flex-shrink-0">
                         <i class="fa-solid fa-circle-plus"></i>
                     </div>
                     <div>
-                        <h2 class="text-xs font-black tracking-wide text-pink-950">新增漫畫</h2>
-                        <p class="text-[10px] text-pink-200/70">記錄漫畫名稱、分類、狀態、網址與封面</p>
+                        <h2 class="text-xs font-black tracking-wide text-emerald-950">新增漫畫</h2>
+                        <p class="text-[10px] text-emerald-800">記錄漫畫名稱、分類、狀態、網址與封面</p>
                     </div>
                 </div>
 
-                <form id="addComicForm" onsubmit="handleAddNewComic(event)" class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#f9a8d4]/50 space-y-3">
+                <form id="addComicForm" onsubmit="handleAddNewComic(event)" class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#a7f3d0]/50 space-y-3">
                     <div>
-                        <label class="block text-[11px] font-bold text-pink-200 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-book text-pink-400 text-[10px]"></i>
+                        <label class="block text-[11px] font-bold text-emerald-800 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-book text-emerald-600 text-[10px]"></i>
                             <span>漫畫名稱 *</span>
                         </label>
-                        <input type="text" id="inputTitle" required placeholder="例如：我獨自升級" class="w-full bg-[#fdf2f8] border border-pink-600/40 rounded-xl px-3.5 py-2.5 text-xs text-pink-950 placeholder-pink-400/40 focus:outline-none focus:border-pink-400 transition shadow-inner">
+                        <input type="text" id="inputTitle" required placeholder="例如：我獨自升級" class="w-full bg-[#f0fdf4] border border-emerald-300 rounded-xl px-3.5 py-2.5 text-xs text-emerald-950 placeholder-emerald-400/40 focus:outline-none focus:border-emerald-400 transition shadow-inner">
                     </div>
 
                     <div>
-                        <label class="block text-[11px] font-bold text-pink-200 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-tag text-pink-400 text-[10px]"></i>
+                        <label class="block text-[11px] font-bold text-emerald-800 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-tag text-emerald-600 text-[10px]"></i>
                             <span>分類 (多個分類可用逗號分隔) *</span>
                         </label>
-                        <input type="text" id="inputGenre" required placeholder="例如：動作, 奇幻" class="w-full bg-[#fdf2f8] border border-pink-600/40 rounded-xl px-3.5 py-2.5 text-xs text-pink-950 placeholder-pink-400/40 focus:outline-none focus:border-pink-400 transition shadow-inner">
+                        <input type="text" id="inputGenre" required placeholder="例如：動作, 奇幻" class="w-full bg-[#f0fdf4] border border-emerald-300 rounded-xl px-3.5 py-2.5 text-xs text-emerald-950 placeholder-emerald-400/40 focus:outline-none focus:border-emerald-400 transition shadow-inner">
                     </div>
 
                     <div>
-                        <label class="block text-[11px] font-bold text-pink-200 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-circle-dot text-pink-400 text-[10px]"></i>
+                        <label class="block text-[11px] font-bold text-emerald-800 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-circle-dot text-emerald-600 text-[10px]"></i>
                             <span>狀態 *</span>
                         </label>
                         <div class="grid grid-cols-2 gap-2">
-                            <label class="flex items-center justify-center space-x-1.5 bg-[#fdf2f8] border border-pink-600/40 rounded-xl py-2.5 text-xs cursor-pointer hover:bg-[#f9a8d4] transition shadow-inner">
-                                <input type="radio" name="inputStatus" value="連載中" checked class="accent-pink-500">
-                                <span class="text-pink-950 font-bold">連載中</span>
+                            <label class="flex items-center justify-center space-x-1.5 bg-[#f0fdf4] border border-emerald-300 rounded-xl py-2.5 text-xs cursor-pointer hover:bg-[#a7f3d0] transition shadow-inner">
+                                <input type="radio" name="inputStatus" value="連載中" checked class="accent-emerald-500">
+                                <span class="text-emerald-950 font-bold">連載中</span>
                             </label>
-                            <label class="flex items-center justify-center space-x-1.5 bg-[#fdf2f8] border border-pink-600/40 rounded-xl py-2.5 text-xs cursor-pointer hover:bg-[#f9a8d4] transition shadow-inner">
-                                <input type="radio" name="inputStatus" value="已完結" class="accent-pink-500">
-                                <span class="text-pink-950 font-bold">已完結</span>
+                            <label class="flex items-center justify-center space-x-1.5 bg-[#f0fdf4] border border-emerald-300 rounded-xl py-2.5 text-xs cursor-pointer hover:bg-[#a7f3d0] transition shadow-inner">
+                                <input type="radio" name="inputStatus" value="已完結" class="accent-emerald-500">
+                                <span class="text-emerald-950 font-bold">已完結</span>
                             </label>
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-[11px] font-bold text-pink-200 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-link text-pink-400 text-[10px]"></i>
+                        <label class="block text-[11px] font-bold text-emerald-800 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-link text-emerald-600 text-[10px]"></i>
                             <span>網址</span>
                         </label>
-                        <input type="url" id="inputUrl" placeholder="https://..." class="w-full bg-[#fdf2f8] border border-pink-600/40 rounded-xl px-3.5 py-2.5 text-xs text-pink-950 placeholder-pink-400/40 focus:outline-none focus:border-pink-400 transition shadow-inner">
+                        <input type="url" id="inputUrl" placeholder="https://..." class="w-full bg-[#f0fdf4] border border-emerald-300 rounded-xl px-3.5 py-2.5 text-xs text-emerald-950 placeholder-emerald-400/40 focus:outline-none focus:border-emerald-400 transition shadow-inner">
                     </div>
 
                     <div>
-                        <label class="block text-[11px] font-bold text-pink-200 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-image text-pink-400 text-[10px]"></i>
+                        <label class="block text-[11px] font-bold text-emerald-800 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-image text-emerald-600 text-[10px]"></i>
                             <span>封面網址</span>
                         </label>
-                        <input type="url" id="inputCoverUrl" placeholder="https://... (圖片連結)" class="w-full bg-[#fdf2f8] border border-pink-600/40 rounded-xl px-3.5 py-2.5 text-xs text-pink-950 placeholder-pink-400/40 focus:outline-none focus:border-pink-400 transition shadow-inner">
+                        <input type="url" id="inputCoverUrl" placeholder="https://... (圖片連結)" class="w-full bg-[#f0fdf4] border border-emerald-300 rounded-xl px-3.5 py-2.5 text-xs text-emerald-950 placeholder-emerald-400/40 focus:outline-none focus:border-emerald-400 transition shadow-inner">
                     </div>
 
-                    <button type="submit" class="w-full bg-red-400 hover:bg-red-600 active:scale-95 text-pink-950 font-bold py-2.5 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-xs">
+                    <button type="submit" class="w-full bg-red-400 hover:bg-red-500 active:scale-95 text-white font-bold py-2.5 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-xs">
                         <i class="fa-solid fa-plus text-xs"></i>
                         <span>確認新增漫畫</span>
                     </button>
@@ -171,26 +171,26 @@
 
             <!-- TAB 4: 設定 (Settings) -->
             <section id="tab-settings" class="hidden space-y-3.5">
-                <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#f9a8d4]/50 flex items-center space-x-3">
-                    <div class="w-9 h-9 rounded-xl bg-pink-600/20 text-pink-300 flex items-center justify-center text-base border border-pink-500/30 flex-shrink-0">
+                <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#a7f3d0]/50 flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-600/20 text-emerald-600 flex items-center justify-center text-base border border-emerald-500/30 flex-shrink-0">
                         <i class="fa-solid fa-gear"></i>
                     </div>
                     <div>
-                        <h2 class="text-xs font-black tracking-wide text-pink-950">設定與備份</h2>
-                        <p class="text-[10px] text-pink-200/70">管理您的漫畫資料與備份</p>
+                        <h2 class="text-xs font-black tracking-wide text-emerald-950">設定與備份</h2>
+                        <p class="text-[10px] text-emerald-800">管理您的漫畫資料與備份</p>
                     </div>
                 </div>
 
-                <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#f9a8d4]/50 space-y-3">
+                <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#a7f3d0]/50 space-y-3">
                     <div class="space-y-2">
-                        <label class="block text-[11px] font-bold text-pink-200">資料備份與還原</label>
+                        <label class="block text-[11px] font-bold text-emerald-800">資料備份與還原</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <button onclick="exportData()" class="bg-[#fdf2f8] hover:bg-[#f9a8d4] active:scale-95 text-pink-950 font-bold py-2.5 rounded-xl transition text-xs border border-pink-600/40 flex items-center justify-center space-x-1.5">
-                                <i class="fa-solid fa-download text-xs text-pink-300"></i>
+                            <button onclick="exportData()" class="bg-[#f0fdf4] hover:bg-[#a7f3d0] active:scale-95 text-emerald-950 font-bold py-2.5 rounded-xl transition text-xs border border-emerald-300 flex items-center justify-center space-x-1.5">
+                                <i class="fa-solid fa-download text-xs text-emerald-600"></i>
                                 <span>匯出備份</span>
                             </button>
-                            <label class="bg-[#fdf2f8] hover:bg-[#f9a8d4] active:scale-95 text-pink-950 font-bold py-2.5 rounded-xl transition text-xs border border-pink-600/40 flex items-center justify-center space-x-1.5 cursor-pointer">
-                                <i class="fa-solid fa-upload text-xs text-pink-300"></i>
+                            <label class="bg-[#f0fdf4] hover:bg-[#a7f3d0] active:scale-95 text-emerald-950 font-bold py-2.5 rounded-xl transition text-xs border border-emerald-300 flex items-center justify-center space-x-1.5 cursor-pointer">
+                                <i class="fa-solid fa-upload text-xs text-emerald-600"></i>
                                 <span>還原備份</span>
                                 <input type="file" accept=".json" onchange="importData(event)" class="hidden">
                             </label>
@@ -202,25 +202,25 @@
         </main>
 
         <!-- Rounded Floating Bottom Navigation Bar -->
-        <nav class="absolute bottom-3 left-3 right-3 bg-[#fbcfe8] border border-white/20 z-40 max-w-[456px] mx-auto shadow-2xl rounded-2xl overflow-hidden flex-shrink-0">
+        <nav class="absolute bottom-3 left-3 right-3 bg-[#d1fae5] border border-emerald-200 z-40 max-w-[456px] mx-auto shadow-2xl rounded-2xl overflow-hidden flex-shrink-0">
             <div class="grid grid-cols-4 h-14 text-center">
                 <!-- Tab 1: 首頁 -->
-                <button onclick="switchTab('home')" id="nav-home" class="nav-btn flex flex-col items-center justify-center border-r border-white/20 text-pink-950 font-bold transition active:bg-[#fce7f3]">
+                <button onclick="switchTab('home')" id="nav-home" class="nav-btn flex flex-col items-center justify-center border-r border-emerald-200 text-emerald-950 font-bold transition active:bg-[#dcfce7]">
                     <i class="fa-solid fa-house text-sm mb-0.5"></i>
                     <span class="text-[10px]">首頁</span>
                 </button>
                 <!-- Tab 2: 分類 -->
-                <button onclick="switchTab('categories')" id="nav-categories" class="nav-btn flex flex-col items-center justify-center border-r border-white/20 text-pink-300/70 font-medium transition active:bg-[#fce7f3]">
+                <button onclick="switchTab('categories')" id="nav-categories" class="nav-btn flex flex-col items-center justify-center border-r border-emerald-200 text-emerald-600/70 font-medium transition active:bg-[#dcfce7]">
                     <i class="fa-solid fa-compass text-sm mb-0.5"></i>
                     <span class="text-[10px]">分類</span>
                 </button>
                 <!-- Tab 3: 新增 -->
-                <button onclick="switchTab('add')" id="nav-add" class="nav-btn flex flex-col items-center justify-center border-r border-white/20 text-pink-300/70 font-medium transition active:bg-[#fce7f3]">
+                <button onclick="switchTab('add')" id="nav-add" class="nav-btn flex flex-col items-center justify-center border-r border-emerald-200 text-emerald-600/70 font-medium transition active:bg-[#dcfce7]">
                     <i class="fa-solid fa-circle-plus text-sm mb-0.5"></i>
                     <span class="text-[10px]">新增</span>
                 </button>
                 <!-- Tab 4: 設定 -->
-                <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn flex flex-col items-center justify-center text-pink-300/70 font-medium transition active:bg-[#fce7f3]">
+                <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn flex flex-col items-center justify-center text-emerald-600/70 font-medium transition active:bg-[#dcfce7]">
                     <i class="fa-solid fa-gear text-sm mb-0.5"></i>
                     <span class="text-[10px]">設定</span>
                 </button>
@@ -228,34 +228,34 @@
         </nav>
 
         <!-- Comic Detail Modal -->
-        <div id="comicModal" class="fixed inset-0 bg-pink-950/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
-            <div class="bg-[#ffffff] border border-[#f9a8d4] rounded-xl w-full max-w-sm p-4 shadow-2xl relative space-y-3 max-h-[85vh] overflow-y-auto">
-                <button onclick="closeComicModal()" class="absolute top-3 right-3 text-pink-300 hover:text-pink-950 p-1">
+        <div id="comicModal" class="fixed inset-0 bg-emerald-950/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+            <div class="bg-[#ffffff] border border-[#a7f3d0] rounded-xl w-full max-w-sm p-4 shadow-2xl relative space-y-3 max-h-[85vh] overflow-y-auto">
+                <button onclick="closeComicModal()" class="absolute top-3 right-3 text-emerald-600 hover:text-emerald-950 p-1">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
                 <div class="flex items-center space-x-3 pr-6">
-                    <div id="modalEmojiContainer" class="w-12 h-12 bg-[#fdf2f8] rounded-xl flex items-center justify-center text-2xl border border-pink-600/40 shadow-inner flex-shrink-0 overflow-hidden">
+                    <div id="modalEmojiContainer" class="w-12 h-12 bg-[#f0fdf4] rounded-xl flex items-center justify-center text-2xl border border-emerald-300 shadow-inner flex-shrink-0 overflow-hidden">
                         📖
                     </div>
                     <div>
                         <h3 id="modalTitle" class="text-base font-bold">漫畫名稱</h3>
-                        <p id="modalGenre" class="text-[11px] text-pink-200/80">分類</p>
+                        <p id="modalGenre" class="text-[11px] text-emerald-800">分類</p>
                     </div>
                 </div>
 
                 <div id="modalUrlBox" class="hidden">
-                    <a id="modalUrlLink" href="#" target="_blank" class="w-full bg-red-400 hover:bg-red-600 active:scale-95 text-pink-950 py-2.5 rounded-lg font-bold transition text-xs flex items-center justify-center space-x-2 shadow">
+                    <a id="modalUrlLink" href="#" target="_blank" class="w-full bg-red-400 hover:bg-red-500 active:scale-95 text-white py-2.5 rounded-lg font-bold transition text-xs flex items-center justify-center space-x-2 shadow">
                         <i class="fa-solid fa-external-link-alt text-xs"></i>
                         <span>前往漫畫網站閱讀</span>
                     </a>
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 pt-2">
-                    <button onclick="openEditModal()" class="bg-pink-700 hover:bg-pink-600 active:scale-95 text-pink-950 py-2.5 rounded-lg font-bold transition text-xs flex items-center justify-center space-x-1 border border-pink-600/40">
+                    <button onclick="openEditModal()" class="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white py-2.5 rounded-lg font-bold transition text-xs flex items-center justify-center space-x-1 border border-emerald-300">
                         <i class="fa-solid fa-pen text-xs"></i>
                         <span>修改</span>
                     </button>
-                    <button onclick="deleteCurrentComic()" class="bg-rose-100 hover:bg-red-800 active:scale-95 text-rose-700 py-2.5 rounded-lg font-bold transition text-xs flex items-center justify-center space-x-1 border border-red-600/40">
+                    <button onclick="deleteCurrentComic()" class="bg-red-100 hover:bg-red-200 active:scale-95 text-red-700 py-2.5 rounded-lg font-bold transition text-xs flex items-center justify-center space-x-1 border border-red-300">
                         <i class="fa-solid fa-trash-can text-xs"></i>
                         <span>刪除</span>
                     </button>
@@ -264,75 +264,75 @@
         </div>
 
         <!-- Edit Comic Modal -->
-        <div id="editModal" class="fixed inset-0 bg-pink-950/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
-            <div class="bg-[#ffffff] border border-[#f9a8d4] rounded-xl w-full max-w-xs p-3.5 shadow-2xl relative space-y-2.5 max-h-[90vh] overflow-y-auto">
-                <button onclick="closeEditModal()" class="absolute top-2.5 right-2.5 text-pink-300 hover:text-pink-950 p-1">
+        <div id="editModal" class="fixed inset-0 bg-emerald-950/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+            <div class="bg-[#ffffff] border border-[#a7f3d0] rounded-xl w-full max-w-xs p-3.5 shadow-2xl relative space-y-2.5 max-h-[90vh] overflow-y-auto">
+                <button onclick="closeEditModal()" class="absolute top-2.5 right-2.5 text-emerald-600 hover:text-emerald-950 p-1">
                     <i class="fa-solid fa-xmark text-base"></i>
                 </button>
-                <h3 class="text-xs font-black tracking-wide text-pink-950 mb-1.5 flex items-center space-x-1">
-                    <i class="fa-solid fa-pen-to-square text-pink-400"></i>
+                <h3 class="text-xs font-black tracking-wide text-emerald-950 mb-1.5 flex items-center space-x-1">
+                    <i class="fa-solid fa-pen-to-square text-emerald-600"></i>
                     <span>修改漫畫紀錄</span>
                 </h3>
                 <form id="editComicForm" onsubmit="handleUpdateComic(event)" class="space-y-2.5">
                     <div>
-                        <label class="block text-[11px] font-bold text-pink-200 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-book text-pink-400 text-[10px]"></i>
+                        <label class="block text-[11px] font-bold text-emerald-800 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-book text-emerald-600 text-[10px]"></i>
                             <span>漫畫名稱 *</span>
                         </label>
-                        <input type="text" id="editInputTitle" required class="w-full bg-[#fdf2f8] border border-pink-600/40 rounded-xl px-3.5 py-2.5 text-xs text-pink-950 focus:outline-none focus:border-pink-400 transition shadow-inner">
+                        <input type="text" id="editInputTitle" required class="w-full bg-[#f0fdf4] border border-emerald-300 rounded-xl px-3.5 py-2.5 text-xs text-emerald-950 focus:outline-none focus:border-emerald-400 transition shadow-inner">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-pink-200 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-tag text-pink-400 text-[10px]"></i>
+                        <label class="block text-[11px] font-bold text-emerald-800 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-tag text-emerald-600 text-[10px]"></i>
                             <span>分類 (多個分類可用逗號分隔) *</span>
                         </label>
-                        <input type="text" id="editInputGenre" required class="w-full bg-[#fdf2f8] border border-pink-600/40 rounded-xl px-3.5 py-2.5 text-xs text-pink-950 focus:outline-none focus:border-pink-400 transition shadow-inner">
+                        <input type="text" id="editInputGenre" required class="w-full bg-[#f0fdf4] border border-emerald-300 rounded-xl px-3.5 py-2.5 text-xs text-emerald-950 focus:outline-none focus:border-emerald-400 transition shadow-inner">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-pink-200 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-circle-dot text-pink-400 text-[10px]"></i>
+                        <label class="block text-[11px] font-bold text-emerald-800 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-circle-dot text-emerald-600 text-[10px]"></i>
                             <span>狀態 *</span>
                         </label>
                         <div class="grid grid-cols-2 gap-2">
-                            <label class="flex items-center justify-center space-x-1.5 bg-[#fdf2f8] border border-pink-600/40 rounded-xl py-2 text-xs cursor-pointer hover:bg-[#f9a8d4] transition shadow-inner">
-                                <input type="radio" name="editInputStatus" value="連載中" class="accent-pink-500">
-                                <span class="text-pink-950 font-bold">連載中</span>
+                            <label class="flex items-center justify-center space-x-1.5 bg-[#f0fdf4] border border-emerald-300 rounded-xl py-2 text-xs cursor-pointer hover:bg-[#a7f3d0] transition shadow-inner">
+                                <input type="radio" name="editInputStatus" value="連載中" class="accent-emerald-500">
+                                <span class="text-emerald-950 font-bold">連載中</span>
                             </label>
-                            <label class="flex items-center justify-center space-x-1.5 bg-[#fdf2f8] border border-pink-600/40 rounded-xl py-2 text-xs cursor-pointer hover:bg-[#f9a8d4] transition shadow-inner">
-                                <input type="radio" name="editInputStatus" value="已完結" class="accent-pink-500">
-                                <span class="text-pink-950 font-bold">已完結</span>
+                            <label class="flex items-center justify-center space-x-1.5 bg-[#f0fdf4] border border-emerald-300 rounded-xl py-2 text-xs cursor-pointer hover:bg-[#a7f3d0] transition shadow-inner">
+                                <input type="radio" name="editInputStatus" value="已完結" class="accent-emerald-500">
+                                <span class="text-emerald-950 font-bold">已完結</span>
                             </label>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-pink-200 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-link text-pink-400 text-[10px]"></i>
+                        <label class="block text-[11px] font-bold text-emerald-800 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-link text-emerald-600 text-[10px]"></i>
                             <span>網址</span>
                         </label>
-                        <input type="url" id="editInputUrl" class="w-full bg-[#fdf2f8] border border-pink-600/40 rounded-xl px-3.5 py-2.5 text-xs text-pink-950 focus:outline-none focus:border-pink-400 transition shadow-inner">
+                        <input type="url" id="editInputUrl" class="w-full bg-[#f0fdf4] border border-emerald-300 rounded-xl px-3.5 py-2.5 text-xs text-emerald-950 focus:outline-none focus:border-emerald-400 transition shadow-inner">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-pink-200 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-image text-pink-400 text-[10px]"></i>
+                        <label class="block text-[11px] font-bold text-emerald-800 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-image text-emerald-600 text-[10px]"></i>
                             <span>封面網址</span>
                         </label>
-                        <input type="url" id="editInputCoverUrl" class="w-full bg-[#fdf2f8] border border-pink-600/40 rounded-xl px-3.5 py-2.5 text-xs text-pink-950 focus:outline-none focus:border-pink-400 transition shadow-inner">
+                        <input type="url" id="editInputCoverUrl" class="w-full bg-[#f0fdf4] border border-emerald-300 rounded-xl px-3.5 py-2.5 text-xs text-emerald-950 focus:outline-none focus:border-emerald-400 transition shadow-inner">
                     </div>
                     <div class="flex space-x-2 pt-1">
-                        <button type="button" onclick="closeEditModal()" class="flex-1 bg-[#fdf2f8] hover:bg-[#f9a8d4] active:scale-95 text-pink-950 font-bold py-2 rounded-xl transition text-xs border border-pink-600/40">取消</button>
-                        <button type="submit" class="flex-1 bg-red-400 hover:bg-red-600 active:scale-95 text-pink-950 font-bold py-2 rounded-xl shadow transition text-xs">儲存修改</button>
+                        <button type="button" onclick="closeEditModal()" class="flex-1 bg-[#f0fdf4] hover:bg-[#a7f3d0] active:scale-95 text-emerald-950 font-bold py-2 rounded-xl transition text-xs border border-emerald-300">取消</button>
+                        <button type="submit" class="flex-1 bg-red-400 hover:bg-red-500 active:scale-95 text-white font-bold py-2 rounded-xl shadow transition text-xs">儲存修改</button>
                     </div>
                 </form>
             </div>
         </div>
 
         <!-- Search Modal -->
-        <div id="searchModal" class="fixed inset-0 bg-pink-950/40 backdrop-blur-sm z-50 hidden flex items-start justify-center pt-12 p-3">
-            <div class="bg-[#ffffff] border border-[#f9a8d4] rounded-xl w-full max-w-sm p-4 shadow-2xl relative space-y-3">
-                <div class="flex items-center space-x-2.5 bg-[#fdf2f8] px-3 py-2 rounded-lg border border-pink-600/40">
-                    <i class="fa-solid fa-search text-pink-300 text-xs"></i>
-                    <input type="text" id="searchInput" oninput="handleSearchInput(event)" placeholder="輸入漫畫標題或分類搜尋..." class="w-full bg-transparent text-pink-950 placeholder-pink-400/50 focus:outline-none text-xs">
-                    <button onclick="closeSearchModal()" class="text-pink-300 hover:text-pink-950 p-1">
+        <div id="searchModal" class="fixed inset-0 bg-emerald-950/40 backdrop-blur-sm z-50 hidden flex items-start justify-center pt-12 p-3">
+            <div class="bg-[#ffffff] border border-[#a7f3d0] rounded-xl w-full max-w-sm p-4 shadow-2xl relative space-y-3">
+                <div class="flex items-center space-x-2.5 bg-[#f0fdf4] px-3 py-2 rounded-lg border border-emerald-300">
+                    <i class="fa-solid fa-search text-emerald-600 text-xs"></i>
+                    <input type="text" id="searchInput" oninput="handleSearchInput(event)" placeholder="輸入漫畫標題或分類搜尋..." class="w-full bg-transparent text-emerald-950 placeholder-emerald-400/50 focus:outline-none text-xs">
+                    <button onclick="closeSearchModal()" class="text-emerald-600 hover:text-emerald-950 p-1">
                         <i class="fa-solid fa-xmark text-xs"></i>
                     </button>
                 </div>
@@ -343,40 +343,40 @@
         </div>
 
         <!-- Notification / Message Box Modal -->
-        <div id="msgModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
-            <div class="bg-[#ffffff] border border-[#f9a8d4] rounded-xl w-full max-w-[280px] p-4 shadow-2xl text-center space-y-3">
-                <div id="msgIcon" class="w-10 h-10 rounded-full bg-pink-600/30 text-pink-300 flex items-center justify-center mx-auto text-base">
+        <div id="msgModal" class="fixed inset-0 bg-emerald-950/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+            <div class="bg-[#ffffff] border border-[#a7f3d0] rounded-xl w-full max-w-[280px] p-4 shadow-2xl text-center space-y-3">
+                <div id="msgIcon" class="w-10 h-10 rounded-full bg-emerald-600/30 text-emerald-600 flex items-center justify-center mx-auto text-base">
                     <i class="fa-solid fa-check"></i>
                 </div>
                 <h3 id="msgTitle" class="font-bold text-sm">提示訊息</h3>
-                <p id="msgText" class="text-xs text-pink-200/80">操作成功</p>
-                <button onclick="closeMsgModal()" class="w-full bg-red-400 hover:bg-red-600 active:scale-95 text-pink-950 font-bold py-2 rounded-lg transition text-xs">確定</button>
+                <p id="msgText" class="text-xs text-emerald-800">操作成功</p>
+                <button onclick="closeMsgModal()" class="w-full bg-red-400 hover:bg-red-500 active:scale-95 text-white font-bold py-2 rounded-lg transition text-xs">確定</button>
             </div>
         </div>
 
         <!-- Notification Modal (Bell) -->
-        <div id="notificationModal" class="fixed inset-0 bg-pink-950/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
-            <div class="bg-[#ffffff] border border-[#f9a8d4] rounded-xl w-full max-w-sm p-4 shadow-2xl relative space-y-3 max-h-[85vh] overflow-y-auto">
-                <div class="flex items-center justify-between pb-2 border-b border-pink-600/30">
-                    <h3 class="font-bold text-sm text-pink-950 flex items-center space-x-1.5">
-                        <i class="fa-solid fa-bell text-pink-300"></i>
+        <div id="notificationModal" class="fixed inset-0 bg-emerald-950/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+            <div class="bg-[#ffffff] border border-[#a7f3d0] rounded-xl w-full max-w-sm p-4 shadow-2xl relative space-y-3 max-h-[85vh] overflow-y-auto">
+                <div class="flex items-center justify-between pb-2 border-b border-emerald-300">
+                    <h3 class="font-bold text-sm text-emerald-950 flex items-center space-x-1.5">
+                        <i class="fa-solid fa-bell text-emerald-600"></i>
                         <span>最新通知與更新</span>
                     </h3>
-                    <button onclick="closeNotificationModal()" class="text-pink-300 hover:text-pink-950 p-1">
+                    <button onclick="closeNotificationModal()" class="text-emerald-600 hover:text-emerald-950 p-1">
                         <i class="fa-solid fa-xmark text-lg"></i>
                     </button>
                 </div>
                 <div class="space-y-2.5">
-                    <div class="bg-[#fdf2f8] p-3 rounded-xl border border-pink-600/30 space-y-1">
-                        <div class="flex justify-between items-center text-[10px] text-pink-300/80">
+                    <div class="bg-[#f0fdf4] p-3 rounded-xl border border-emerald-300 space-y-1">
+                        <div class="flex justify-between items-center text-[10px] text-emerald-600/80">
                             <span>系統通知</span>
                             <span>今天</span>
                         </div>
-                        <p class="text-xs text-pink-950 font-bold">歡迎使用 TOPTOON 漫畫紀錄網！</p>
-                        <p class="text-[11px] text-pink-100/70">您可以在此新增追蹤清單、管理分類與備份還原資料。</p>
+                        <p class="text-xs text-emerald-950 font-bold">歡迎使用 TOPTOON 漫畫紀錄網！</p>
+                        <p class="text-[11px] text-emerald-700">您可以在此新增追蹤清單、管理分類與備份還原資料。</p>
                     </div>
                 </div>
-                <button onclick="closeNotificationModal()" class="w-full bg-pink-700 hover:bg-pink-600 active:scale-95 text-pink-950 font-bold py-2 rounded-lg transition text-xs">關閉通知</button>
+                <button onclick="closeNotificationModal()" class="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold py-2 rounded-lg transition text-xs">關閉通知</button>
             </div>
         </div>
 
@@ -390,7 +390,7 @@
                 genre: '動作, 奇幻',
                 status: '已完結',
                 url: 'https://toptoon.com/',
-                coverUrl: 'https://placehold.co/300x400/0b5c42/ffffff?text=Solo+Leveling'
+                coverUrl: 'https://placehold.co/300x400/a7f3d0/064e3b?text=Solo+Leveling'
             },
             {
                 id: '1710000000002',
@@ -398,7 +398,7 @@
                 genre: '愛情, 校園',
                 status: '連載中',
                 url: 'https://toptoon.com/',
-                coverUrl: 'https://placehold.co/300x400/0b5c42/ffffff?text=True+Beauty'
+                coverUrl: 'https://placehold.co/300x400/a7f3d0/064e3b?text=True+Beauty'
             }
         ];
         if (!localStorage.getItem('toptoon_comics')) {
@@ -440,13 +440,13 @@
             }
 
             document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('text-pink-950', 'font-bold');
-                btn.classList.add('text-pink-300/70', 'font-medium');
+                btn.classList.remove('text-emerald-950', 'font-bold');
+                btn.classList.add('text-emerald-600/70', 'font-medium');
             });
             const activeBtn = document.getElementById(`nav-${tabName}`);
             if (activeBtn) {
-                activeBtn.classList.remove('text-pink-300/70', 'font-medium');
-                activeBtn.classList.add('text-pink-950', 'font-bold');
+                activeBtn.classList.remove('text-emerald-600/70', 'font-medium');
+                activeBtn.classList.add('text-emerald-950', 'font-bold');
             }
 
             if(tabName === 'home') renderComics();
@@ -469,9 +469,9 @@
 
             if (activeGenreFilter !== '全部') {
                 filterBannerContainer.innerHTML = `
-                    <div class="bg-[#fdf2f8] border border-pink-600/40 rounded-xl px-3 py-2 flex items-center justify-between text-xs shadow-inner mb-2.5">
-                        <span class="text-pink-200">分類篩選：<strong class="text-pink-950">${activeGenreFilter}</strong></span>
-                        <button onclick="clearGenreFilter()" class="text-red-400 hover:text-red-300 font-bold flex items-center space-x-1">
+                    <div class="bg-[#f0fdf4] border border-emerald-300 rounded-xl px-3 py-2 flex items-center justify-between text-xs shadow-inner mb-2.5">
+                        <span class="text-emerald-800">分類篩選：<strong class="text-emerald-950">${activeGenreFilter}</strong></span>
+                        <button onclick="clearGenreFilter()" class="text-red-400 hover:text-red-500 font-bold flex items-center space-x-1">
                             <i class="fa-solid fa-xmark text-[10px]"></i>
                             <span>顯示全部</span>
                         </button>
@@ -489,7 +489,7 @@
 
             if (filteredComics.length === 0) {
                 container.innerHTML = `
-                    <div class="bg-[#ffffff] rounded-xl p-6 text-center border border-pink-600/30 text-pink-200/60 space-y-2 col-span-2">
+                    <div class="bg-[#ffffff] rounded-xl p-6 text-center border border-emerald-300 text-emerald-800 space-y-2 col-span-2">
                         <i class="fa-solid fa-box-open text-2xl"></i>
                         <p class="text-xs">目前沒有符合的漫畫紀錄</p>
                     </div>
@@ -501,22 +501,22 @@
 
             container.innerHTML = filteredComics.map(comic => {
                 const coverDisplay = comic.coverUrl ? 
-                    `<div class="w-full h-40 bg-[#fdf2f8] rounded-t-xl overflow-hidden relative border-b border-pink-600/30">
+                    `<div class="w-full h-40 bg-[#f0fdf4] rounded-t-xl overflow-hidden relative border-b border-emerald-300">
                         <img src="${comic.coverUrl}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="handleImgError(this)">
                      </div>` :
-                    `<div class="w-full h-40 bg-[#fdf2f8] rounded-t-xl flex items-center justify-center text-3xl border-b border-pink-600/30 relative">
+                    `<div class="w-full h-40 bg-[#f0fdf4] rounded-t-xl flex items-center justify-center text-3xl border-b border-emerald-300 relative">
                         📖
                      </div>`;
 
                 
     
-                const statusBadge = comic.status ? `<span class="inline-block text-[9px] ${comic.status === '連載中' ? 'bg-pink-600/50 text-pink-200' : 'bg-red-900/50 text-rose-700'} px-1.5 py-0.5 rounded border border-pink-600/30 w-fit">${comic.status}</span>` : '';
+                const statusBadge = comic.status ? `<span class="inline-block text-[9px] ${comic.status === '連載中' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-700'} px-1.5 py-0.5 rounded border border-emerald-300 w-fit">${comic.status}</span>` : '';
 
                 return `
-                    <div onclick="openComicModal('${comic.id}')" class="group bg-[#ffffff] hover:bg-[#fce7f3] border border-pink-600/30 hover:border-pink-400 rounded-xl shadow transition cursor-pointer overflow-hidden flex flex-col active:scale-[0.98]">
+                    <div onclick="openComicModal('${comic.id}')" class="group bg-[#ffffff] hover:bg-[#dcfce7] border border-emerald-300 hover:border-emerald-400 rounded-xl shadow transition cursor-pointer overflow-hidden flex flex-col active:scale-[0.98]">
                         ${coverDisplay}
                         <div class="p-2.5 flex flex-col justify-between flex-1 space-y-1.5">
-                            <h4 class="font-bold text-pink-950 text-xs line-clamp-1">${comic.title}</h4>
+                            <h4 class="font-bold text-emerald-950 text-xs line-clamp-1">${comic.title}</h4>
                             <div class="flex items-center space-x-1 flex-wrap gap-1">
                             
                                 ${statusBadge}
@@ -539,12 +539,12 @@
             genreGrid.innerHTML = genres.map(g => {
                 const count = g === '全部' ? comics.length : comics.filter(c => parseGenres(c.genre).includes(g)).length;
                 const isSelected = activeGenreFilter === g;
-                const activeStyle = isSelected ? 'border-pink-400 bg-[#fce7f3] ring-1 ring-pink-400/50' : 'border-pink-600/30 hover:border-pink-400';
+                const activeStyle = isSelected ? 'border-emerald-400 bg-[#dcfce7] ring-1 ring-emerald-400/50' : 'border-emerald-300 hover:border-emerald-400';
                 
                 return `
                     <div onclick="filterByGenre('${g}')" class="genre-card bg-[#ffffff] ${activeStyle} p-3.5 rounded-xl border flex items-center justify-between shadow cursor-pointer transition active:scale-[0.98]">
-                        <span class="font-bold text-xs text-pink-950">${g}</span>
-                        <span class="text-xs bg-[#fdf2f8] px-2 py-0.5 rounded-full text-pink-200 border border-pink-600/40">${count} 部</span>
+                        <span class="font-bold text-xs text-emerald-950">${g}</span>
+                        <span class="text-xs bg-[#f0fdf4] px-2 py-0.5 rounded-full text-emerald-800 border border-emerald-300">${count} 部</span>
                     </div>
                 `;
             }).join('');
@@ -650,7 +650,7 @@
 
         function openSearchModal() {
             document.getElementById('searchInput').value = '';
-            document.getElementById('searchResults').innerHTML = '<p class="text-xs text-pink-200/50 text-center py-2">請輸入關鍵字搜尋</p>';
+            document.getElementById('searchResults').innerHTML = '<p class="text-xs text-emerald-800/50 text-center py-2">請輸入關鍵字搜尋</p>';
             document.getElementById('searchModal').classList.remove('hidden');
             setTimeout(() => document.getElementById('searchInput').focus(), 100);
         }
@@ -664,7 +664,7 @@
             const resultsContainer = document.getElementById('searchResults');
 
             if (!query) {
-                resultsContainer.innerHTML = '<p class="text-xs text-pink-200/50 text-center py-2">請輸入關鍵字搜尋</p>';
+                resultsContainer.innerHTML = '<p class="text-xs text-emerald-800/50 text-center py-2">請輸入關鍵字搜尋</p>';
                 return;
             }
 
@@ -674,20 +674,20 @@
             );
 
             if (matched.length === 0) {
-                resultsContainer.innerHTML = '<p class="text-xs text-pink-200/60 text-center py-2">找不到符合的漫畫</p>';
+                resultsContainer.innerHTML = '<p class="text-xs text-emerald-800 text-center py-2">找不到符合的漫畫</p>';
                 return;
             }
 
             resultsContainer.innerHTML = matched.map(comic => `
-                <div onclick="closeSearchModal(); openComicModal('${comic.id}');" class="bg-[#fdf2f8] hover:bg-[#f9a8d4] p-2.5 rounded-lg border border-pink-600/40 flex items-center justify-between cursor-pointer transition">
+                <div onclick="closeSearchModal(); openComicModal('${comic.id}');" class="bg-[#f0fdf4] hover:bg-[#a7f3d0] p-2.5 rounded-lg border border-emerald-300 flex items-center justify-between cursor-pointer transition">
                     <div class="flex items-center space-x-2">
                         <span class="text-base">📖</span>
                         <div>
-                            <h5 class="text-xs font-bold text-pink-950">${comic.title}</h5>
-                            <span class="text-[10px] text-pink-200/70">${comic.genre}</span>
+                            <h5 class="text-xs font-bold text-emerald-950">${comic.title}</h5>
+                            <span class="text-[10px] text-emerald-800">${comic.genre}</span>
                         </div>
                     </div>
-                    <i class="fa-solid fa-chevron-right text-xs text-pink-300"></i>
+                    <i class="fa-solid fa-chevron-right text-xs text-emerald-600"></i>
                 </div>
             `).join('');
         }
