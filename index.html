@@ -235,7 +235,7 @@
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
                 <div class="flex items-center space-x-3 pr-6">
-                    <div id="modalEmojiContainer" class="w-12 h-12 bg-[#fafafa] rounded-xl flex items-center justify-center text-2xl border border-[#a6051a]/40 shadow-inner flex-shrink-0 overflow-hidden">
+                    <div id="modalEmojiContainer" class="w-12 h-12 bg-[#fafafa] rounded-xl flex items-center justify-center text-2xl  shadow-inner flex-shrink-0 overflow-hidden">
                         📖
                     </div>
                     <div>
@@ -463,17 +463,17 @@
             container.innerHTML = filteredComics.map(comic => {
                 const coverSrc = safeUrl(comic.coverUrl);
                 const coverDisplay = coverSrc ?
-                    `<div class="w-full h-40 bg-[#fafafa] rounded-t-xl overflow-hidden relative border-b border-[#a6051a]/40">
+                    `<div class="w-full h-40 bg-[#fafafa] rounded-t-xl overflow-hidden relative ">
                         <img src="${escapeHtml(coverSrc)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="handleImgError(this)">
                      </div>` :
-                    `<div class="w-full h-40 bg-[#fafafa] rounded-t-xl flex items-center justify-center text-3xl border-b border-[#a6051a]/40 relative">
+                    `<div class="w-full h-40 bg-[#fafafa] rounded-t-xl flex items-center justify-center text-3xl relative">
                         📖
                      </div>`;
         
                 const statusBadge = comic.status ? `<span class="inline-block text-[9px] ${comic.status === '連載中' ? 'bg-[#a6051a]/10 text-[#a6051a]' : 'bg-gray-200 text-gray-700'} px-1.5 py-0.5 rounded border border-[#a6051a]/40 w-fit">${escapeHtml(comic.status)}</span>` : '';
         
                 return `
-                    <div data-id="${escapeHtml(comic.id)}" onclick="openComicModal(this.dataset.id)" class="group bg-[#ffffff] hover:bg-[#f0f0f0] border border-[#a6051a]/40 hover:border-[#a6051a] rounded-xl shadow transition cursor-pointer overflow-hidden flex flex-col active:scale-[0.98]">
+                    <div data-id="${escapeHtml(comic.id)}" onclick="openComicModal(this.dataset.id)" class="group bg-[#ffffff] hover:bg-[#f0f0f0]  rounded-xl shadow transition cursor-pointer overflow-hidden flex flex-col active:scale-[0.98]">
                         ${coverDisplay}
                         <div class="p-2.5 flex flex-col justify-between flex-1 space-y-1.5">
                             <h4 class="font-bold text-neutral-900 text-xs line-clamp-1">${escapeHtml(comic.title)}</h4>
