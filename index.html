@@ -620,16 +620,7 @@
 
 // 產生備份檔案名稱
 function getBackupFileName() {
-    const now = new Date();
-
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-
-    const hour = String(now.getHours()).padStart(2, '0');
-    const minute = String(now.getMinutes()).padStart(2, '0');
-
-    return `toptoon_backup_${year}-${month}-${day}_${hour}-${minute}.json`;
+    return 'toptoon_backup.json';
 }
 
 
