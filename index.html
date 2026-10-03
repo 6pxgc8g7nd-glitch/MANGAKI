@@ -57,7 +57,7 @@
 
         <!-- Top Header -->
         <header class="w-full py-3 px-4 bg-[#ffffff] shadow-md flex items-center justify-between flex-shrink-0 z-50 border-b border-[#e5e5e5]/50">
-            <div onclick="switchTab('home')" class="flex items-center space-x-2 cursor-pointer active:opacity-80 transition">
+            <div onclick="goHome()" class="flex items-center space-x-2 cursor-pointer active:opacity-80 transition">
                 <h1 class="text-xl font-black tracking-wider">
                     <span class="text-[#a6051a]">TOP</span><span class="text-neutral-900">TOON</span>
                 </h1>
@@ -207,7 +207,7 @@
         <nav class="absolute bottom-3 left-3 right-3 bg-[#a6051a] z-40 max-w-[456px] mx-auto shadow-2xl rounded-2xl overflow-hidden flex-shrink-0">
             <div class="grid grid-cols-4 h-14 text-center">
                 <!-- Tab 1: 首頁 -->
-                <button onclick="switchTab('home')" id="nav-home" class="nav-btn flex flex-col items-center justify-center text-white font-bold transition active:bg-white/10">
+                <button onclick="goHome()" id="nav-home" class="nav-btn flex flex-col items-center justify-center text-white font-bold transition active:bg-white/10">
                     <i class="fa-solid fa-house text-sm mb-0.5"></i>
                     <span class="text-[10px]">首頁</span>
                 </button>
@@ -415,6 +415,16 @@
 
             if(tabName === 'home') renderComics();
             if(tabName === 'categories') renderCategories();
+        }
+        function goHome() {
+            currentPage = 1;
+            activeGenreFilter = '全部';
+            switchTab('home');
+        
+            const main = document.querySelector('.app-container > main');
+            if (main) {
+                main.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         }
 
         function filterByGenre(genre) {
