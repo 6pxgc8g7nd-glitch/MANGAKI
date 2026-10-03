@@ -480,10 +480,10 @@
             container.innerHTML = paginatedComics.map(comic => {
                 const coverSrc = safeUrl(comic.coverUrl);
                 const coverDisplay = coverSrc ?
-                    `<div class="w-full h-40 bg-[#fafafa] rounded-t-xl overflow-hidden relative ">
+                    `<div class="w-full aspect-[3/4] bg-[#fafafa] rounded-t-xl overflow-hidden relative ">
                         <img src="${escapeHtml(coverSrc)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="handleImgError(this)">
                      </div>` :
-                    `<div class="w-full h-40 bg-[#fafafa] rounded-t-xl flex items-center justify-center text-3xl relative">
+                    `<div class="w-full aspect-[3/4] bg-[#fafafa] rounded-t-xl flex items-center justify-center text-3xl relative">
                         📖
                      </div>`;
 
