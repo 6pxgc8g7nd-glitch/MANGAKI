@@ -192,7 +192,13 @@
 
         /* 手機寬度：滿版，不要外框與陰影（只有大螢幕才保留手機外框） */
         @media (max-width: 480px) {
-            html, body { background-color: var(--paper) !important; background-image: none !important; height: 100%; }
+            html, body {
+                background-color: var(--paper) !important;
+                background-image: radial-gradient(rgba(166,5,26,0.10) 1.2px, transparent 1.4px) !important;
+                background-size: 9px 9px !important;
+                background-attachment: fixed !important;
+                height: 100%;
+            }
             .app-container {
                 position: fixed;
                 inset: 0;
