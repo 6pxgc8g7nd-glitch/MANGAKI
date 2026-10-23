@@ -175,16 +175,7 @@
             mask-image: linear-gradient(to left, #000 0%, transparent 65%);
             pointer-events: none;
         }
-        .app-container > header::after {
-            content: "";
-            position: absolute;
-            right: 6px;
-            top: 2px;
-            bottom: 6px;
-            width: 190px;
-            background: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 64%22%3E%0A%3Cpolygon points=%22166.0,7.0 170.1,16.5 178.5,10.3 177.3,20.7 187.7,19.5 181.5,27.9 191.0,32.0 181.5,36.1 187.7,44.5 177.3,43.3 178.5,53.7 170.1,47.5 166.0,57.0 161.9,47.5 153.5,53.7 154.7,43.3 144.3,44.5 150.5,36.1 141.0,32.0 150.5,27.9 144.3,19.5 154.7,20.7 153.5,10.3 161.9,16.5%22 fill=%22%23111%22 transform=%22translate%283,3%29%22/%3E%0A%3Cpolygon points=%22166.0,7.0 170.1,16.5 178.5,10.3 177.3,20.7 187.7,19.5 181.5,27.9 191.0,32.0 181.5,36.1 187.7,44.5 177.3,43.3 178.5,53.7 170.1,47.5 166.0,57.0 161.9,47.5 153.5,53.7 154.7,43.3 144.3,44.5 150.5,36.1 141.0,32.0 150.5,27.9 144.3,19.5 154.7,20.7 153.5,10.3 161.9,16.5%22 fill=%22%23a6051a%22 stroke=%22%23111%22 stroke-width=%222.5%22 stroke-linejoin=%22round%22/%3E%0A%3Ctext x=%22166%22 y=%2245%22 font-family=%22Arial Black,Impact,sans-serif%22 font-size=%2232%22 font-weight=%22900%22 text-anchor=%22middle%22 fill=%22%23fff%22 stroke=%22%23111%22 stroke-width=%222.5%22 paint-order=%22stroke%22%3E%21%3C/text%3E%0A%3Cg transform=%22rotate%28-8 100 24%29%22%3E%0A%3Cpath d=%22M78 8h46a8 8 0 0 1 8 8v12a8 8 0 0 1-8 8h-22l-8 10 0-10h-16a8 8 0 0 1-8-8V16a8 8 0 0 1 8-8z%22 fill=%22%23111%22 transform=%22translate%282.5,2.5%29%22/%3E%0A%3Cpath d=%22M78 8h46a8 8 0 0 1 8 8v12a8 8 0 0 1-8 8h-22l-8 10 0-10h-16a8 8 0 0 1-8-8V16a8 8 0 0 1 8-8z%22 fill=%22%23fff%22 stroke=%22%23111%22 stroke-width=%222.5%22 stroke-linejoin=%22round%22/%3E%0A%3Ctext x=%22101%22 y=%2229%22 font-family=%22Arial Black,Impact,sans-serif%22 font-size=%2215%22 font-weight=%22900%22 text-anchor=%22middle%22 fill=%22%23a6051a%22%3EWOW%3C/text%3E%0A%3C/g%3E%0A%3Cpolygon points=%2240,6 52,6 45,22 56,22 36,50 41,28 31,28%22 fill=%22%23fff%22 stroke=%22%23111%22 stroke-width=%222%22 stroke-linejoin=%22round%22/%3E%0A%3Cpolygon points=%2214.0,35.0 16.0,42.0 23.0,44.0 16.0,46.0 14.0,53.0 12.0,46.0 5.0,44.0 12.0,42.0%22 fill=%22%23fff%22 stroke=%22%23111%22 stroke-width=%222%22 stroke-linejoin=%22round%22/%3E%0A%3Cpolygon points=%2272.0,46.0 73.4,50.6 78.0,52.0 73.4,53.4 72.0,58.0 70.6,53.4 66.0,52.0 70.6,50.6%22 fill=%22%23a6051a%22 stroke=%22%23111%22 stroke-width=%222%22 stroke-linejoin=%22round%22/%3E%0A%3Cpolygon points=%22136.0,2.0 137.4,6.6 142.0,8.0 137.4,9.4 136.0,14.0 134.6,9.4 130.0,8.0 134.6,6.6%22 fill=%22%23fff%22 stroke=%22%23111%22 stroke-width=%222%22 stroke-linejoin=%22round%22/%3E%0A%3Cpolygon points=%22192.0,0.0 193.8,6.2 200.0,8.0 193.8,9.8 192.0,16.0 190.2,9.8 184.0,8.0 190.2,6.2%22 fill=%22%23fff%22 stroke=%22%23111%22 stroke-width=%222%22 stroke-linejoin=%22round%22/%3E%0A%3Cpolygon points=%22190.0,49.0 191.3,52.7 195.0,54.0 191.3,55.3 190.0,59.0 188.7,55.3 185.0,54.0 188.7,52.7%22 fill=%22%23a6051a%22 stroke=%22%23111%22 stroke-width=%222%22 stroke-linejoin=%22round%22/%3E%0A%3Ccircle cx=%2258%22 cy=%2230%22 r=%222.5%22 fill=%22%23111%22/%3E%3Ccircle cx=%2226%22 cy=%2220%22 r=%222%22 fill=%22%23a6051a%22/%3E%3Ccircle cx=%22124%22 cy=%2256%22 r=%222.5%22 fill=%22%23111%22/%3E%0A%3C/svg%3E") right center / contain no-repeat;
-            pointer-events: none;
-        }
+        .app-container > header::after { display: none; }
         .app-container > header > * { position: relative; z-index: 1; }
 
 
@@ -206,6 +197,43 @@
         main > section:not(.hidden) { animation: tabIn 0.18s ease-out; }
         @media (prefers-reduced-motion: reduce) { main > section:not(.hidden) { animation: none; } }
 
+
+        /* ===== 頂部導覽：Logo + 圖示按鈕，下方文字分頁 ===== */
+        .app-container > header .nav-btn {
+            min-width: 46px;
+            padding: 4px 6px;
+            color: var(--ink);
+            font-weight: 800;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            transition: transform 0.1s, background 0.15s;
+        }
+        .app-container > header .nav-btn:active { transform: scale(0.92); }
+        .app-container > header .nav-btn.is-active {
+            background: #ffffff;
+            color: var(--red);
+            border-color: var(--ink);
+            box-shadow: 2px 2px 0 var(--ink);
+        }
+        #statusTabs {
+            border-top: 3px solid var(--ink);
+        }
+        .status-tab {
+            padding: 11px 0 9px;
+            font-size: 14px;
+            font-weight: 800;
+            color: #6b6b6b;
+            background: #fff;
+            position: relative;
+        }
+        .status-tab + .status-tab { border-left: 2px solid rgba(17,17,17,0.12); }
+        .status-tab.is-active {
+            color: var(--red);
+            font-weight: 900;
+            box-shadow: inset 0 -5px 0 var(--red);
+        }
+        .status-tab:active { background: #fff3b0; }
+
         /* 彈窗背景去掉模糊，改成網點 */
         #comicModal, #editModal, #msgModal { backdrop-filter: none !important; background: rgba(17,17,17,0.55) !important; }
     </style>
@@ -215,16 +243,37 @@
     <div class="app-container">
 
         <!-- Top Header -->
-        <header style="border-top: env(safe-area-inset-top) solid #111; padding-top: 0.75rem;" class="w-full pb-3 px-4 bg-[#ffffff] shadow-md flex items-center justify-between flex-shrink-0 z-50 border-b border-[#e5e5e5]/50">
-            <div onclick="goHome()" class="flex items-center space-x-2 cursor-pointer active:opacity-80 transition">
-                <h1 class="text-xl font-black tracking-wider">
-                    <span class="text-[#a6051a]">MANGA</span><span class="text-neutral-900">KI</span>
-                </h1>
+        <header style="border-top: env(safe-area-inset-top) solid #111;" class="w-full pb-0 bg-[#ffffff] flex flex-col flex-shrink-0 z-50">
+            <div class="flex items-center justify-between px-4 pt-3 pb-3">
+                <div onclick="goHome()" class="flex items-center cursor-pointer active:opacity-80 transition">
+                    <h1 class="text-xl font-black tracking-wider">
+                        <span class="text-[#a6051a]">MANGA</span><span class="text-neutral-900">KI</span>
+                    </h1>
+                </div>
+                <div class="flex items-end space-x-1.5">
+                    <button onclick="switchTab('categories')" id="nav-categories" class="nav-btn flex flex-col items-center justify-center">
+                        <i class="fa-regular fa-compass text-lg"></i>
+                        <span class="text-[10px] mt-0.5">分類</span>
+                    </button>
+                    <button onclick="switchTab('add')" id="nav-add" class="nav-btn flex flex-col items-center justify-center">
+                        <i class="fa-regular fa-square-plus text-lg"></i>
+                        <span class="text-[10px] mt-0.5">新增</span>
+                    </button>
+                    <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn flex flex-col items-center justify-center">
+                        <i class="fa-solid fa-gear text-lg"></i>
+                        <span class="text-[10px] mt-0.5">設定</span>
+                    </button>
+                </div>
+            </div>
+            <div id="statusTabs" class="grid grid-cols-3 bg-white">
+                <button onclick="setStatusFilter('全部')" data-status="全部" class="status-tab">全部</button>
+                <button onclick="setStatusFilter('連載中')" data-status="連載中" class="status-tab">連載中</button>
+                <button onclick="setStatusFilter('已完結')" data-status="已完結" class="status-tab">已完結</button>
             </div>
         </header>
 
         <!-- Main Content Area -->
-        <main class="flex-1 w-full p-3.5 overflow-y-auto" style="padding-bottom: calc(6rem + max(0rem, env(safe-area-inset-bottom) - 1.25rem));">
+        <main class="flex-1 w-full p-3.5 overflow-y-auto" style="padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));">
 
             <!-- TAB 1: 首頁 (Home) -->
             <section id="tab-home" class="space-y-3">
@@ -401,32 +450,6 @@
 
         </main>
 
-        <!-- Rounded Floating Bottom Navigation Bar -->
-        <nav class="absolute left-3 right-3 bg-[#a6051a] z-40 max-w-[456px] mx-auto shadow-2xl rounded-[28px] overflow-hidden flex-shrink-0" style="bottom: max(0.5rem, calc(env(safe-area-inset-bottom) - 1.25rem));">
-            <div class="grid grid-cols-4 h-14 text-center">
-                <!-- Tab 1: 首頁 -->
-                <button onclick="goHome()" id="nav-home" class="nav-btn flex flex-col items-center justify-center text-white font-bold transition active:bg-white/10">
-                    <i class="fa-solid fa-house text-sm mb-0.5"></i>
-                    <span class="text-[10px]">首頁</span>
-                </button>
-                <!-- Tab 2: 分類 -->
-                <button onclick="switchTab('categories')" id="nav-categories" class="nav-btn flex flex-col items-center justify-center text-white/50 font-medium transition active:bg-white/10">
-                    <i class="fa-solid fa-compass text-sm mb-0.5"></i>
-                    <span class="text-[10px]">分類</span>
-                </button>
-                <!-- Tab 3: 新增 -->
-                <button onclick="switchTab('add')" id="nav-add" class="nav-btn flex flex-col items-center justify-center text-white/50 font-medium transition active:bg-white/10">
-                    <i class="fa-solid fa-circle-plus text-sm mb-0.5"></i>
-                    <span class="text-[10px]">新增</span>
-                </button>
-                <!-- Tab 4: 設定 -->
-                <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn flex flex-col items-center justify-center text-white/50 font-medium transition active:bg-white/10">
-                    <i class="fa-solid fa-gear text-sm mb-0.5"></i>
-                    <span class="text-[10px]">設定</span>
-                </button>
-            </div>
-        </nav>
-
         <!-- Comic Detail Modal -->
         <div id="comicModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
             <div class="bg-[#ffffff] border border-[#e5e5e5] rounded-xl w-full max-w-sm p-4 shadow-2xl relative space-y-3 max-h-[85vh] overflow-y-auto">
@@ -571,6 +594,7 @@
 
         let activeComicId = null;
         let activeGenreFilter = '全部';
+        let activeStatusFilter = '全部';
         let currentPage = 1;
         const comicsPerPage = 10;
         function escapeHtml(str) {
@@ -643,14 +667,10 @@
             }
 
             document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('text-white', 'font-bold');
-                btn.classList.add('text-white/50', 'font-medium');
+                btn.classList.toggle('is-active', btn.id === `nav-${tabName}`);
             });
-            const activeBtn = document.getElementById(`nav-${tabName}`);
-            if (activeBtn) {
-                activeBtn.classList.remove('text-white/50', 'font-medium');
-                activeBtn.classList.add('text-white', 'font-bold');
-            }
+            // 狀態分頁（全部／連載中／已完結）只在首頁顯示
+            document.getElementById('statusTabs').classList.toggle('hidden', tabName !== 'home');
 
             if(tabName === 'home') renderComics();
             if(tabName === 'categories') renderCategories();
@@ -659,6 +679,7 @@
         function goHome() {
             currentPage = 1;
             activeGenreFilter = '全部';
+            activeStatusFilter = '全部';
             switchTab('home');
         
             const main = document.querySelector('.app-container > main');
@@ -671,6 +692,25 @@
             activeGenreFilter = genre;
             currentPage = 1;
             switchTab('home');
+        }
+
+        function getFilteredComics() {
+            return comics.filter(c =>
+                (activeGenreFilter === '全部' || parseGenres(c.genre).includes(activeGenreFilter)) &&
+                (activeStatusFilter === '全部' || (c.status || '連載中') === activeStatusFilter)
+            );
+        }
+
+        function setStatusFilter(status) {
+            activeStatusFilter = status;
+            currentPage = 1;
+            renderComics();
+        }
+
+        function renderStatusTabs() {
+            document.querySelectorAll('.status-tab').forEach(btn => {
+                btn.classList.toggle('is-active', btn.dataset.status === activeStatusFilter);
+            });
         }
 
         function clearGenreFilter() {
@@ -696,9 +736,8 @@
                 filterBannerContainer.innerHTML = '';
             }
 
-            const filteredComics = activeGenreFilter === '全部' ?
-                comics :
-                comics.filter(c => parseGenres(c.genre).includes(activeGenreFilter));
+            renderStatusTabs();
+            const filteredComics = getFilteredComics();
 
             document.getElementById('comicCount').innerText = `共 ${filteredComics.length} 部`;
 
@@ -790,9 +829,7 @@
         }
 
         function changePage(page) {
-            const filteredCount = activeGenreFilter === '全部' ?
-                comics.length :
-                comics.filter(c => parseGenres(c.genre).includes(activeGenreFilter)).length;
+            const filteredCount = getFilteredComics().length;
 
             const totalPages = Math.ceil(filteredCount / comicsPerPage);
 
