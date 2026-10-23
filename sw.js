@@ -1,6 +1,6 @@
 // MANGAKI service worker：網路優先（自動取得最新版），離線時用快取
-const CACHE = 'mangaki-v2';
-const PRECACHE = ['./', './index.html', './manifest.json', './icon.png'];
+const CACHE = 'mangaki-v3';
+const PRECACHE = ['./', './index.html', './manifest.json', './icon.png', './tailwind.css'];
 
 self.addEventListener('install', event => {
     event.waitUntil(
