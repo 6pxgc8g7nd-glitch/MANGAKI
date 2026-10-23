@@ -94,7 +94,7 @@
             border: 2.5px solid var(--ink) !important;
             box-shadow: 4px 4px 0 var(--ink) !important;
         }
-        .app-container [class*="aspect-[3/4]"] {
+        .app-container [class*="aspect-square"] {
             border-bottom: 2.5px solid var(--ink);
         }
         [data-id].group:active, .genre-card:active { transform: translate(2px, 2px) !important; box-shadow: 2px 2px 0 var(--ink) !important; }
@@ -1004,10 +1004,10 @@
             container.innerHTML = paginatedComics.map(comic => {
                 const coverSrc = safeUrl(comic.coverUrl);
                 const coverDisplay = coverSrc ?
-                    `<div class="w-full aspect-[3/4] bg-[#fafafa] rounded-t-xl overflow-hidden relative ">
-                        <img src="${escapeHtml(coverSrc)}" referrerpolicy="no-referrer" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="handleImgError(this)">
+                    `<div class="w-full aspect-square bg-[#fafafa] rounded-t-xl overflow-hidden relative ">
+                        <img src="${escapeHtml(coverSrc)}" referrerpolicy="no-referrer" loading="lazy" class="w-full h-full object-contain group-hover:scale-105 transition duration-300" onerror="handleImgError(this)">
                      </div>` :
-                    `<div class="w-full aspect-[3/4] bg-[#fafafa] rounded-t-xl flex items-center justify-center text-3xl relative">
+                    `<div class="w-full aspect-square bg-[#fafafa] rounded-t-xl flex items-center justify-center text-3xl relative">
                         📖
                      </div>`;
 
@@ -1143,7 +1143,7 @@
                 const img = document.createElement('img');
                 img.referrerPolicy = 'no-referrer';
                 img.src = coverSrc;
-                img.className = 'w-full h-full object-cover';
+                img.className = 'w-full h-full object-contain';
                 img.onerror = () => { modalEmojiContainer.innerText = '📖'; };
                 modalEmojiContainer.innerText = '';
                 modalEmojiContainer.appendChild(img);
