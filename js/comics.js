@@ -30,6 +30,7 @@ function switchTab(tabName) {
     if(tabName === 'home') renderComics();
     if(tabName === 'categories') renderCategories();
     if(tabName === 'settings') { ghRenderSettings(); renderUpdateInfo(); }
+    if (typeof assistRefresh === 'function') assistRefresh();   // 懸浮按鈕：設定頁不顯示
 }
 function goHome() {
     currentPage = 1;

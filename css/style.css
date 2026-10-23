@@ -405,3 +405,29 @@ main > section[data-enter="left"]:not(.hidden)  { animation: enterFromLeft  .32s
 
 /* 彈窗背景去掉模糊，改成網點 */
 #comicModal, #editModal, #msgModal, #confirmModal, #optionSheet { backdrop-filter: none !important; background: rgba(17,17,17,0.55) !important; }
+
+/* ===== 懸浮按鈕（輔助觸控）===== */
+#assistBtn {
+    position: fixed; left: 0; top: 0; width: 50px; height: 50px; border-radius: 50%; z-index: 45;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--ink); color: var(--yellow); border: 3px solid var(--yellow);
+    box-shadow: 2px 2px 0 var(--red); font-size: 20px;
+    touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; cursor: pointer;
+    transition: opacity .3s, transform .22s ease-out;
+}
+#assistBtn.is-idle { opacity: .4; }
+#assistBtn.is-dragging { transition: none; opacity: 1; }
+#assistBtn.hidden, #assistPanel.hidden, #assistBackdrop.hidden { display: none; }
+#assistBackdrop { position: fixed; inset: 0; z-index: 44; background: transparent; }
+#assistPanel {
+    position: fixed; left: 0; top: 0; z-index: 46; width: 214px; padding: 10px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    background: #fff; border: 3px solid var(--ink); border-radius: 16px; box-shadow: 4px 4px 0 var(--ink);
+}
+.assist-item {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    padding: 12px 4px; background: #fafafa; border: 2px solid var(--ink); border-radius: 12px;
+    font-size: 11px; font-weight: 800; color: var(--ink); box-shadow: 2px 2px 0 var(--ink);
+}
+.assist-item i { font-size: 18px; color: var(--red); }
+.assist-item:active { transform: translate(2px, 2px); box-shadow: none; }
