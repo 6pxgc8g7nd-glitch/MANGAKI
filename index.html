@@ -369,7 +369,6 @@
                         <label class="block text-[11px] font-bold text-neutral-600 mb-1">權杖 Token</label>
                         <input type="password" id="ghToken" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_..." class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
                     </div>
-                    <p id="ghRepoInfo" class="text-[11px] font-bold text-neutral-900"></p>
                     <label class="flex items-center space-x-2 text-xs font-bold text-neutral-900 cursor-pointer">
                         <input type="checkbox" id="ghAuto" checked class="accent-[#a6051a] w-4 h-4">
                         <span>資料變動後自動備份</span>
@@ -1365,8 +1364,6 @@ function importData(e) {
             if (tokenEl) tokenEl.value = cfg.token || '';
             const auto = document.getElementById('ghAuto');
             if (auto) auto.checked = cfg.auto !== false;
-            const info = document.getElementById('ghRepoInfo');
-            if (info) info.innerText = cfg.repo ? `📦 備份到：${cfg.repo}（${cfg.branch}）` : '';
             ghShowStatus();
         }
 
