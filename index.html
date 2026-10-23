@@ -2044,6 +2044,31 @@ function importData(e) {
             });
         }
 
+        // DEBUG（暫時）：顯示視窗尺寸
+        (function(){
+            const probe=document.createElement('div');
+            probe.style.cssText='position:fixed;left:-9999px;top:0;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)';
+            document.body.appendChild(probe);
+            const box=document.createElement('pre');
+            box.id='dbgBox';
+            box.style.cssText='position:fixed;left:6px;bottom:80px;z-index:99999;background:rgba(0,0,0,.8);color:#0f0;font:10px/1.3 monospace;padding:4px 6px;border-radius:6px;white-space:pre;pointer-events:none';
+            document.body.appendChild(box);
+            const upd=()=>{
+                const ac=document.querySelector('.app-container').getBoundingClientRect();
+                const vv=window.visualViewport;
+                box.textContent=[
+                  'inner '+innerWidth+'x'+innerHeight,
+                  'screen '+screen.width+'x'+screen.height,
+                  'vv '+(vv?Math.round(vv.width)+'x'+Math.round(vv.height):'-')+' off '+(vv?Math.round(vv.offsetTop):'-'),
+                  'client '+document.documentElement.clientHeight,
+                  'ac top '+Math.round(ac.top)+' bot '+Math.round(ac.bottom),
+                  'env '+getComputedStyle(probe).paddingTop+' / '+getComputedStyle(probe).paddingBottom,
+                  'standalone '+(navigator.standalone===true)
+                ].join('\n');
+            };
+            upd(); setInterval(upd,1000); window.addEventListener('resize',upd);
+        })();
+
         // Initialize on load
         window.onload = function() {
             initCustomSelects();
