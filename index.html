@@ -820,8 +820,8 @@
         </div>
 
         <!-- 內建閱讀：閱讀畫面 -->
-        <div id="readerView" class="fixed inset-0 z-[55] hidden bg-black text-white" style="touch-action: pan-y;">
-            <div id="rdScroll" class="absolute inset-0 overflow-y-auto hidden" style="-webkit-overflow-scrolling: touch;"></div>
+        <div id="readerView" class="fixed inset-0 z-[55] hidden bg-black text-white" style="touch-action: pan-x pan-y;">
+            <div id="rdScroll" class="absolute inset-0 overflow-auto hidden" style="-webkit-overflow-scrolling: touch;"></div>
             <div id="rdPaged" class="absolute inset-0 hidden flex items-center justify-center select-none" style="padding-bottom: 4.5rem;">
                 <img id="rdPageImg" alt="" class="max-w-full max-h-full object-contain" draggable="false">
             </div>
@@ -3020,8 +3020,16 @@ function importData(e) {
             const idx = Math.min(n - 1, Math.max(0, startAt !== undefined ? startAt : (saved || 0)));
             rd = { chIdx, chapter, n, urls: new Map(), idx, bad: 0 };
             document.getElementById('rdBarTitle').textContent = chapter.label;
-            document.getElementById('readerView').classList.remove('hidden');
+            const view = document.getElementById('readerView');
+            const fresh = view.classList.contains('hidden');
+            view.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
+            rdResetZoom();
+            if (fresh) {
+                // 剛進入閱讀器：先顯示工具列，約 2 秒後自動收起
+                rdBars(true);
+                rdBarTimer = setTimeout(() => rdBars(false), 2000);
+            }
             await rdRender();
         }
 
@@ -3053,6 +3061,7 @@ function importData(e) {
         }
 
         function rdClose() {
+            clearTimeout(rdBarTimer);
             if (rd) rdSavePos(rd.chapter.id, rd.idx);
             rdRelease();
             document.getElementById('readerView').classList.add('hidden');
@@ -3068,7 +3077,7 @@ function importData(e) {
         }
 
         function rdSaveCfg() { try { localStorage.setItem(RD_CFG_KEY, JSON.stringify(rdCfg)); } catch (e) {} }
-        function rdToggleMode() { rdCfg.mode = rdCfg.mode === 'scroll' ? 'paged' : 'scroll'; rdSaveCfg(); rdRender(); }
+        function rdToggleMode() { rdCfg.mode = rdCfg.mode === 'scroll' ? 'paged' : 'scroll'; rdSaveCfg(); rdResetZoom(); rdRender(); }
 
         function rdShowPageNo() {
             if (!rd) return;
@@ -3094,6 +3103,84 @@ function importData(e) {
             }
         }
 
+        // ---------- 縮放（雙指）與工具列自動收起 ----------
+        const rdZ = { scroll: 1, paged: { s: 1, x: 0, y: 0 } };
+        let rdBarTimer = 0;
+
+        function rdBars(show) {
+            clearTimeout(rdBarTimer);
+            ['rdBar', 'rdFoot'].forEach(id => document.getElementById(id).classList.toggle('hidden', !show));
+        }
+
+        function rdApplyPaged() {
+            const z = rdZ.paged;
+            document.getElementById('rdPageImg').style.transform = z.s > 1 ? `translate(${z.x}px, ${z.y}px) scale(${z.s})` : '';
+        }
+
+        function rdResetZoom() {
+            rdZ.scroll = 1;
+            rdZ.paged = { s: 1, x: 0, y: 0 };
+            const inner = document.getElementById('rdScrollInner');
+            if (inner) inner.style.width = '100%';
+            rdApplyPaged();
+        }
+
+        const rdZoomGet = () => rdCfg.mode === 'scroll' ? rdZ.scroll : rdZ.paged.s;
+
+        // 縮放到 z 倍，並讓手指中心點（fx, fy）底下的內容留在原地
+        function rdZoomTo(z, fx, fy) {
+            z = Math.min(4, Math.max(1, z));
+            if (rdCfg.mode === 'scroll') {
+                const sc = document.getElementById('rdScroll'), inner = document.getElementById('rdScrollInner');
+                if (!inner) return;
+                const oldW = inner.offsetWidth, rect = sc.getBoundingClientRect();
+                const px = fx - rect.left, py = fy - rect.top, left = sc.scrollLeft, top = sc.scrollTop;
+                rdZ.scroll = z < 1.03 ? 1 : z;
+                inner.style.width = `${rdZ.scroll * 100}%`;
+                const k = inner.offsetWidth / oldW;
+                sc.scrollLeft = (left + px) * k - px;
+                sc.scrollTop = (top + py) * k - py;
+            } else {
+                const img = document.getElementById('rdPageImg'), box = document.getElementById('rdPaged');
+                const zp = rdZ.paged, rect = box.getBoundingClientRect();
+                const cx = rect.left + img.offsetLeft + img.offsetWidth / 2, cy = rect.top + img.offsetTop + img.offsetHeight / 2;
+                const px = (fx - cx - zp.x) / zp.s, py = (fy - cy - zp.y) / zp.s;
+                zp.s = z < 1.03 ? 1 : z;
+                zp.x = fx - cx - px * zp.s;
+                zp.y = fy - cy - py * zp.s;
+                rdClampPaged();
+                rdApplyPaged();
+            }
+        }
+
+        // 放大後拖曳時，不要讓圖片離開畫面太遠
+        function rdClampPaged() {
+            const z = rdZ.paged, img = document.getElementById('rdPageImg'), box = document.getElementById('rdPaged');
+            if (z.s <= 1) { z.x = 0; z.y = 0; return; }
+            const maxX = Math.max(0, (img.offsetWidth * z.s - box.clientWidth) / 2);
+            const maxY = Math.max(0, (img.offsetHeight * z.s - box.clientHeight) / 2);
+            z.x = Math.min(maxX, Math.max(-maxX, z.x));
+            z.y = Math.min(maxY, Math.max(-maxY, z.y));
+        }
+
+        // 捲動模式：點上／下三分之一，往上／往下捲一屏（約 0.25 秒）
+        let rdScrollAnim = 0;
+        function rdScrollScreen(dir) {
+            const sc = document.getElementById('rdScroll');
+            cancelAnimationFrame(rdScrollAnim);
+            const from = sc.scrollTop;
+            const max = sc.scrollHeight - sc.clientHeight;
+            const to = Math.min(max, Math.max(0, from + dir * sc.clientHeight * 0.9));
+            if (Math.abs(to - from) < 2) return;
+            const start = performance.now(), dur = 250;
+            const step = now => {
+                const t = Math.min(1, (now - start) / dur);
+                sc.scrollTop = from + (to - from) * (1 - Math.pow(1 - t, 3));
+                if (t < 1) rdScrollAnim = requestAnimationFrame(step);
+            };
+            rdScrollAnim = requestAnimationFrame(step);
+        }
+
         async function rdRender() {
             if (!rd) return;
             rdUpdateButtons();
@@ -3109,6 +3196,10 @@ function importData(e) {
                 cur.urls.forEach(u => URL.revokeObjectURL(u));
                 cur.urls.clear();
                 const imgs = [];
+                const inner = document.createElement('div');
+                inner.id = 'rdScrollInner';
+                inner.style.width = `${rdZ.scroll * 100}%`;
+                scroll.appendChild(inner);
                 for (let k = 0; k < cur.n; k++) {
                     const img = document.createElement('img');
                     img.className = 'block w-full';
@@ -3116,14 +3207,14 @@ function importData(e) {
                     img.style.minHeight = '40vh';
                     img.onload = () => { img.style.minHeight = ''; img.style.height = ''; img.style.aspectRatio = ''; };
                     img.onerror = () => { if (img.getAttribute('src')) rdImageFailed(); };
-                    scroll.appendChild(img);
+                    inner.appendChild(img);
                     imgs.push(img);
                 }
                 const next = document.createElement('button');
                 next.className = 'block w-full py-8 text-sm font-bold text-white/80';
                 next.textContent = '下一話 ▶';
                 next.onclick = () => rdStep(1, true);
-                scroll.appendChild(next);
+                inner.appendChild(next);
 
                 const at = cur.idx;
                 // 用目前這一頁的長寬比先把所有頁面的高度預留好，載入後位置才不會亂跳
@@ -3147,7 +3238,8 @@ function importData(e) {
                             const url = await rdPageUrl(k);
                             if (rd === cur && url && en.target.isConnected && !im.getAttribute('src')) im.src = url;
                         } else if (im.getAttribute('src')) {
-                            im.style.height = im.clientHeight + 'px';
+                            if (im.naturalWidth && im.naturalHeight) im.style.aspectRatio = `${im.naturalWidth} / ${im.naturalHeight}`;
+                            else im.style.height = im.clientHeight + 'px';
                             im.removeAttribute('src');
                             rdFreePage(k);
                         }
@@ -3173,6 +3265,8 @@ function importData(e) {
         async function rdShowPaged() {
             const cur = rd;
             const idx = cur.idx;
+            rdZ.paged = { s: 1, x: 0, y: 0 };
+            rdApplyPaged();
             const pageImg = document.getElementById('rdPageImg');
             pageImg.onerror = () => { if (pageImg.getAttribute('src')) rdImageFailed(); };
             rdShowPageNo();
@@ -3231,38 +3325,82 @@ function importData(e) {
             }
         }, { passive: true });
 
-        // 點擊：中間顯示/隱藏工具列；翻頁模式左右點擊或滑動翻頁
+        // 手勢：雙指縮放；點擊中間顯示/隱藏工具列；翻頁模式點左右或滑動翻頁；捲動模式點上／下捲一屏
         (function () {
             const view = document.getElementById('readerView');
-            let sx = 0, sy = 0, moved = false;
-            const toggleBars = () => {
-                ['rdBar', 'rdFoot'].forEach(id => document.getElementById(id).classList.toggle('hidden'));
-            };
+            let sx = 0, sy = 0, lx = 0, ly = 0, moved = false, multi = false, pinch = null;
+            const toggleBars = () => rdBars(document.getElementById('rdBar').classList.contains('hidden'));
             const forward = left => left ? -1 : 1;   // 固定由左至右
-            view.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; moved = false; }, { passive: true });
-            view.addEventListener('touchmove', e => {
-                if (Math.abs(e.touches[0].clientX - sx) > 10 || Math.abs(e.touches[0].clientY - sy) > 10) moved = true;
+            const dist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+            const mid = t => [(t[0].clientX + t[1].clientX) / 2, (t[0].clientY + t[1].clientY) / 2];
+            const inBars = e => e.target.closest('button, input, #rdFoot, #rdBar');
+
+            // 依點的位置做事：翻頁模式看左右三分之一；捲動模式看上下三分之一
+            const tapAt = (x, y) => {
+                if (rdCfg.mode === 'paged') {
+                    const third = window.innerWidth / 3;
+                    if (rdZ.paged.s > 1) toggleBars();   // 放大時點一下只切換工具列，避免誤翻頁
+                    else if (x < third) rdTurn(forward(true));
+                    else if (x > third * 2) rdTurn(forward(false));
+                    else toggleBars();
+                } else {
+                    const third = window.innerHeight / 3;
+                    if (y < third) rdScrollScreen(-1);
+                    else if (y > third * 2) rdScrollScreen(1);
+                    else toggleBars();
+                }
+            };
+
+            view.addEventListener('touchstart', e => {
+                if (e.target.closest('#rdBar, #rdFoot')) clearTimeout(rdBarTimer);   // 手動操作工具列就不再自動收起
+                if (e.touches.length >= 2) {
+                    multi = true; moved = true;
+                    const [fx, fy] = mid(e.touches);
+                    pinch = { d0: dist(e.touches) || 1, z0: rdZoomGet(), fx, fy };
+                    return;
+                }
+                multi = false;
+                sx = lx = e.touches[0].clientX; sy = ly = e.touches[0].clientY; moved = false;
             }, { passive: true });
+
+            view.addEventListener('touchmove', e => {
+                if (e.touches.length >= 2 && pinch) {
+                    e.preventDefault();
+                    const [fx, fy] = mid(e.touches);
+                    rdZoomTo(pinch.z0 * dist(e.touches) / pinch.d0, fx, fy);
+                    return;
+                }
+                if (multi) return;
+                const t = e.touches[0];
+                if (Math.abs(t.clientX - sx) > 10 || Math.abs(t.clientY - sy) > 10) moved = true;
+                // 翻頁模式放大後：單指拖曳移動圖片
+                if (rdCfg.mode === 'paged' && rdZ.paged.s > 1 && !inBars(e)) {
+                    e.preventDefault();
+                    rdZ.paged.x += t.clientX - lx;
+                    rdZ.paged.y += t.clientY - ly;
+                    rdClampPaged();
+                    rdApplyPaged();
+                }
+                lx = t.clientX; ly = t.clientY;
+            }, { passive: false });
+
             view.addEventListener('touchend', e => {
-                if (e.target.closest('button, input, #rdFoot, #rdBar')) return;
+                if (e.touches.length > 0) return;                    // 還有手指在螢幕上
+                if (multi) { multi = false; pinch = null; return; }  // 縮放結束，不當成點擊
+                if (inBars(e)) return;
                 const t = e.changedTouches[0];
                 const dx = t.clientX - sx, dy = t.clientY - sy;
-                if (rdCfg.mode === 'paged' && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+                if (rdCfg.mode === 'paged' && rdZ.paged.s <= 1 && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
                     rdTurn(forward(dx > 0));   // 向右滑 = 往左邊的方向
                     return;
                 }
                 if (moved) return;
-                const third = window.innerWidth / 3;
-                if (rdCfg.mode === 'paged' && t.clientX < third) rdTurn(forward(true));
-                else if (rdCfg.mode === 'paged' && t.clientX > third * 2) rdTurn(forward(false));
-                else toggleBars();
+                tapAt(t.clientX, t.clientY);
             });
+
             view.addEventListener('click', e => {
-                if (e.target.closest('button, input, #rdFoot, #rdBar') || 'ontouchstart' in window) return;
-                const third = window.innerWidth / 3;
-                if (rdCfg.mode === 'paged' && e.clientX < third) rdTurn(forward(true));
-                else if (rdCfg.mode === 'paged' && e.clientX > third * 2) rdTurn(forward(false));
-                else toggleBars();
+                if (inBars(e) || 'ontouchstart' in window) return;
+                tapAt(e.clientX, e.clientY);
             });
             document.addEventListener('keydown', e => {
                 if (!rd) return;
@@ -3278,7 +3416,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '16543e12';
+        const APP_BUILD = 'f4f1e25a';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
