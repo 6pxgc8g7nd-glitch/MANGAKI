@@ -214,7 +214,7 @@
             font-weight: 900;
             letter-spacing: 0.14em;
             text-align: center;
-            padding: 5px 8px 4px;
+            padding: 3px 8px 2px;
             border-bottom: 3px solid var(--ink);
             white-space: nowrap;
             overflow: hidden;
@@ -223,8 +223,8 @@
 
         /* ===== 頂部導覽：Logo + 圖示按鈕，下方文字分頁 ===== */
         .app-container > header .nav-btn {
-            min-width: 46px;
-            padding: 4px 6px;
+            min-width: 44px;
+            padding: 3px 6px;
             color: var(--ink);
             font-weight: 800;
             border: 2px solid transparent;
@@ -242,7 +242,7 @@
             border-top: 3px solid var(--ink);
         }
         .status-tab {
-            padding: 11px 0 9px;
+            padding: 8px 0 7px;
             font-size: 14px;
             font-weight: 800;
             color: #6b6b6b;
@@ -268,7 +268,7 @@
         <!-- Top Header -->
         <header style="border-top: env(safe-area-inset-top) solid #111;" class="w-full pb-0 bg-[#ffffff] flex flex-col flex-shrink-0 z-50">
             <div class="slogan">★ 追更不漏看・專屬你的漫畫書櫃 ★</div>
-            <div class="flex items-center justify-between px-4 pt-3 pb-3">
+            <div class="flex items-center justify-between px-4 pt-2 pb-2">
                 <div onclick="goHome()" class="flex items-center cursor-pointer active:opacity-80 transition">
                     <h1 class="text-xl font-black tracking-wider">
                         <span class="text-[#a6051a]">MANGA</span><span class="text-neutral-900">KI</span>
@@ -276,16 +276,16 @@
                 </div>
                 <div class="flex items-end space-x-1.5">
                     <button onclick="switchTab('categories')" id="nav-categories" class="nav-btn flex flex-col items-center justify-center">
-                        <i class="fa-regular fa-compass text-lg"></i>
-                        <span class="text-[10px] mt-0.5">分類</span>
+                        <i class="fa-regular fa-compass text-base"></i>
+                        <span class="text-[10px] leading-none mt-1">分類</span>
                     </button>
                     <button onclick="switchTab('add')" id="nav-add" class="nav-btn flex flex-col items-center justify-center">
-                        <i class="fa-regular fa-square-plus text-lg"></i>
-                        <span class="text-[10px] mt-0.5">新增</span>
+                        <i class="fa-regular fa-square-plus text-base"></i>
+                        <span class="text-[10px] leading-none mt-1">新增</span>
                     </button>
                     <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn flex flex-col items-center justify-center">
-                        <i class="fa-solid fa-gear text-lg"></i>
-                        <span class="text-[10px] mt-0.5">設定</span>
+                        <i class="fa-solid fa-gear text-base"></i>
+                        <span class="text-[10px] leading-none mt-1">設定</span>
                     </button>
                 </div>
             </div>
