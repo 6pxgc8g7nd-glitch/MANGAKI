@@ -791,7 +791,12 @@
                         <span id="rdImportText">選擇圖片並匯入</span>
                         <input type="file" id="rdFiles" accept="image/*" multiple class="hidden" onchange="rdImport(this)">
                     </label>
-                    <p class="text-[10px] text-neutral-500">圖片只存在這支手機的瀏覽器裡，不會上傳，也不包含在 GitHub 備份中。</p>
+                    <label class="w-full bg-white active:scale-95 text-neutral-900 py-2.5 rounded-xl font-bold transition text-xs flex items-center justify-center space-x-2 shadow border border-[#a6051a]/40 cursor-pointer">
+                        <i class="fa-solid fa-file-zipper text-xs"></i>
+                        <span id="rdZipText">選擇 zip 匯入（資料夾壓縮檔）</span>
+                        <input type="file" id="rdZipFile" accept=".zip,application/zip,application/x-zip-compressed" class="hidden" onchange="rdImportZip(this)">
+                    </label>
+                    <p class="text-[10px] text-neutral-500">zip 裡每個資料夾會變成一話；只有圖片、沒有資料夾就是一話。圖片只存在這支手機的瀏覽器裡，不會上傳，也不包含在 GitHub 備份中。</p>
                 </div>
             </div>
         </div>
@@ -2514,36 +2519,155 @@ function importData(e) {
             });
         }
 
+        // 存一話：getPage(i) 回傳 { buf, type }；一頁一頁寫入，不會一次佔滿記憶體
+        async function rdSaveChapter(label, count, getPage, order, onProgress) {
+            const id = `${rdComicId}-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+            try {
+                for (let i = 0; i < count; i++) {
+                    if (onProgress) onProgress(i + 1, count);
+                    const { buf, type } = await getPage(i);
+                    await rdRun('pages', 'readwrite', tx => tx.objectStore('pages').put({ k: rdPageKey(id, i), buf, type }));
+                }
+                await rdRun('chapters', 'readwrite', tx => tx.objectStore('chapters').put({ id, comicId: rdComicId, label, count, addedAt: Date.now() + (order || 0) }));
+            } catch (e) {
+                rdRun('pages', 'readwrite', tx => tx.objectStore('pages').delete(IDBKeyRange.bound(`${id}#`, `${id}#￿`))).catch(() => {});
+                throw e;
+            }
+        }
+
+        function rdImportError(e) {
+            const full = e && e.name === 'QuotaExceededError';
+            showMsg('匯入失敗', full ? '手機儲存空間不足，請減少圖片或刪除舊的章節。' : (e.message || '無法寫入本機儲存'));
+        }
+
         async function rdImport(input) {
             const files = Array.from(input.files || []).filter(f => (f.type || '').startsWith('image/') || /\.(jpe?g|png|webp|gif|avif)$/i.test(f.name));
             input.value = '';
             if (!files.length) return;
             files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
             const label = document.getElementById('rdLabel').value.trim() || `第 ${rdChapterList.length + 1} 話`;
-            const id = `${rdComicId}-${Date.now()}`;
             const text = document.getElementById('rdImportText');
             text.textContent = `匯入中（${files.length} 張）…`;
             try {
                 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
-                try {
-                    for (let i = 0; i < files.length; i++) {
-                        text.textContent = `匯入中（${i + 1}/${files.length}）…`;
-                        // 存成原始資料而不是檔案物件：iOS 常常讀不回存在 IndexedDB 的檔案物件
-                        const buf = await files[i].arrayBuffer();
-                        const type = files[i].type || 'image/jpeg';
-                        await rdRun('pages', 'readwrite', tx => tx.objectStore('pages').put({ k: rdPageKey(id, i), buf, type }));
-                    }
-                    await rdRun('chapters', 'readwrite', tx => tx.objectStore('chapters').put({ id, comicId: rdComicId, label, count: files.length, addedAt: Date.now() }));
-                } catch (e) {
-                    rdRun('pages', 'readwrite', tx => tx.objectStore('pages').delete(IDBKeyRange.bound(`${id}#`, `${id}#\uffff`))).catch(() => {});
-                    throw e;
+                // 存成原始資料而不是檔案物件：iOS 常常讀不回存在 IndexedDB 的檔案物件
+                await rdSaveChapter(label, files.length, async i => ({ buf: await files[i].arrayBuffer(), type: files[i].type || 'image/jpeg' }),
+                    0, (n, total) => { text.textContent = `匯入中（${n}/${total}）…`; });
+                await rdRenderList();
+            } catch (e) {
+                rdImportError(e);
+            } finally {
+                text.textContent = '選擇圖片並匯入';
+            }
+        }
+
+        // ---------- zip 匯入（自己解 zip，不需要額外套件） ----------
+        const RD_IMG_TYPES = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif', avif: 'image/avif', bmp: 'image/bmp' };
+        const RD_ZIP_MAX_ENTRY = 150 * 1024 * 1024;   // 單張圖解壓後上限，避免惡意壓縮檔
+
+        // 讀 zip 的目錄（只讀檔案尾端的目錄表，不把整個 zip 讀進記憶體）
+        async function zipList(file) {
+            const size = file.size;
+            const tailLen = Math.min(size, 65557);
+            const tail = new DataView(await file.slice(size - tailLen).arrayBuffer());
+            let eocd = -1;
+            for (let i = tailLen - 22; i >= 0; i--) {
+                if (tail.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+            }
+            if (eocd < 0) throw new Error('這不是有效的 zip 檔');
+            const count = tail.getUint16(eocd + 10, true);
+            const cdSize = tail.getUint32(eocd + 12, true);
+            const cdOff = tail.getUint32(eocd + 16, true);
+            if (count === 0xffff || cdSize === 0xffffffff || cdOff === 0xffffffff) throw new Error('這個 zip 太大（超過 4GB），請分成幾個小一點的 zip。');
+            if (cdOff + cdSize > size) throw new Error('zip 檔案損毀');
+            const cd = new DataView(await file.slice(cdOff, cdOff + cdSize).arrayBuffer());
+            const dec = new TextDecoder('utf-8');
+            const entries = [];
+            let p = 0;
+            for (let k = 0; k < count; k++) {
+                if (p + 46 > cd.byteLength || cd.getUint32(p, true) !== 0x02014b50) break;
+                const flags = cd.getUint16(p + 8, true);
+                const nlen = cd.getUint16(p + 28, true), elen = cd.getUint16(p + 30, true), clen = cd.getUint16(p + 32, true);
+                entries.push({
+                    name: dec.decode(new Uint8Array(cd.buffer, p + 46, nlen)),
+                    method: cd.getUint16(p + 10, true),
+                    csize: cd.getUint32(p + 20, true),
+                    usize: cd.getUint32(p + 24, true),
+                    lho: cd.getUint32(p + 42, true),
+                    encrypted: !!(flags & 1)
+                });
+                p += 46 + nlen + elen + clen;
+            }
+            return entries;
+        }
+
+        async function zipData(file, e) {
+            if (e.encrypted) throw new Error('這個 zip 有設密碼，請先解除密碼。');
+            if (e.usize > RD_ZIP_MAX_ENTRY) throw new Error('zip 裡有單張過大的檔案');
+            const lh = new DataView(await file.slice(e.lho, e.lho + 30).arrayBuffer());
+            if (lh.getUint32(0, true) !== 0x04034b50) throw new Error('zip 檔案損毀');
+            const start = e.lho + 30 + lh.getUint16(26, true) + lh.getUint16(28, true);
+            const raw = file.slice(start, start + e.csize);
+            if (e.method === 0) return raw.arrayBuffer();
+            if (e.method === 8) {
+                if (typeof DecompressionStream === 'undefined') throw new Error('這個瀏覽器版本太舊，無法解壓 zip，請更新 iOS。');
+                return new Response(raw.stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
+            }
+            throw new Error('不支援這個 zip 的壓縮方式');
+        }
+
+        // 依資料夾分成多話；沒有資料夾（或全部在同一層）就是一話
+        function zipChapters(entries) {
+            const groups = new Map();
+            entries.forEach(e => {
+                const parts = e.name.split('/').filter(Boolean);
+                const base = parts[parts.length - 1] || '';
+                if (e.name.endsWith('/') || parts.includes('__MACOSX') || base.startsWith('.')) return;
+                const ext = (base.split('.').pop() || '').toLowerCase();
+                if (!RD_IMG_TYPES[ext]) return;
+                const dir = parts.slice(0, -1).join('/');
+                if (!groups.has(dir)) groups.set(dir, []);
+                groups.get(dir).push({ e, ext, name: parts.join('/') });
+            });
+            const nat = (a, b) => a.localeCompare(b, undefined, { numeric: true });
+            return Array.from(groups.entries())
+                .sort((a, b) => nat(a[0], b[0]))
+                .map(([dir, items]) => ({ label: dir.split('/').pop() || '', items: items.sort((a, b) => nat(a.name, b.name)) }));
+        }
+
+        async function rdImportZip(input) {
+            const file = input.files && input.files[0];
+            input.value = '';
+            if (!file) return;
+            const text = document.getElementById('rdZipText');
+            const idle = '選擇 zip 匯入（資料夾壓縮檔）';
+            try {
+                text.textContent = '讀取 zip…';
+                const chapters = zipChapters(await zipList(file));
+                const pages = chapters.reduce((n, c) => n + c.items.length, 0);
+                if (!pages) { showMsg('找不到圖片', '這個 zip 裡沒有 JPG、PNG、WebP 等圖片。'); return; }
+                if (chapters.length > 1 || pages > 300) {
+                    const ok = await showConfirm('匯入 zip', `找到 ${chapters.length} 話、共 ${pages} 頁。\n\n每個資料夾會成為一話。要匯入嗎？`, { okText: '匯入' });
+                    if (!ok) return;
+                }
+                if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+                const typed = document.getElementById('rdLabel').value.trim();
+                const base = rdChapterList.length;
+                for (let c = 0; c < chapters.length; c++) {
+                    const ch = chapters[c];
+                    const label = chapters.length === 1
+                        ? (typed || ch.label || `第 ${base + 1} 話`)
+                        : (ch.label || `第 ${base + c + 1} 話`);
+                    await rdSaveChapter(label, ch.items.length, async i => ({
+                        buf: await zipData(file, ch.items[i].e),
+                        type: RD_IMG_TYPES[ch.items[i].ext]
+                    }), c, (n, total) => { text.textContent = `匯入中 第 ${c + 1}/${chapters.length} 話（${n}/${total}）…`; });
                 }
                 await rdRenderList();
             } catch (e) {
-                const full = e && e.name === 'QuotaExceededError';
-                showMsg('匯入失敗', full ? '手機儲存空間不足，請減少圖片或刪除舊的章節。' : (e.message || '無法寫入本機儲存'));
+                rdImportError(e);
             } finally {
-                text.textContent = '選擇圖片並匯入';
+                text.textContent = idle;
             }
         }
 
@@ -2847,7 +2971,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '299e05a9';
+        const APP_BUILD = '149762af';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
