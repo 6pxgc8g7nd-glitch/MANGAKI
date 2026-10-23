@@ -2119,8 +2119,12 @@ function importData(e) {
 
         function ghRenderSettings() {
             const cfg = ghLoad();
+            // 權杖不回填到欄位（不顯示圓點）：存好之後欄位保持空白，用提示文字說明已儲存
             const tokenEl = document.getElementById('ghToken');
-            if (tokenEl) tokenEl.value = cfg.token || '';
+            if (tokenEl) {
+                tokenEl.value = '';
+                tokenEl.placeholder = cfg.token ? '已儲存權杖（不顯示），要更換請重新貼上' : '貼上權杖 github_pat_...';
+            }
             const auto = document.getElementById('ghAuto');
             if (auto) auto.checked = cfg.auto !== false;
             ghShowStatus();
@@ -2147,7 +2151,20 @@ function importData(e) {
         async function ghSaveSettings() {
             const token = document.getElementById('ghToken').value.trim();
             const auto = document.getElementById('ghAuto').checked;
-            if (!token) { showMsg('設定不完整', '請輸入權杖'); return; }
+            if (!token) {
+                // 欄位留白：已經有儲存的權杖就只更新「自動備份」開關，不用再貼一次
+                const saved = ghLoad();
+                if (saved.token) {
+                    saved.auto = auto;
+                    if (!ghStoreCfg(saved)) { showMsg('儲存失敗', '無法寫入瀏覽器儲存空間。'); return; }
+                    ghRenderSettings();
+                    ghSetStatus(true, '設定已更新');
+                    showMsg('設定已更新', auto ? '之後資料有變動會自動備份。' : '已關閉自動備份，可按「立即備份」手動備份。');
+                    return;
+                }
+                showMsg('設定不完整', '請輸入權杖');
+                return;
+            }
 
             let repo;
             try {
@@ -2298,7 +2315,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '3a524de4';
+        const APP_BUILD = 'c8eca41a';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
