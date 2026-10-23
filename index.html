@@ -1220,6 +1220,32 @@ function importData(e) {
 
 
 
+        // 自動更新：註冊 service worker，偵測到新版本就重新載入（資料在 localStorage，不受影響）
+        if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+            const hadController = !!navigator.serviceWorker.controller;
+            let reloading = false;
+
+            const isTyping = () => {
+                const el = document.activeElement;
+                return el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA');
+            };
+
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                // 第一次安裝不用重新載入；正在輸入時等下次開啟再套用
+                if (!hadController || reloading || isTyping()) return;
+                reloading = true;
+                location.reload();
+            });
+
+            navigator.serviceWorker.register('sw.js').then(reg => {
+                const check = () => reg.update().catch(() => {});
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'visible') check();
+                });
+                setInterval(check, 30 * 60 * 1000);
+            }).catch(err => console.error('TOPTOON service worker 註冊失敗：', err));
+        }
+
         // Initialize on load
         window.onload = function() {
             renderComics();
