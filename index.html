@@ -2356,7 +2356,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = 'b18ca619';
+        const APP_BUILD = '41d997b1';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
@@ -2854,6 +2854,26 @@ function importData(e) {
             return new Blob([...parts, ...central, end.buffer], { type: 'application/zip' });
         }
 
+        // 匯出／匯入時保持螢幕不熄滅（iPhone 螢幕一暗或切到別的 App，處理就會暫停，看起來像卡住）
+        let ioWakeLock = null;
+        async function keepAwake(on) {
+            try {
+                if (on) {
+                    if (navigator.wakeLock && !ioWakeLock) ioWakeLock = await navigator.wakeLock.request('screen');
+                } else if (ioWakeLock) {
+                    await ioWakeLock.release();
+                    ioWakeLock = null;
+                }
+            } catch (e) { ioWakeLock = null; }
+        }
+
+        // 進度文字：百分比 + 已經過幾秒
+        function ioProgress(label, done, total, t0) {
+            const pct = total ? Math.round(done / total * 100) : 0;
+            const sec = Math.round((performance.now() - t0) / 1000);
+            setImgIoStatus(`${label} ${pct}%（${done}/${total}，已 ${sec} 秒）請保持畫面開啟`);
+        }
+
         function setImgIoStatus(text) {
             const el = document.getElementById('imgIoStatus');
             if (el) el.textContent = text || '';
@@ -2872,20 +2892,28 @@ function importData(e) {
             for (const ep of eps) { const pages = await getEpisodePages(ep.id); pagesByEp.push(pages); total += pages.length; }
             if (total > 65000) throw new Error('圖片數量太多');
             let bytesTotal = 0;
+            // 一次同時讀幾張來算檢查碼，比一張一張等快
+            const crcOf = async blob => crc32(new Uint8Array(await blob.arrayBuffer()));
             for (let i = 0; i < eps.length; i++) {
                 const ep = eps[i];
                 const mEp = { id: ep.id, comic: ep.comic, label: ep.label, pages: [] };
-                for (let k = 0; k < pagesByEp[i].length; k++) {
-                    const pg = pagesByEp[i][k];
+                const pgs = pagesByEp[i];
+                const crcs = new Array(pgs.length);
+                const LANES = 4;
+                let next = 0;
+                await Promise.all(Array.from({ length: LANES }, async () => {
+                    while (next < pgs.length) { const k = next++; crcs[k] = await crcOf(pgs[k].blob); }
+                }));
+                for (let k = 0; k < pgs.length; k++) {
+                    const pg = pgs[k];
                     const name = `${ep.id}/${String(k).padStart(4, '0')}.jpg`;
-                    const bytes = new Uint8Array(await pg.blob.arrayBuffer());
-                    entries.push({ name, blob: pg.blob, crc: crc32(bytes), size: pg.blob.size });
+                    entries.push({ name, blob: pg.blob, crc: crcs[k], size: pg.blob.size });
                     bytesTotal += pg.blob.size;
                     if (bytesTotal > 3.5 * 1024 * 1024 * 1024) throw new Error('圖片總量太大');
                     mEp.pages.push({ name, w: pg.w, h: pg.h });
-                    done++;
-                    if (onProgress && done % 5 === 0) onProgress(done, total);
                 }
+                done += pgs.length;
+                if (onProgress) onProgress(done, total);
                 manifest.episodes.push(mEp);
             }
             const mBytes = new TextEncoder().encode(JSON.stringify(manifest, null, 1));
@@ -2898,8 +2926,11 @@ function importData(e) {
             if (btn.disabled) return;
             btn.disabled = true;
             try {
-                setImgIoStatus('準備中…');
-                const res = await buildImagesZip((d, t) => setImgIoStatus(`整理圖片 ${d}/${t}`));
+                await keepAwake(true);
+                const t0 = performance.now();
+                setImgIoStatus('準備中…請保持畫面開啟');
+                const res = await buildImagesZip((d, t) => ioProgress('整理圖片', d, t, t0));
+                if (res) setImgIoStatus('正在建立檔案，檔案大時會需要一些時間…');
                 if (!res) { setImgIoStatus(''); showMsg('沒有圖片', '目前這支手機上沒有可以匯出的內頁圖片。'); return; }
                 const ymd = new Date().toISOString().slice(0, 10).replace(/-/g, '');
                 const file = new File([res.blob], `mangaki_images_${ymd}.zip`, { type: 'application/zip' });
@@ -2924,6 +2955,7 @@ function importData(e) {
                 showMsg('匯出失敗', '整理圖片時發生錯誤，可能是圖片太多或手機記憶體不足。');
             } finally {
                 btn.disabled = false;
+                keepAwake(false);
             }
         }
 
@@ -2968,6 +3000,34 @@ function importData(e) {
             throw new Error('不支援的壓縮格式');
         }
 
+        // 一整集的檔案在 ZIP 裡通常是連續的：一次讀出整段，再在記憶體裡切開，
+        // 比每張圖都各讀一次（含檔頭）快很多，尤其在 iPhone 上
+        async function readEpisodeBlobs(file, entries, pages) {
+            const list = pages.map(pg => ({ pg, entry: entries.get(pg.name) })).filter(x => x.entry);
+            if (!list.length) return [];
+            const MARGIN = 1024;
+            const lo = Math.min(...list.map(x => x.entry.lho));
+            const hi = Math.min(file.size, Math.max(...list.map(x => x.entry.lho + 30 + MARGIN + x.entry.csize)));
+            const buf = await file.slice(lo, hi).arrayBuffer();
+            const out = [];
+            for (const { pg, entry } of list) {
+                const off = entry.lho - lo;
+                const dv = new DataView(buf, off, 30);
+                if (dv.getUint32(0, true) !== 0x04034b50) throw new Error('ZIP 資料損毀');
+                const start = off + 30 + dv.getUint16(26, true) + dv.getUint16(28, true);
+                const raw = new Blob([buf.slice(start, start + entry.csize)], { type: 'image/jpeg' });
+                let blob = raw;
+                if (entry.method === 8) {
+                    if (typeof DecompressionStream === 'undefined') throw new Error('不支援的壓縮格式');
+                    blob = new Blob([await new Response(raw.stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer()], { type: 'image/jpeg' });
+                } else if (entry.method !== 0) {
+                    throw new Error('不支援的壓縮格式');
+                }
+                out.push({ blob, w: Number(pg.w) || 1200, h: Number(pg.h) || 1800 });
+            }
+            return out;
+        }
+
         async function importImagesFromFile(file, onProgress) {
             const entries = await readZipEntries(file);
             const mEntry = entries.get('manifest.json');
@@ -2977,22 +3037,19 @@ function importData(e) {
             const wanted = new Set();
             comics.forEach(c => getAlbums(c).forEach(a => wanted.add(a.id)));
             const result = { episodes: 0, pages: 0, skipped: 0 };
-            let doneEps = 0;
-            for (const ep of manifest.episodes) {
-                if (!wanted.has(ep.id)) { result.skipped++; continue; }
-                const pages = [];
-                for (const pg of ep.pages) {
-                    const entry = entries.get(pg.name);
-                    if (!entry) continue;
-                    pages.push({ blob: await readZipEntryBlob(file, entry, 'image/jpeg'), w: Number(pg.w) || 1200, h: Number(pg.h) || 1800 });
-                }
+            const todo = manifest.episodes.filter(ep => wanted.has(ep.id));
+            result.skipped = manifest.episodes.length - todo.length;
+            // 讀下一集的同時，寫入上一集（兩件事重疊進行）
+            let pending = todo.length ? readEpisodeBlobs(file, entries, todo[0].pages) : null;
+            for (let i = 0; i < todo.length; i++) {
+                const pages = await pending;
+                pending = i + 1 < todo.length ? readEpisodeBlobs(file, entries, todo[i + 1].pages) : null;
                 if (pages.length) {
-                    await putEpisodePages(ep.id, pages);
+                    await putEpisodePages(todo[i].id, pages);
                     result.episodes++;
                     result.pages += pages.length;
                 }
-                doneEps++;
-                if (onProgress) onProgress(doneEps, manifest.episodes.length);
+                if (onProgress) onProgress(i + 1, todo.length);
             }
             return result;
         }
@@ -3009,8 +3066,10 @@ function importData(e) {
             const label = document.getElementById('imgImportBtn');
             label.classList.add('opacity-50', 'pointer-events-none');
             try {
-                setImgIoStatus('讀取中…');
-                const r = await importImagesFromFile(file, (d, t) => setImgIoStatus(`匯入中 ${d}/${t} 集`));
+                await keepAwake(true);
+                const t0 = performance.now();
+                setImgIoStatus('讀取中…請保持畫面開啟');
+                const r = await importImagesFromFile(file, (d, t) => ioProgress('匯入中', d, t, t0));
                 setImgIoStatus('');
                 updateImgUsage();
                 if (r.episodes === 0) {
@@ -3025,6 +3084,7 @@ function importData(e) {
             } finally {
                 label.classList.remove('opacity-50', 'pointer-events-none');
                 input.value = '';
+                keepAwake(false);
             }
         }
 
