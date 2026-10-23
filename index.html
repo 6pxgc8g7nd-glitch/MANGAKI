@@ -1546,6 +1546,27 @@ function importData(e) {
                 location.reload();
             });
 
+            // 頁面內容有更新（但 sw.js 沒變）時，也要能自動套用：比對 index.html 的內容雜湊
+            const pageHash = async () => {
+                const res = await fetch(location.pathname, { cache: 'no-store' });
+                const text = await res.text();
+                let h = 5381;
+                for (let i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) | 0;
+                return h;
+            };
+            let loadedHash = null;
+            pageHash().then(h => { loadedHash = h; }).catch(() => {});
+            const checkPage = async () => {
+                try {
+                    if (loadedHash === null || reloading || isTyping()) return;
+                    if ((await pageHash()) !== loadedHash) { reloading = true; location.reload(); }
+                } catch (e) {}
+            };
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') checkPage();
+            });
+            setInterval(checkPage, 30 * 60 * 1000);
+
             navigator.serviceWorker.register('sw.js').then(reg => {
                 const check = () => reg.update().catch(() => {});
                 document.addEventListener('visibilitychange', () => {
