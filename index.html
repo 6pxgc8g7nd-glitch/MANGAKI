@@ -809,6 +809,10 @@
                         <span id="rdZipText">選擇 zip 匯入（資料夾壓縮檔）</span>
                         <input type="file" id="rdZipFile" accept=".zip,application/zip,application/x-zip-compressed" class="hidden" onchange="rdImportZip(this)">
                     </label>
+                    <button type="button" onclick="rdExportZip()" class="w-full bg-white active:scale-95 text-neutral-900 py-2.5 rounded-xl font-bold transition text-xs flex items-center justify-center space-x-2 shadow border border-[#a6051a]/40">
+                        <i class="fa-solid fa-file-export text-xs"></i>
+                        <span id="rdExportText">匯出整部漫畫為 zip</span>
+                    </button>
                     <p class="text-[10px] text-neutral-500">zip 裡每個資料夾會變成一話；只有圖片、沒有資料夾就是一話。圖片只存在這支手機的瀏覽器裡，不會上傳，也不包含在 GitHub 備份中。</p>
                 </div>
             </div>
@@ -2750,6 +2754,108 @@ function importData(e) {
             }
         }
 
+
+        // ---------- 匯出整部漫畫為 zip（結構：漫畫名稱 / 話 / 頁碼.副檔名，可直接再用批次匯入還原） ----------
+        const CRC_TABLE = (() => {
+            const t = new Uint32Array(256);
+            for (let n = 0; n < 256; n++) {
+                let c = n;
+                for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+                t[n] = c >>> 0;
+            }
+            return t;
+        })();
+
+        function crc32(bytes) {
+            let c = 0xffffffff;
+            for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+            return (c ^ 0xffffffff) >>> 0;
+        }
+
+        const safeName = t => String(t).replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_').replace(/^\.+/, '_').trim() || '未命名';
+        const EXT_OF_TYPE = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif', 'image/avif': 'avif', 'image/bmp': 'bmp' };
+
+        async function rdExportZip() {
+            const comic = comics.find(c => c.id === rdComicId);
+            const text = document.getElementById('rdExportText');
+            const idle = '匯出整部漫畫為 zip';
+            if (!comic) return;
+            try {
+                const chapters = await rdGetChapters(rdComicId);
+                if (!chapters.length) { showMsg('沒有圖片', '這部漫畫還沒有匯入任何一話。'); return; }
+                const total = chapters.reduce((n, c) => n + c.count, 0);
+                if (total > 65000) throw new Error('頁數太多（超過 65000 頁），無法放進同一個 zip。');
+                const enc = new TextEncoder();
+                const dosNow = new Date();
+                const dosTime = (dosNow.getHours() << 11) | (dosNow.getMinutes() << 5) | (dosNow.getSeconds() >> 1);
+                const dosDate = ((dosNow.getFullYear() - 1980) << 9) | ((dosNow.getMonth() + 1) << 5) | dosNow.getDate();
+                const top = safeName(comic.title);
+                const parts = [], central = [];
+                let offset = 0, done = 0, bytes = 0;
+                const used = new Set();
+                for (const ch of chapters) {
+                    let folder = safeName(ch.label), n = 2;
+                    while (used.has(folder)) folder = `${safeName(ch.label)} (${n++})`;
+                    used.add(folder);
+                    for (let i = 0; i < ch.count; i++) {
+                        text.textContent = `打包中（${++done}/${total}）…`;
+                        const rec = await rdRun('pages', 'readonly', tx => tx.objectStore('pages').get(rdPageKey(ch.id, i)));
+                        if (!rec) continue;
+                        const buf = rec.buf || await rec.blob.arrayBuffer();
+                        const data = new Uint8Array(buf);
+                        const ext = EXT_OF_TYPE[rec.type] || 'jpg';
+                        const name = enc.encode(`${top}/${folder}/${String(i + 1).padStart(4, '0')}.${ext}`);
+                        const crc = crc32(data);
+                        const head = new DataView(new ArrayBuffer(30));
+                        head.setUint32(0, 0x04034b50, true); head.setUint16(4, 20, true); head.setUint16(6, 0x0800, true);
+                        head.setUint16(8, 0, true); head.setUint16(10, dosTime, true); head.setUint16(12, dosDate, true);
+                        head.setUint32(14, crc, true); head.setUint32(18, data.length, true); head.setUint32(22, data.length, true);
+                        head.setUint16(26, name.length, true); head.setUint16(28, 0, true);
+                        parts.push(head.buffer, name, data);
+                        central.push({ name, crc, size: data.length, offset });
+                        offset += 30 + name.length + data.length;
+                        bytes += data.length;
+                        if (bytes > 3.8e9) throw new Error('內容超過 3.8GB，無法放進同一個 zip。請分話匯出（先刪掉部分章節）。');
+                    }
+                }
+                const cdStart = offset;
+                let cdSize = 0;
+                central.forEach(e => {
+                    const h = new DataView(new ArrayBuffer(46));
+                    h.setUint32(0, 0x02014b50, true); h.setUint16(4, 20, true); h.setUint16(6, 20, true); h.setUint16(8, 0x0800, true);
+                    h.setUint16(10, 0, true); h.setUint16(12, dosTime, true); h.setUint16(14, dosDate, true);
+                    h.setUint32(16, e.crc, true); h.setUint32(20, e.size, true); h.setUint32(24, e.size, true);
+                    h.setUint16(28, e.name.length, true); h.setUint32(42, e.offset, true);
+                    parts.push(h.buffer, e.name);
+                    cdSize += 46 + e.name.length;
+                });
+                const end = new DataView(new ArrayBuffer(22));
+                end.setUint32(0, 0x06054b50, true);
+                end.setUint16(8, central.length, true); end.setUint16(10, central.length, true);
+                end.setUint32(12, cdSize, true); end.setUint32(16, cdStart, true);
+                parts.push(end.buffer);
+                const blob = new Blob(parts, { type: 'application/zip' });
+                const file = new File([blob], `${top}.zip`, { type: 'application/zip' });
+                text.textContent = idle;
+                // 分享／下載要由「剛按下的按鈕」觸發，iOS 才允許，所以再問一次
+                const ok = await showConfirm('打包完成', `${chapters.length} 話、${central.length} 頁，共 ${(bytes / 1048576).toFixed(1)} MB。\n\n按「儲存」選擇要存到哪裡。`, { okText: '儲存' });
+                if (!ok) return;
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try { await navigator.share({ files: [file], title: top }); return; }
+                    catch (e) { if (e && e.name === 'AbortError') return; }
+                }
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = file.name;
+                document.body.appendChild(a); a.click(); a.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 60000);
+            } catch (e) {
+                showMsg('匯出失敗', e && e.name === 'QuotaExceededError' ? '記憶體或空間不足，請分次匯出。' : (e.message || '無法打包'));
+            } finally {
+                text.textContent = idle;
+            }
+        }
+
         async function rdImportZip(input) {
             const file = input.files && input.files[0];
             input.value = '';
@@ -3086,7 +3192,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = 'dfb39785';
+        const APP_BUILD = '300c4f82';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
