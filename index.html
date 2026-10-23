@@ -322,8 +322,6 @@
         .link-add-btn:active { background: rgba(0,0,0,.05); }
         .link-pick { justify-content: center; gap: 6px; padding: 10px 4px; font-size: 13px; min-width: 0; }
         .link-pick .lp-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-        .link-pick.is-latest { padding: 13px 8px; font-size: 15px; }
-        .link-pick .tag { flex: none; font-size: 10px; background: var(--red); color: #fff; border-radius: 6px; padding: 1px 6px; }
 
         /* ===== 頂部導覽：Logo + 圖示按鈕，下方文字分頁 ===== */
         .app-container > header .nav-btn {
@@ -544,7 +542,7 @@
                     <div>
                         <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
                             <i class="fa-solid fa-link text-[#a6051a] text-[10px]"></i>
-                            <span>網址（可加多集，最後一筆視為最新）</span>
+                            <span>網址（可加多集，會照順序排列）</span>
                         </label>
                         <div id="addLinks" class="link-editor"></div>
                         <button type="button" onclick="addLinkRow(document.getElementById('addLinks'))" class="link-add-btn"><i class="fa-solid fa-plus"></i><span>新增一集連結</span></button>
@@ -729,7 +727,7 @@
                     <div>
                         <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
                             <i class="fa-solid fa-link text-[#a6051a] text-[10px]"></i>
-                            <span>網址（可加多集，最後一筆視為最新）</span>
+                            <span>網址（可加多集，會照順序排列）</span>
                         </label>
                         <div id="editLinks" class="link-editor"></div>
                         <button type="button" onclick="addLinkRow(document.getElementById('editLinks'))" class="link-add-btn"><i class="fa-solid fa-plus"></i><span>新增一集連結</span></button>
@@ -2241,7 +2239,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = 'bfceb9b8';
+        const APP_BUILD = 'e05530cd';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
@@ -2361,7 +2359,7 @@ function importData(e) {
         }
 
         // ================================
-        // 多集連結：每部漫畫 links = [{label, url}, ...]，最後一筆視為最新一集
+        // 多集連結：每部漫畫 links = [{label, url}, ...]，照輸入的順序排列
         // ================================
         function getLinks(comic) {
             if (Array.isArray(comic.links)) {
@@ -2402,7 +2400,7 @@ function importData(e) {
             })).filter(l => l.url);
         }
 
-        // 點卡片：沒有連結提示；只有一個直接開；多個就列出集數（最新在最上面）
+        // 點卡片：沒有連結提示；只有一個直接開；多個就依序列出集數
         function openLinkSheet(comic, links) {
             const sheet = document.getElementById('optionSheet');
             const list = document.getElementById('optionSheetList');
@@ -2410,22 +2408,15 @@ function importData(e) {
             list.className = 'grid grid-cols-3 gap-2';
             list.innerHTML = '';
             const close = () => { sheet.classList.add('hidden'); sheet.onclick = null; document.getElementById('optionSheetCancel').onclick = null; };
-            const last = links.length - 1;
-            links.map((l, i) => ({ l, i })).reverse().forEach(({ l, i }) => {
+            // 照輸入的順序排列
+            links.forEach((l, i) => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                const isLatest = i === last;
-                btn.className = 'option-item link-pick' + (isLatest ? ' is-selected col-span-3 is-latest' : '');
+                btn.className = 'option-item link-pick';
                 const name = document.createElement('span');
                 name.className = 'lp-name';
                 name.textContent = l.label || String(i + 1);
                 btn.appendChild(name);
-                if (isLatest) {
-                    const tag = document.createElement('span');
-                    tag.className = 'tag';
-                    tag.textContent = '最新';
-                    btn.appendChild(tag);
-                }
                 btn.onclick = () => { close(); window.open(l.url, '_blank', 'noopener,noreferrer'); };
                 list.appendChild(btn);
             });
