@@ -189,7 +189,14 @@
 
         /* 手機寬度：滿版，不要外框與陰影（只有大螢幕才保留手機外框） */
         @media (max-width: 480px) {
-            .app-container { box-shadow: none !important; }
+            html, body { background-color: var(--paper) !important; background-image: none !important; height: 100%; }
+            .app-container {
+                position: fixed;
+                inset: 0;
+                height: auto;
+                max-width: none;
+                box-shadow: none !important;
+            }
         }
 
         /* 切換分頁的淡入動畫 */
