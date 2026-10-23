@@ -947,6 +947,9 @@
 
         let activeComicId = null;
         let activeGenreFilter = '全部';
+        // 特殊分類「漫畫」：把匯入過圖片、可以用內建閱讀的漫畫整理在一起（不是使用者自己輸入的分類）
+        const READER_KEY = '__reader__';
+        const genreLabel = g => g === READER_KEY ? '漫畫' : g;
         let activeStatusFilter = '全部';
         let currentPage = 1;
         const comicsPerPage = 10;
@@ -1399,7 +1402,7 @@
 
         function getFilteredComics() {
             const list = comics.filter(c =>
-                (activeGenreFilter === '全部' || parseGenres(c.genre).includes(activeGenreFilter)) &&
+                (activeGenreFilter === '全部' || (activeGenreFilter === READER_KEY ? rdChapterCount.has(c.id) : parseGenres(c.genre).includes(activeGenreFilter))) &&
                 (activeStatusFilter === '全部' || (c.status || '連載中') === activeStatusFilter)
             );
             // 連載中排在前面，依「最近一次更新」由近到遠（今天更新的最前面）；
@@ -1443,7 +1446,7 @@
             if (activeGenreFilter !== '全部') {
                 filterBannerContainer.innerHTML = `
                     <div class="bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3 py-2 flex items-center justify-between text-xs shadow-inner mb-2.5">
-                        <span class="text-neutral-600">分類篩選：<strong class="text-neutral-900">${escapeHtml(activeGenreFilter)}</strong></span>
+                        <span class="text-neutral-600">分類篩選：<strong class="text-neutral-900">${escapeHtml(genreLabel(activeGenreFilter))}</strong></span>
                         <button onclick="clearGenreFilter()" class="text-[#a6051a] hover:text-[#8a0416] p-1" aria-label="清除篩選">
                             <i class="fa-solid fa-xmark text-sm"></i>
                         </button>
@@ -1581,16 +1584,16 @@
             comics.forEach(c => {
                 parseGenres(c.genre).forEach(g => allGenresSet.add(g));
             });
-            const genres = ['全部', ...allGenresSet];
+            const genres = ['全部', READER_KEY, ...allGenresSet];
         
             genreGrid.innerHTML = genres.map(g => {
-                const count = g === '全部' ? comics.length : comics.filter(c => parseGenres(c.genre).includes(g)).length;
+                const count = g === '全部' ? comics.length : g === READER_KEY ? comics.filter(c => rdChapterCount.has(c.id)).length : comics.filter(c => parseGenres(c.genre).includes(g)).length;
                 const isSelected = activeGenreFilter === g;
                 const activeStyle = isSelected ? 'border-[#a6051a] bg-[#f0f0f0] ring-1 ring-[#a6051a]/40' : 'border-[#a6051a]/40 hover:border-[#a6051a]';
         
                 return `
                     <div data-genre="${escapeHtml(g)}" onclick="filterByGenre(this.dataset.genre)" class="genre-card bg-[#ffffff] ${activeStyle} p-3.5 rounded-xl border flex items-center justify-between shadow cursor-pointer transition active:scale-[0.98]">
-                        <span class="font-bold text-xs text-neutral-900">${escapeHtml(g)}</span>
+                        <span class="font-bold text-xs text-neutral-900">${g === READER_KEY ? '<i class="fa-solid fa-book-open-reader text-[#a6051a] mr-1"></i>' : ''}${escapeHtml(genreLabel(g))}</span>
                         <span class="text-xs bg-[#fafafa] px-2 py-0.5 rounded-full text-neutral-600 border border-[#a6051a]/40">${count} 部</span>
                     </div>
                 `;
@@ -2397,12 +2400,21 @@ function importData(e) {
         let rdDbPromise = null;
         const rdChapterCount = new Map();   // 漫畫 id → 已匯入的話數（讓點卡片可以同步判斷）
 
+        // 有圖片的漫畫變動時，同步更新「漫畫」分類的數量與清單
+        function rdFlagsChanged() {
+            try {
+                renderCategories();
+                if (activeGenreFilter === READER_KEY) renderComics();
+            } catch (e) {}
+        }
+
         async function rdRefreshFlags() {
             try {
                 const all = await rdRun('chapters', 'readonly', tx => tx.objectStore('chapters').getAll());
                 rdChapterCount.clear();
                 (all || []).forEach(ch => rdChapterCount.set(ch.comicId, (rdChapterCount.get(ch.comicId) || 0) + 1));
             } catch (e) {}
+            rdFlagsChanged();
         }
         let rdComicId = null;
         let rdChapterList = [];
@@ -2508,6 +2520,7 @@ function importData(e) {
                 box.textContent = e.message;
                 return;
             }
+            rdFlagsChanged();
             document.getElementById('rdLabel').value = '';
             document.getElementById('rdLabel').placeholder = `名稱，例如：第 ${rdChapterList.length + 1} 話`;
             box.textContent = '';
@@ -2906,6 +2919,7 @@ function importData(e) {
         // 刪除整部漫畫時，順便清掉它的圖片
         async function rdDeleteComic(comicId) {
             rdChapterCount.delete(comicId);
+            rdFlagsChanged();
             try {
                 const chapters = await rdGetChapters(comicId);
                 if (!chapters.length) return;
@@ -3192,7 +3206,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '300c4f82';
+        const APP_BUILD = '8a9038c5';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
