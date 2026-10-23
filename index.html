@@ -324,17 +324,17 @@
         .link-pick .lp-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
 
 
-        /* 內頁圖片按鈕（編輯視窗每一集） */
-        .link-img {
-            position: relative; width: 38px; height: 34px; flex: none;
-            display: flex; align-items: center; justify-content: center; gap: 2px;
-            border: 2px solid var(--ink); border-radius: 10px; background: #fff; color: var(--ink); font-size: 14px;
+        /* 內頁圖片集編輯列 */
+        .album-pick {
+            flex: 1; min-width: 0; height: 34px;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            border: 2px solid var(--ink); border-radius: 10px; background: #fff; color: var(--ink);
+            font-size: 12px; font-weight: 800; white-space: nowrap;
         }
-        .link-img .cnt { font-size: 10px; font-weight: 900; }
-        .link-img.has-pages { background: var(--yellow); }
-        .link-img.busy { opacity: .6; pointer-events: none; }
-        .link-img.busy .cnt { font-size: 9px; }
-        .link-img:active { transform: scale(.92); }
+        .album-pick i { color: var(--red); }
+        .album-pick.has-pages { background: var(--yellow); }
+        .album-pick.busy { opacity: .6; pointer-events: none; }
+        .album-pick:active { transform: scale(.97); }
         .link-pick .lp-ic { font-size: 11px; color: var(--red); margin-left: 4px; }
 
         /* 閱讀器 */
@@ -583,6 +583,14 @@
                         <div id="addLinks" class="link-editor"></div>
                         <button type="button" onclick="addLinkRow(document.getElementById('addLinks'))" class="link-add-btn"><i class="fa-solid fa-plus"></i><span>新增一集連結</span></button>
                     </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
+                            <i class="fa-regular fa-images text-[#a6051a] text-[10px]"></i>
+                            <span>內頁圖片（可加多集，直接在 App 內閱讀）</span>
+                        </label>
+                        <div id="addAlbums" class="link-editor"></div>
+                        <button type="button" onclick="addAlbumRow(document.getElementById('addAlbums'))" class="link-add-btn"><i class="fa-solid fa-plus"></i><span>新增一集圖片</span></button>
+                    </div>
 
                     <div>
                         <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
@@ -769,6 +777,14 @@
                         </label>
                         <div id="editLinks" class="link-editor"></div>
                         <button type="button" onclick="addLinkRow(document.getElementById('editLinks'))" class="link-add-btn"><i class="fa-solid fa-plus"></i><span>新增一集連結</span></button>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
+                            <i class="fa-regular fa-images text-[#a6051a] text-[10px]"></i>
+                            <span>內頁圖片（可加多集，直接在 App 內閱讀）</span>
+                        </label>
+                        <div id="editAlbums" class="link-editor"></div>
+                        <button type="button" onclick="addAlbumRow(document.getElementById('editAlbums'))" class="link-add-btn"><i class="fa-solid fa-plus"></i><span>新增一集圖片</span></button>
                     </div>
                     <div>
                         <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
@@ -1538,6 +1554,7 @@
                 genre: document.getElementById('inputGenre').value.trim(),
                 status: statusInput ? statusInput.value : '連載中',
                 links: addLinksValue,
+                albums: readAlbums(document.getElementById('addAlbums')),
                 url: latestUrl(addLinksValue),
                 coverUrl: safeUrl(document.getElementById('inputCoverUrl').value.trim()),
                 progress: parseProgress(document.getElementById('inputProgress').value),
@@ -1548,6 +1565,7 @@
             saveComics();
             document.getElementById('addComicForm').reset();
             initLinkEditor(document.getElementById('addLinks'), []);
+            initAlbumEditor(document.getElementById('addAlbums'), []);
             syncCustomSelects();
             showMsg('新增成功', '已成功將漫畫加入追蹤清單！');
             switchTab('home');
@@ -1599,6 +1617,7 @@
             document.getElementById('editInputTitle').value = comic.title;
             document.getElementById('editInputGenre').value = comic.genre;
             initLinkEditor(document.getElementById('editLinks'), getLinks(comic));
+            initAlbumEditor(document.getElementById('editAlbums'), getAlbums(comic));
             document.getElementById('editInputCoverUrl').value = comic.coverUrl || '';
             document.getElementById('editInputProgress').value = comic.progress > 0 ? comic.progress : '';
             const editDay = getUpdateDay(comic);
@@ -1628,6 +1647,7 @@
             comics[comicIndex].status = statusInput ? statusInput.value : '連載中';
             const editedLinks = readLinks(document.getElementById('editLinks'));
             comics[comicIndex].links = editedLinks;
+            comics[comicIndex].albums = readAlbums(document.getElementById('editAlbums'));
             comics[comicIndex].url = latestUrl(editedLinks);
             comics[comicIndex].coverUrl = safeUrl(document.getElementById('editInputCoverUrl').value.trim());
             comics[comicIndex].progress = parseProgress(document.getElementById('editInputProgress').value);
@@ -1812,6 +1832,13 @@ function validateComic(comic) {
     }
 
     if (
+        comic.albums !== undefined &&
+        (!Array.isArray(comic.albums) || comic.albums.some(a => !a || typeof a !== 'object'))
+    ) {
+        return false;
+    }
+
+    if (
         comic.links !== undefined &&
         (!Array.isArray(comic.links) || comic.links.some(l => !l || typeof l !== 'object' || (l.url !== undefined && typeof l.url !== 'string') || (l.label !== undefined && typeof l.label !== 'string')))
     ) {
@@ -1975,6 +2002,7 @@ function importData(e) {
                     genre: String(comic.genre).trim(),
                     status: comic.status || '連載中',
                     links: getLinks(comic),
+                    albums: getAlbums(comic),
                     url: latestUrl(getLinks(comic)),
                     coverUrl: safeUrl(comic.coverUrl),
                     progress: parseProgress(comic.progress),
@@ -2291,7 +2319,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '0a8ce040';
+        const APP_BUILD = 'f1be6b38';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
@@ -2416,48 +2444,84 @@ function importData(e) {
         function getLinks(comic) {
             if (Array.isArray(comic.links)) {
                 return comic.links
-                    .map(l => ({
-                        label: String((l && l.label) || '').trim(),
-                        url: safeUrl(l && l.url),
-                        id: String((l && l.id) || ''),
-                        pages: Math.max(0, Number(l && l.pages) || 0)
-                    }))
-                    .filter(l => l.url || l.pages > 0);
+                    .map(l => ({ label: String((l && l.label) || '').trim(), url: safeUrl(l && l.url) }))
+                    .filter(l => l.url);
             }
             const legacy = safeUrl(comic.url);
-            return legacy ? [{ label: '', url: legacy, id: '', pages: 0 }] : [];
+            return legacy ? [{ label: '', url: legacy }] : [];
+        }
+
+        // 內頁圖片集（跟網址無關，各自獨立）。相容剛推出時綁在連結上的資料（links[i].id / pages）
+        function getAlbums(comic) {
+            const out = [];
+            const add = a => {
+                if (!a || !a.id || !(Number(a.pages) > 0)) return;
+                const id = String(a.id);
+                if (out.some(o => o.id === id)) return;
+                out.push({ label: String(a.label || '').trim(), id, pages: Number(a.pages) });
+            };
+            if (Array.isArray(comic.albums)) comic.albums.forEach(add);
+            if (Array.isArray(comic.links)) comic.links.forEach(add);
+            return out;
         }
 
         function latestUrl(links) { return links.length ? links[links.length - 1].url : ''; }
-
-        function newId() {
-            return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
-        }
-
-        function setRowPages(row, n) {
-            row.dataset.pages = String(n);
-            const btn = row.querySelector('.link-img');
-            btn.classList.toggle('has-pages', n > 0);
-            btn.querySelector('.cnt').textContent = n > 0 ? String(n) : '';
-        }
 
         function addLinkRow(box, link) {
             const row = document.createElement('div');
             row.className = 'link-row';
             row.innerHTML = '<input type="text" class="lk-label" maxlength="20" placeholder="第幾話" autocomplete="off">' +
                 '<input type="url" class="lk-url" placeholder="https://" autocomplete="off" autocapitalize="off" spellcheck="false">' +
-                '<button type="button" class="link-img" aria-label="這集的內頁圖片"><i class="fa-regular fa-images"></i><span class="cnt"></span></button>' +
                 '<button type="button" class="link-del" aria-label="刪除這集"><i class="fa-solid fa-xmark"></i></button>';
             row.querySelector('.lk-label').value = (link && link.label) || '';
             row.querySelector('.lk-url').value = (link && link.url) || '';
-            row.dataset.id = (link && link.id) || newId();
-            setRowPages(row, (link && link.pages) || 0);
-            row.querySelector('.link-img').onclick = () => pickEpisodeImages(row);
             row.querySelector('.link-del').onclick = () => {
                 row.remove();
                 if (!box.children.length) addLinkRow(box);
             };
             box.appendChild(row);
+        }
+
+        // ---- 內頁圖片集編輯器：每列 = 集數名稱 + 選圖片 + 刪除 ----
+        function newId() {
+            return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
+        }
+
+        function setRowPages(row, n) {
+            row.dataset.pages = String(n);
+            const btn = row.querySelector('.album-pick');
+            btn.classList.toggle('has-pages', n > 0);
+            btn.querySelector('.ap-text').textContent = n > 0 ? `${n} 張・重新選擇` : '選擇圖片';
+        }
+
+        function addAlbumRow(box, album) {
+            const row = document.createElement('div');
+            row.className = 'link-row album-row';
+            row.innerHTML = '<input type="text" class="lk-label" maxlength="20" placeholder="第幾話" autocomplete="off">' +
+                '<button type="button" class="album-pick"><i class="fa-regular fa-images"></i><span class="ap-text"></span></button>' +
+                '<button type="button" class="link-del" aria-label="刪除這集圖片"><i class="fa-solid fa-xmark"></i></button>';
+            row.querySelector('.lk-label').value = (album && album.label) || '';
+            row.dataset.id = (album && album.id) || newId();
+            setRowPages(row, (album && album.pages) || 0);
+            row.querySelector('.album-pick').onclick = () => pickEpisodeImages(row);
+            row.querySelector('.link-del').onclick = () => {
+                row.remove();
+                if (!box.children.length) addAlbumRow(box);
+            };
+            box.appendChild(row);
+        }
+
+        function initAlbumEditor(box, albums) {
+            box.innerHTML = '';
+            (albums && albums.length ? albums : [null]).forEach(a => addAlbumRow(box, a));
+        }
+
+        function readAlbums(box) {
+            return Array.from(box.querySelectorAll('.album-row')).map(row => ({
+                label: row.querySelector('.lk-label').value.trim(),
+                id: row.dataset.id || '',
+                pages: Number(row.dataset.pages) || 0
+            })).filter(a => a.id && a.pages > 0);
         }
 
         function initLinkEditor(box, links) {
@@ -2466,37 +2530,40 @@ function importData(e) {
         }
 
         function readLinks(box) {
-            return Array.from(box.querySelectorAll('.link-row')).map(row => ({
+            return Array.from(box.querySelectorAll('.link-row:not(.album-row)')).map(row => ({
                 label: row.querySelector('.lk-label').value.trim(),
-                url: safeUrl(row.querySelector('.lk-url').value.trim()),
-                id: row.dataset.id || '',
-                pages: Number(row.dataset.pages) || 0
-            })).filter(l => l.url || l.pages > 0);
+                url: safeUrl(row.querySelector('.lk-url').value.trim())
+            })).filter(l => l.url);
         }
 
         // 點卡片：沒有連結提示；只有一個直接開；多個就依序列出集數
-        function openLinkSheet(comic, links) {
+        // 點卡片可開啟的項目：先列內頁圖片集（直接在 App 內閱讀），再列網址
+        function getEntries(comic) {
+            return [
+                ...getAlbums(comic).map((a, i) => ({ type: 'album', label: a.label, albumIndex: i })),
+                ...getLinks(comic).map(l => ({ type: 'link', label: l.label, url: l.url }))
+            ];
+        }
+
+        function openLinkSheet(comic, entries) {
             const sheet = document.getElementById('optionSheet');
             const list = document.getElementById('optionSheetList');
-            document.getElementById('optionSheetTitle').innerText = `選擇要開啟的集數（共 ${links.length} 集）`;
+            document.getElementById('optionSheetTitle').innerText = `選擇要開啟的項目（共 ${entries.length} 項）`;
             list.className = 'grid grid-cols-3 gap-2';
             list.innerHTML = '';
             const close = () => { sheet.classList.add('hidden'); sheet.onclick = null; document.getElementById('optionSheetCancel').onclick = null; };
-            // 照輸入的順序排列；有內頁圖片的集數會多一個圖片圖示
-            links.forEach((l, i) => {
+            entries.forEach((en, i) => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'option-item link-pick';
                 const name = document.createElement('span');
                 name.className = 'lp-name';
-                name.textContent = l.label || String(i + 1);
+                name.textContent = en.label || String(i + 1);
                 btn.appendChild(name);
-                if (l.pages > 0) {
-                    const ic = document.createElement('i');
-                    ic.className = 'fa-regular fa-images lp-ic';
-                    btn.appendChild(ic);
-                }
-                btn.onclick = () => { close(); openEpisode(comic.id, i); };
+                const ic = document.createElement('i');
+                ic.className = en.type === 'album' ? 'fa-regular fa-images lp-ic' : 'fa-solid fa-link lp-ic';
+                btn.appendChild(ic);
+                btn.onclick = () => { close(); openEntry(comic.id, en); };
                 list.appendChild(btn);
             });
             document.getElementById('optionSheetCancel').onclick = close;
@@ -2504,34 +2571,27 @@ function importData(e) {
             sheet.classList.remove('hidden');
         }
 
-        // 開啟某一集：有內頁圖片就用閱讀器，否則開網址
-        async function openEpisode(comicId, index) {
+        async function openEntry(comicId, entry) {
             const comic = comics.find(c => c.id === comicId);
             if (!comic) return;
-            const links = getLinks(comic);
-            const link = links[index];
-            if (!link) return;
-            if (link.pages > 0 && link.id) {
-                const ok = await openReader(comic, index);
-                if (ok) return;
-                if (!link.url) {
-                    showMsg('找不到圖片', '這一集的內頁圖片不在這支手機上（備份檔不含圖片）。請長按卡片重新選擇圖片，或補上網址。');
-                    return;
-                }
+            if (entry.type === 'link') {
+                window.open(entry.url, '_blank', 'noopener,noreferrer');
+                return;
             }
-            if (link.url) window.open(link.url, '_blank', 'noopener,noreferrer');
+            const ok = await openReader(comic, entry.albumIndex);
+            if (!ok) showMsg('找不到圖片', '這一集的圖片不在這支手機上（備份檔不含圖片）。請長按卡片重新選擇圖片。');
         }
 
         function openComicLink(id) {
             const comic = comics.find(c => c.id === id);
             if (!comic) return;
-            const links = getLinks(comic);
-            if (links.length === 0) {
-                showMsg('尚未設定網址', '這部漫畫還沒有網址或圖片。長按卡片可以編輯。');
-            } else if (links.length === 1) {
-                openEpisode(id, 0);
+            const entries = getEntries(comic);
+            if (entries.length === 0) {
+                showMsg('尚未設定網址或圖片', '這部漫畫還沒有網址或內頁圖片。長按卡片可以編輯。');
+            } else if (entries.length === 1) {
+                openEntry(id, entries[0]);
             } else {
-                openLinkSheet(comic, links);
+                openLinkSheet(comic, entries);
             }
         }
 
@@ -2610,7 +2670,7 @@ function importData(e) {
                     // 沒有資料時不清理，避免資料讀取失敗時誤刪所有圖片
                     if (!comics.length || !window.indexedDB) return;
                     const used = new Set();
-                    comics.forEach(c => getLinks(c).forEach(l => { if (l.id) used.add(l.id); }));
+                    comics.forEach(c => getAlbums(c).forEach(a => used.add(a.id)));
                     const stored = await listStoredEpisodes();
                     for (const ep of stored) if (!used.has(ep)) await deleteEpisodePages(ep);
                     updateImgUsage();
@@ -2656,13 +2716,13 @@ function importData(e) {
                     if (!go) return;
                 }
                 files.sort((a, b) => natural.compare(a.name, b.name));
-                const btn = row.querySelector('.link-img');
-                const cnt = btn.querySelector('.cnt');
+                const btn = row.querySelector('.album-pick');
+                const cnt = btn.querySelector('.ap-text');
                 btn.classList.add('busy');
                 try {
                     const pages = [];
                     for (let i = 0; i < files.length; i++) {
-                        cnt.textContent = `${i + 1}/${files.length}`;
+                        cnt.textContent = `處理中 ${i + 1}/${files.length}`;
                         pages.push(...await processImage(files[i]));
                     }
                     await putEpisodePages(row.dataset.id, pages);
@@ -2693,12 +2753,12 @@ function importData(e) {
         const reader = { comicId: null, index: 0, urls: new Map(), loadObs: null, unloadObs: null, raf: 0, hideTimer: null, saveTimer: null };
 
         function readerEpisodes(comic) {
-            return getLinks(comic).map((l, i) => ({ l, i })).filter(x => x.l.pages > 0 && x.l.id);
+            return getAlbums(comic).map((l, i) => ({ l, i }));
         }
 
         async function openReader(comic, index) {
-            const links = getLinks(comic);
-            const link = links[index];
+            const link = getAlbums(comic)[index];
+            if (!link) return false;
             let pages = [];
             try { pages = await getEpisodePages(link.id); } catch (e) { console.error(e); }
             if (!pages.length) return false;
@@ -2785,7 +2845,7 @@ function importData(e) {
         function saveReaderPos() {
             if (reader.comicId == null) return;
             const comic = comics.find(c => c.id === reader.comicId);
-            const link = comic && getLinks(comic)[reader.index];
+            const link = comic && getAlbums(comic)[reader.index];
             if (!link || !link.id) return;
             const scroller = document.getElementById('readerScroll');
             const max = Math.max(1, scroller.scrollHeight - scroller.clientHeight);
@@ -2797,7 +2857,7 @@ function importData(e) {
             const comic = comics.find(c => c.id === reader.comicId);
             if (!comic) return;
             saveReaderPos();
-            const link = getLinks(comic)[index];
+            const link = getAlbums(comic)[index];
             try { localStorage.removeItem('mangaki_rpos_' + link.id); } catch (e) {}
             openReader(comic, index);
         }
@@ -2879,6 +2939,7 @@ function importData(e) {
         window.onload = function() {
             initCustomSelects();
             initLinkEditor(document.getElementById('addLinks'), []);
+            initAlbumEditor(document.getElementById('addAlbums'), []);
             initCardGestures();
             initReader();
             renderComics();
