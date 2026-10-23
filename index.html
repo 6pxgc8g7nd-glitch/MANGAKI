@@ -2,6 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    <meta name="referrer" content="no-referrer">
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="manifest" href="manifest.json">
@@ -419,6 +420,12 @@
         }
 
         function handleImgError(imgEl) {
+            // http 圖片在 https 頁面會被瀏覽器擋下，先試一次 https
+            if (imgEl.src.startsWith('http://') && !imgEl.dataset.retried) {
+                imgEl.dataset.retried = '1';
+                imgEl.src = imgEl.src.replace('http://', 'https://');
+                return;
+            }
             const parent = imgEl.parentElement;
             parent.innerHTML = '<div class="w-full h-full flex items-center justify-center text-3xl">📖</div>';
         }
@@ -536,7 +543,7 @@
                 const coverSrc = safeUrl(comic.coverUrl);
                 const coverDisplay = coverSrc ?
                     `<div class="w-full aspect-[3/4] bg-[#fafafa] rounded-t-xl overflow-hidden relative ">
-                        <img src="${escapeHtml(coverSrc)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="handleImgError(this)">
+                        <img src="${escapeHtml(coverSrc)}" referrerpolicy="no-referrer" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="handleImgError(this)">
                      </div>` :
                     `<div class="w-full aspect-[3/4] bg-[#fafafa] rounded-t-xl flex items-center justify-center text-3xl relative">
                         📖
@@ -666,6 +673,7 @@
             modalEmojiContainer.innerText = '📖';
             if (coverSrc) {
                 const img = document.createElement('img');
+                img.referrerPolicy = 'no-referrer';
                 img.src = coverSrc;
                 img.className = 'w-full h-full object-cover';
                 img.onerror = () => { modalEmojiContainer.innerText = '📖'; };
