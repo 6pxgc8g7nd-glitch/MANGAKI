@@ -1377,8 +1377,10 @@ function importData(e) {
                 cache: 'no-store'
             });
             if (!res.ok) throw new Error(ghErrorText(res.status));
-            const repos = (await res.json()).filter(r => r.permissions && r.permissions.push);
-            if (repos.length === 0) throw new Error('這個權杖沒有任何儲存庫的寫入權限，請確認已加上 Contents: Read and write，並選了一個儲存庫。');
+            // 細粒度權杖對公開庫一律唯讀，且 permissions 欄位是「使用者」的角色、不是權杖的權限；
+            // 私人庫只有在權杖被明確授權時才會出現，所以只看私人庫
+            const repos = (await res.json()).filter(r => r.private === true && r.permissions && r.permissions.push);
+            if (repos.length === 0) throw new Error('這個權杖沒有授權任何私人儲存庫。請建立一個私人庫，並在權杖的 Repository access 選它，Contents 設為 Read and write。');
             if (repos.length > 1) {
                 const names = repos.slice(0, 5).map(r => r.full_name).join('、');
                 throw new Error(`這個權杖授權了 ${repos.length} 個儲存庫（${names}${repos.length > 5 ? '…' : ''}）。請重新建立只選「一個」儲存庫的權杖。`);
