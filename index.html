@@ -492,24 +492,22 @@
                 </div>
 
                 <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 space-y-3">
-                    <div class="space-y-2">
-                        <label class="block text-[11px] font-bold text-neutral-600">資料備份與還原</label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button onclick="exportData()" class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40 flex items-center justify-center space-x-1.5">
-                                <i class="fa-solid fa-download text-xs text-[#a6051a]"></i>
-                                <span>匯出備份</span>
-                            </button>
-                            <label class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40 flex items-center justify-center space-x-1.5 cursor-pointer">
-                                <i class="fa-solid fa-upload text-xs text-[#a6051a]"></i>
-                                <span>還原備份</span>
-                                <input type="file" accept=".json" onchange="importData(event)" class="hidden">
-                            </label>
-                            <button onclick="copyBackupText()" class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40 flex items-center justify-center space-x-1.5 col-span-2">
-                                <i class="fa-solid fa-copy text-xs text-[#a6051a]"></i>
-                                <span>複製備份文字（下載失敗時使用）</span>
-                            </button>
-                        </div>
+                    <div class="flex items-center space-x-1.5">
+                        <i class="fa-solid fa-box-archive text-[#a6051a] text-sm"></i>
+                        <label class="block text-[11px] font-bold text-neutral-600">資料備份</label>
                     </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="exportData()" class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40 flex items-center justify-center space-x-1.5">
+                            <i class="fa-solid fa-download text-xs text-[#a6051a]"></i>
+                            <span>匯出</span>
+                        </button>
+                        <label class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40 flex items-center justify-center space-x-1.5 cursor-pointer">
+                            <i class="fa-solid fa-upload text-xs text-[#a6051a]"></i>
+                            <span>還原</span>
+                            <input type="file" accept=".json" onchange="importData(event)" class="hidden">
+                        </label>
+                    </div>
+                    <button onclick="copyBackupText()" class="text-[10px] text-neutral-500 underline">下載失敗？複製備份文字</button>
                 </div>
 
                 <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 space-y-3">
@@ -533,28 +531,23 @@
                 <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 space-y-3">
                     <div class="flex items-center space-x-1.5">
                         <i class="fa-brands fa-github text-[#a6051a] text-sm"></i>
-                        <label class="block text-[11px] font-bold text-neutral-600">自動備份到 GitHub</label>
+                        <label class="block text-[11px] font-bold text-neutral-600">GitHub 自動備份</label>
                     </div>
-                    <p class="text-[10px] text-neutral-600 leading-relaxed">
-                        每次新增、修改或刪除漫畫後，約 8 秒會自動把清單存成 JSON 並 commit 到你指定的儲存庫。
-                        只要貼上<strong>細粒度權杖（Fine-grained token）</strong>，App 會自動找到它授權的儲存庫，不用另外輸入名稱。
-                        權杖請只授權「一個<strong>私人</strong>儲存庫」的 Contents 讀寫。權杖只存在這支手機的瀏覽器，不會包含在備份檔裡。
-                    </p>
-                    <div>
-                        <label class="block text-[11px] font-bold text-neutral-600 mb-1">權杖 Token</label>
-                        <input type="password" id="ghToken" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_..." class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
+                    <input type="password" id="ghToken" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="貼上權杖 github_pat_..." class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center space-x-2 text-xs font-bold text-neutral-900 cursor-pointer">
+                            <input type="checkbox" id="ghAuto" checked class="accent-[#a6051a] w-4 h-4">
+                            <span>自動備份</span>
+                        </label>
+                        <button onclick="ghSaveSettings()" class="bg-[#a6051a] hover:bg-[#8a0416] active:scale-95 text-white font-bold px-5 py-2 rounded-xl shadow-lg transition text-xs">儲存</button>
                     </div>
-                    <label class="flex items-center space-x-2 text-xs font-bold text-neutral-900 cursor-pointer">
-                        <input type="checkbox" id="ghAuto" checked class="accent-[#a6051a] w-4 h-4">
-                        <span>資料變動後自動備份</span>
-                    </label>
                     <p id="ghStatus" class="text-[10px] text-neutral-600 min-h-[14px]"></p>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="ghSaveSettings()" class="col-span-2 bg-[#a6051a] hover:bg-[#8a0416] active:scale-95 text-white font-bold py-2.5 rounded-xl shadow-lg transition text-xs">儲存設定</button>
-                        <button onclick="ghBackupNow(true)" class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40">立即備份</button>
-                        <button onclick="ghRestore()" class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40">從 GitHub 還原</button>
-                        <button onclick="ghClearSettings()" class="col-span-2 bg-white hover:bg-neutral-100 active:scale-95 text-[#a6051a] font-bold py-2 rounded-xl transition text-xs border border-[#a6051a]/40">清除權杖與設定</button>
+                    <div class="flex items-center space-x-3 text-[10px] text-neutral-500">
+                        <button onclick="ghBackupNow(true)" class="underline">立即備份</button>
+                        <button onclick="ghRestore()" class="underline">從 GitHub 還原</button>
+                        <button onclick="ghClearSettings()" class="underline">清除權杖</button>
                     </div>
+                    <p class="text-[10px] text-neutral-500">請用只授權單一私人儲存庫的細粒度權杖。</p>
                 </div>
             </section>
 
