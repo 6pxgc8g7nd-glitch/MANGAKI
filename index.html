@@ -238,6 +238,20 @@
             border-color: var(--ink);
             box-shadow: 2px 2px 0 var(--ink);
         }
+
+        /* 按鈕群組加白底，避免被背景網點干擾 */
+        .nav-group {
+            background: rgba(255,255,255,0.92);
+            border: 2.5px solid var(--ink);
+            border-radius: 16px;
+            padding: 2px 4px;
+            box-shadow: 3px 3px 0 var(--ink);
+        }
+        .app-container > header .nav-btn { min-width: 48px; border-radius: 12px; }
+        .app-container > header .nav-btn i { color: var(--ink); }
+        .app-container > header .nav-btn.is-active { background: var(--yellow); border-color: var(--ink); box-shadow: none; }
+        .app-container > header .nav-btn.is-active i { color: var(--red); }
+
         #statusTabs {
             border-top: 3px solid var(--ink);
         }
@@ -274,18 +288,18 @@
                         <span class="text-[#a6051a]">MANGA</span><span class="text-neutral-900">KI</span>
                     </h1>
                 </div>
-                <div class="flex items-end space-x-1.5">
+                <div class="nav-group flex items-end">
                     <button onclick="switchTab('categories')" id="nav-categories" class="nav-btn flex flex-col items-center justify-center">
-                        <i class="fa-regular fa-compass text-base"></i>
-                        <span class="text-[10px] leading-none mt-1">分類</span>
+                        <i class="fa-solid fa-compass text-[19px]"></i>
+                        <span class="text-[11px] leading-none mt-1">分類</span>
                     </button>
                     <button onclick="switchTab('add')" id="nav-add" class="nav-btn flex flex-col items-center justify-center">
-                        <i class="fa-regular fa-square-plus text-base"></i>
-                        <span class="text-[10px] leading-none mt-1">新增</span>
+                        <i class="fa-solid fa-square-plus text-[19px]"></i>
+                        <span class="text-[11px] leading-none mt-1">新增</span>
                     </button>
                     <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn flex flex-col items-center justify-center">
-                        <i class="fa-solid fa-gear text-base"></i>
-                        <span class="text-[10px] leading-none mt-1">設定</span>
+                        <i class="fa-solid fa-gear text-[19px]"></i>
+                        <span class="text-[11px] leading-none mt-1">設定</span>
                     </button>
                 </div>
             </div>
