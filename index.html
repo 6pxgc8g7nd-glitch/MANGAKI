@@ -149,6 +149,37 @@
         .app-container > nav .nav-btn.text-white { color: var(--yellow) !important; }
         .app-container > nav .nav-btn.text-white i { transform: translateY(-1px) scale(1.15); }
 
+
+        /* 標題列裝飾：放射速度線 + 網點漸層 + 驚嘆爆炸框 */
+        .app-container > header {
+            position: relative;
+            overflow: hidden;
+            background-color: var(--yellow) !important;
+            background-image: repeating-conic-gradient(from 0deg at 86% 55%, rgba(255,255,255,0) 0deg 7deg, rgba(255,255,255,0.35) 7deg 10deg) !important;
+        }
+        .app-container > header::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(166,5,26,0.55) 1.6px, transparent 2px);
+            background-size: 8px 8px;
+            -webkit-mask-image: linear-gradient(to left, #000 0%, transparent 65%);
+            mask-image: linear-gradient(to left, #000 0%, transparent 65%);
+            pointer-events: none;
+        }
+        .app-container > header::after {
+            content: "";
+            position: absolute;
+            right: 12px;
+            bottom: 3px;
+            width: 40px;
+            height: 40px;
+            background: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 110 110%22%3E%3Cpolygon points=%2250.0,4.0 57.8,21.0 73.0,10.2 71.2,28.8 89.8,27.0 79.0,42.2 96.0,50.0 79.0,57.8 89.8,73.0 71.2,71.2 73.0,89.8 57.8,79.0 50.0,96.0 42.2,79.0 27.0,89.8 28.8,71.2 10.2,73.0 21.0,57.8 4.0,50.0 21.0,42.2 10.2,27.0 28.8,28.8 27.0,10.2 42.2,21.0%22 fill=%22%23111%22 transform=%22translate%284,4%29%22/%3E%3Cpolygon points=%2250.0,4.0 57.8,21.0 73.0,10.2 71.2,28.8 89.8,27.0 79.0,42.2 96.0,50.0 79.0,57.8 89.8,73.0 71.2,71.2 73.0,89.8 57.8,79.0 50.0,96.0 42.2,79.0 27.0,89.8 28.8,71.2 10.2,73.0 21.0,57.8 4.0,50.0 21.0,42.2 10.2,27.0 28.8,28.8 27.0,10.2 42.2,21.0%22 fill=%22%23a6051a%22 stroke=%22%23111%22 stroke-width=%223%22 stroke-linejoin=%22round%22/%3E%3Ctext x=%2250%22 y=%2268%22 font-family=%22Arial Black,Impact,sans-serif%22 font-size=%2252%22 font-weight=%22900%22 text-anchor=%22middle%22 fill=%22%23fff%22 stroke=%22%23111%22 stroke-width=%223%22 paint-order=%22stroke%22%3E%21%3C/text%3E%3Cpolygon points=%2214.0,12.0 16.1,19.9 24.0,22.0 16.1,24.1 14.0,32.0 11.9,24.1 4.0,22.0 11.9,19.9%22 fill=%22%23fff%22 stroke=%22%23111%22 stroke-width=%222%22 stroke-linejoin=%22round%22/%3E%3Cpolygon points=%2230.0,79.0 31.8,84.2 37.0,86.0 31.8,87.8 30.0,93.0 28.2,87.8 23.0,86.0 28.2,84.2%22 fill=%22%23fff%22 stroke=%22%23111%22 stroke-width=%222%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E") center / contain no-repeat;
+            transform: rotate(8deg);
+            pointer-events: none;
+        }
+        .app-container > header > * { position: relative; z-index: 1; }
+
         /* 主畫面 App：iOS 會在畫面頂端做漸層模糊，標題往下移一點避開 */
         @media (display-mode: standalone) {
             .app-container > header { padding-top: 20px !important; }
