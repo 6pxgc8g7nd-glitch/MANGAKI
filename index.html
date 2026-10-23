@@ -407,6 +407,7 @@
                         </h3>
                         <span id="comicCount" class="text-[11px] text-neutral-600 font-medium">共 0 部</span>
                     </div>
+                    <p class="text-[10px] text-neutral-500 px-1 -mt-1">點擊前往閱讀・長按編輯</p>
                     
                     <!-- Active Filter Banner -->
                     <div id="filterBannerContainer"></div>
@@ -697,6 +698,9 @@
                     <div class="flex space-x-2 pt-1">
                         <button type="button" onclick="closeEditModal()" class="flex-1 bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2 rounded-xl transition text-xs border border-[#a6051a]/40">取消</button>
                         <button type="submit" class="flex-1 bg-[#a6051a] hover:bg-[#8a0416] active:scale-95 text-white font-bold py-2 rounded-xl shadow transition text-xs">儲存修改</button>
+                    </div>
+                <div class="text-center pt-1">
+                        <button type="button" onclick="deleteCurrentComic()" class="text-[10px] text-[#a6051a] underline">刪除這部漫畫</button>
                     </div>
                 </form>
             </div>
@@ -1072,7 +1076,7 @@
                      </div>`;
 
                 return `
-                    <div data-id="${escapeHtml(comic.id)}" onclick="openComicModal(this.dataset.id)" class="group bg-[#ffffff] hover:bg-[#f0f0f0]  rounded-xl shadow transition cursor-pointer overflow-hidden flex flex-col active:scale-[0.98]">
+                    <div data-id="${escapeHtml(comic.id)}" class="group bg-[#ffffff] hover:bg-[#f0f0f0]  rounded-xl shadow transition cursor-pointer overflow-hidden flex flex-col active:scale-[0.98]">
                         <div class="relative">
                             ${coverDisplay}
                             <div class="cover-title"><h4>${escapeHtml(comic.title)}</h4></div>
@@ -1266,6 +1270,7 @@
             comics = comics.filter(c => c.id !== activeComicId);
             saveComics();
             closeComicModal();
+            closeEditModal();
             showMsg('刪除成功', '已從追蹤清單移除該漫畫。');
             renderComics();
         }
@@ -1997,9 +2002,63 @@ function importData(e) {
             }).catch(err => console.error('TOPTOON service worker 註冊失敗：', err));
         }
 
+        // 卡片手勢：點擊 → 前往連結；長按 → 編輯
+        const LONG_PRESS_MS = 500;
+        const MOVE_TOLERANCE = 10;
+
+        function openComicLink(id) {
+            const comic = comics.find(c => c.id === id);
+            if (!comic) return;
+            const href = safeUrl(comic.url);
+            if (href) {
+                window.open(href, '_blank', 'noopener,noreferrer');
+            } else {
+                showMsg('尚未設定網址', '這部漫畫還沒有網址。長按卡片可以編輯並加上網址。');
+            }
+        }
+
+        function editComicById(id) {
+            activeComicId = id;
+            openEditModal();
+        }
+
+        function initCardGestures() {
+            const list = document.getElementById('comicListContainer');
+            let timer = null, startX = 0, startY = 0, pressedId = null, longPressed = false;
+
+            const cancel = () => { clearTimeout(timer); timer = null; pressedId = null; };
+
+            list.addEventListener('pointerdown', e => {
+                const card = e.target.closest('[data-id]');
+                if (!card) return;
+                longPressed = false;
+                pressedId = card.dataset.id;
+                startX = e.clientX; startY = e.clientY;
+                clearTimeout(timer);
+                timer = setTimeout(() => {
+                    timer = null;
+                    longPressed = true;
+                    if (navigator.vibrate) navigator.vibrate(15);
+                    editComicById(pressedId);
+                }, LONG_PRESS_MS);
+            });
+            list.addEventListener('pointermove', e => {
+                if (timer && Math.hypot(e.clientX - startX, e.clientY - startY) > MOVE_TOLERANCE) cancel();
+            });
+            ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => list.addEventListener(t, () => { if (timer) cancel(); }));
+            list.addEventListener('contextmenu', e => e.preventDefault());
+            list.addEventListener('click', e => {
+                const card = e.target.closest('[data-id]');
+                if (!card) return;
+                if (longPressed) { longPressed = false; return; }
+                openComicLink(card.dataset.id);
+            });
+        }
+
         // Initialize on load
         window.onload = function() {
             initCustomSelects();
+            initCardGestures();
             renderComics();
         };
     </script>
