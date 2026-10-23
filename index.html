@@ -82,10 +82,10 @@
             font-weight: 900;
             font-size: 1.5rem;
             letter-spacing: 0.08em;
-            text-shadow: 2px 2px 0 var(--ink);
+            text-shadow: none;
         }
-        .app-container > header h1 span:first-child { color: #ffffff !important; }
-        .app-container > header h1 span:last-child { color: var(--red) !important; }
+        .app-container > header h1 span:first-child { color: var(--red) !important; }
+        .app-container > header h1 span:last-child { color: var(--ink) !important; }
 
         /* 白色圓角卡片（漫畫格） */
         .app-container [class*="bg-[#ffffff]"][class*="rounded-xl"] {
@@ -167,7 +167,7 @@
         </header>
 
         <!-- Main Content Area -->
-        <main class="flex-1 w-full p-3.5 overflow-y-auto" style="padding-bottom: calc(6rem + env(safe-area-inset-bottom));">
+        <main class="flex-1 w-full p-3.5 overflow-y-auto" style="padding-bottom: calc(6rem + max(0rem, env(safe-area-inset-bottom) - 1.25rem));">
 
             <!-- TAB 1: 首頁 (Home) -->
             <section id="tab-home" class="space-y-3">
@@ -318,7 +318,7 @@
         </main>
 
         <!-- Rounded Floating Bottom Navigation Bar -->
-        <nav class="absolute left-3 right-3 bg-[#a6051a] z-40 max-w-[456px] mx-auto shadow-2xl rounded-[28px] overflow-hidden flex-shrink-0" style="bottom: calc(0.75rem + env(safe-area-inset-bottom));">
+        <nav class="absolute left-3 right-3 bg-[#a6051a] z-40 max-w-[456px] mx-auto shadow-2xl rounded-[28px] overflow-hidden flex-shrink-0" style="bottom: max(0.5rem, calc(env(safe-area-inset-bottom) - 1.25rem));">
             <div class="grid grid-cols-4 h-14 text-center">
                 <!-- Tab 1: 首頁 -->
                 <button onclick="goHome()" id="nav-home" class="nav-btn flex flex-col items-center justify-center text-white font-bold transition active:bg-white/10">
