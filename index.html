@@ -799,7 +799,7 @@
         <!-- 內建閱讀：閱讀畫面 -->
         <div id="readerView" class="fixed inset-0 z-[55] hidden bg-black text-white" style="touch-action: pan-y;">
             <div id="rdScroll" class="absolute inset-0 overflow-y-auto hidden" style="-webkit-overflow-scrolling: touch;"></div>
-            <div id="rdPaged" class="absolute inset-0 hidden flex items-center justify-center select-none">
+            <div id="rdPaged" class="absolute inset-0 hidden flex items-center justify-center select-none" style="padding-bottom: 4.5rem;">
                 <img id="rdPageImg" alt="" class="max-w-full max-h-full object-contain" draggable="false">
             </div>
             <div id="rdBar" class="absolute top-0 inset-x-0 flex items-center gap-2 px-3 py-2 bg-black/80 text-xs" style="padding-top: max(0.5rem, env(safe-area-inset-top));">
@@ -2847,7 +2847,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '4fa95c8f';
+        const APP_BUILD = '299e05a9';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
