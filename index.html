@@ -2372,6 +2372,15 @@ function importData(e) {
         const RD_CFG_KEY = 'mangaki_reader_cfg';
         const RD_POS_KEY = 'mangaki_reader_pos';
         let rdDbPromise = null;
+        const rdHasChapters = new Set();   // 有匯入過圖片的漫畫 id（讓點卡片可以同步判斷）
+
+        async function rdRefreshFlags() {
+            try {
+                const all = await rdRun('chapters', 'readonly', tx => tx.objectStore('chapters').getAll());
+                rdHasChapters.clear();
+                (all || []).forEach(ch => rdHasChapters.add(ch.comicId));
+            } catch (e) {}
+        }
         let rdComicId = null;
         let rdChapterList = [];
         let rd = null; // { chapter, urls, idx }
@@ -2433,6 +2442,7 @@ function importData(e) {
             const box = document.getElementById('rdChapters');
             try {
                 rdChapterList = await rdGetChapters(rdComicId);
+                if (rdChapterList.length) rdHasChapters.add(rdComicId); else rdHasChapters.delete(rdComicId);
             } catch (e) {
                 box.textContent = e.message;
                 return;
@@ -2511,6 +2521,7 @@ function importData(e) {
 
         // 刪除整部漫畫時，順便清掉它的圖片
         async function rdDeleteComic(comicId) {
+            rdHasChapters.delete(comicId);
             try {
                 const chapters = await rdGetChapters(comicId);
                 if (!chapters.length) return;
@@ -2708,7 +2719,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '24983a38';
+        const APP_BUILD = 'ef18f335';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
@@ -2894,17 +2905,14 @@ function importData(e) {
         }
 
         // 點卡片：有匯入過圖片就開內建閱讀，否則跳到網址
-        async function openComicLink(id, skipReader) {
+        // 必須同步判斷：await 之後再 window.open 會被手機瀏覽器當成彈出視窗擋掉
+        function openComicLink(id, skipReader) {
             const comic = comics.find(c => c.id === id);
             if (!comic) return;
-            if (!skipReader && !privacyMode) {
-                try {
-                    if ((await rdGetChapters(id)).length) {
-                        activeComicId = id;
-                        openReaderList();
-                        return;
-                    }
-                } catch (e) {}
+            if (!skipReader && !privacyMode && rdHasChapters.has(id)) {
+                activeComicId = id;
+                openReaderList();
+                return;
             }
             const links = getLinks(comic);
             if (links.length === 0) {
@@ -2964,6 +2972,7 @@ function importData(e) {
             initLinkEditor(document.getElementById('addLinks'), []);
             initCardGestures();
             renderComics();
+            rdRefreshFlags();
         };
     </script>
 </body>
