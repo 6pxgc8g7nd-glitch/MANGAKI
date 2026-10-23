@@ -8,7 +8,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="TOPTOON">
-    <meta name="theme-color" content="#ffffff">
+    <meta name="theme-color" content="#ffd400">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>TOPTOON 漫畫紀錄網</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -50,6 +50,107 @@
             background: #e5e5e5;
             border-radius: 2px;
         }
+
+        /* ===== 漫畫風格：粗黑邊框 + 硬陰影 + 網點底 + 紅黃配色 ===== */
+        :root {
+            --ink: #111111;
+            --red: #a6051a;
+            --yellow: #ffd400;
+            --paper: #fff8dc;
+        }
+        body {
+            background-color: var(--yellow) !important;
+            background-image: radial-gradient(rgba(0,0,0,0.18) 1.2px, transparent 1.4px);
+            background-size: 9px 9px;
+        }
+        .app-container {
+            background-color: var(--paper) !important;
+            background-image: radial-gradient(rgba(166,5,26,0.10) 1.2px, transparent 1.4px);
+            background-size: 9px 9px;
+            box-shadow: 0 0 0 3px var(--ink), 8px 8px 0 var(--ink) !important;
+        }
+        ::-webkit-scrollbar-track { background: var(--paper); }
+        ::-webkit-scrollbar-thumb { background: var(--ink); }
+
+        /* 標題列 */
+        .app-container > header {
+            background: var(--yellow) !important;
+            border-bottom: 3px solid var(--ink) !important;
+            box-shadow: none !important;
+        }
+        .app-container > header h1 {
+            font-weight: 900;
+            font-size: 1.5rem;
+            letter-spacing: 0.08em;
+            text-shadow: 2px 2px 0 var(--ink);
+        }
+        .app-container > header h1 span:first-child { color: #ffffff !important; }
+        .app-container > header h1 span:last-child { color: var(--red) !important; }
+
+        /* 白色圓角卡片（漫畫格） */
+        .app-container [class*="bg-[#ffffff]"][class*="rounded-xl"] {
+            border: 2.5px solid var(--ink) !important;
+            box-shadow: 4px 4px 0 var(--ink) !important;
+        }
+        .app-container [class*="aspect-[3/4]"] {
+            border-bottom: 2.5px solid var(--ink);
+        }
+        [data-id].group:active, .genre-card:active { transform: translate(2px, 2px) !important; box-shadow: 2px 2px 0 var(--ink) !important; }
+
+        /* 所有紅色細邊框改成黑色 */
+        .app-container [class*="border-[#a6051a]/40"] { border-color: var(--ink) !important; border-width: 2px !important; }
+        .app-container [class*="border-[#a6051a]/30"] { border-color: var(--ink) !important; }
+        .app-container .genre-card[class*="ring-"] { background: var(--yellow) !important; box-shadow: 4px 4px 0 var(--red) !important; }
+
+        /* 輸入框 */
+        .app-container input[type="text"], .app-container input[type="url"], .app-container input[type="number"] {
+            background: #ffffff !important;
+            box-shadow: none !important;
+            border: 2px solid var(--ink) !important;
+            font-weight: 700;
+        }
+        .app-container input:focus { box-shadow: 3px 3px 0 var(--red) !important; }
+        .app-container label[class*="bg-[#fafafa]"] { background: #ffffff !important; box-shadow: none !important; }
+
+        /* 紅色主要按鈕 */
+        .app-container button[class*="bg-[#a6051a]"]:not(.nav-btn),
+        .app-container a[class*="bg-[#a6051a]"] {
+            border: 2.5px solid var(--ink) !important;
+            box-shadow: 3px 3px 0 var(--ink) !important;
+            font-weight: 900;
+        }
+        .app-container button[class*="bg-[#a6051a]"]:not(.nav-btn):active,
+        .app-container a[class*="bg-[#a6051a]"]:active { box-shadow: 1px 1px 0 var(--ink) !important; }
+        /* 次要按鈕 */
+        .app-container button[class*="bg-[#fafafa]"], .app-container label.cursor-pointer[class*="bg-[#fafafa]"],
+        .app-container button[class*="bg-white"], .app-container button[class*="bg-gray-700"] {
+            box-shadow: 3px 3px 0 var(--ink) !important;
+        }
+        .app-container button[class*="bg-gray-700"] { background: var(--ink) !important; }
+        .app-container button[class*="bg-white"][class*="text-[#a6051a]"] { color: var(--red) !important; }
+        .app-container button:disabled { box-shadow: none !important; opacity: 0.5; }
+
+        /* 狀態標籤 */
+        .app-container [class*="text-[9px]"] {
+            border: 2px solid var(--ink) !important;
+            font-weight: 900;
+            background: var(--yellow) !important;
+            color: var(--ink) !important;
+        }
+        .app-container [class*="bg-gray-200"] { background: #e5e5e5 !important; }
+
+        /* 底部導覽列：黑底 + 黃色選中 */
+        .app-container > nav {
+            background: var(--ink) !important;
+            border: 3px solid var(--ink);
+            box-shadow: 4px 4px 0 var(--red) !important;
+        }
+        .app-container > nav .nav-btn { color: rgba(255,255,255,0.55) !important; }
+        .app-container > nav .nav-btn.text-white { color: var(--yellow) !important; }
+        .app-container > nav .nav-btn.text-white i { transform: translateY(-1px) scale(1.15); }
+
+        /* 彈窗背景去掉模糊，改成網點 */
+        #comicModal, #editModal, #msgModal { backdrop-filter: none !important; background: rgba(17,17,17,0.55) !important; }
     </style>
 </head>
 <body class="bg-[#f5f5f5] flex justify-center items-center h-[100dvh]">
