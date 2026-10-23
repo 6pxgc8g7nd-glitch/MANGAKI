@@ -2819,7 +2819,7 @@ function importData(e) {
         }
 
         // 一個 zip 的大小上限：全部塞進記憶體 iPhone 會直接把網頁關掉，所以分成好幾個小檔
-        const RD_EXPORT_PART_BYTES = 60 * 1024 * 1024;
+        const RD_EXPORT_PART_BYTES = 100 * 1024 * 1024;
 
         async function rdExportAll() {
             const text = document.getElementById('rdExportText');
@@ -3223,7 +3223,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = 'c0f485f1';
+        const APP_BUILD = '0d490b67';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
