@@ -149,6 +149,11 @@
         .app-container > nav .nav-btn.text-white { color: var(--yellow) !important; }
         .app-container > nav .nav-btn.text-white i { transform: translateY(-1px) scale(1.15); }
 
+        /* 主畫面 App：iOS 會在畫面頂端做漸層模糊，標題往下移一點避開 */
+        @media (display-mode: standalone) {
+            .app-container > header { padding-top: 1.75rem !important; }
+        }
+
         /* 彈窗背景去掉模糊，改成網點 */
         #comicModal, #editModal, #msgModal { backdrop-filter: none !important; background: rgba(17,17,17,0.55) !important; }
     </style>
