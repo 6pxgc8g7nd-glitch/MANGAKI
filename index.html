@@ -1829,7 +1829,7 @@ function exportData() {
 
         // iOS 主畫面 App 不支援 <a download>，優先用系統分享表單（可存到「檔案」）
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            navigator.share({ files: [file], title: 'MANGAKI 備份' })
+            navigator.share({ files: [file] })
                 .then(() => showMsg('匯出成功', `已成功備份 ${count} 部漫畫資料。`))
                 .catch(err => {
                     if (err && err.name === 'AbortError') return; // 使用者取消
@@ -2801,7 +2801,7 @@ function importData(e) {
                 const f = new File([blob], name, { type });
                 if (!navigator.canShare) { lastErr = '這個瀏覽器不支援分享檔案'; break; }
                 if (!navigator.canShare({ files: [f] })) { lastErr = `系統不接受 ${type}`; continue; }
-                try { await navigator.share({ files: [f], title }); return true; }
+                try { await navigator.share({ files: [f] }); return true; }
                 catch (e) {
                     if (e && e.name === 'AbortError') return false;   // 使用者自己取消
                     lastErr = `${e && e.name}: ${e && e.message}`;
@@ -3223,7 +3223,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '71749c36';
+        const APP_BUILD = 'c0f485f1';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
