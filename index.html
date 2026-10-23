@@ -2847,15 +2847,25 @@ function importData(e) {
                 // 分享／下載要由「剛按下的按鈕」觸發，iOS 才允許，所以再問一次
                 const ok = await showConfirm('打包完成', `${jobs.length} 部漫畫、${chapterTotal} 話、${central.length} 頁，共 ${(bytes / 1048576).toFixed(1)} MB。\n\n按「儲存」選擇要存到哪裡。`, { okText: '儲存' });
                 if (!ok) return;
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try { await navigator.share({ files: [file], title: 'MANGAKI 圖片' }); return; }
-                    catch (e) { if (e && e.name === 'AbortError') return; }
+                // 依序嘗試不同的檔案類型：iOS 對可分享的類型有限制，zip 有時會被拒絕
+                let lastErr = '';
+                for (const type of ['application/zip', 'application/octet-stream']) {
+                    const f = new File([blob], file.name, { type });
+                    if (!navigator.canShare) { lastErr = '這個瀏覽器不支援分享檔案'; break; }
+                    if (!navigator.canShare({ files: [f] })) { lastErr = `系統不接受 ${type}`; continue; }
+                    try { await navigator.share({ files: [f], title: 'MANGAKI 圖片' }); return; }
+                    catch (e) {
+                        if (e && e.name === 'AbortError') return;   // 使用者自己取消
+                        lastErr = `${e && e.name}: ${e && e.message}`;
+                    }
                 }
+                // 分享不了才退回下載（一般瀏覽器可用；iOS 主畫面 App 可能沒反應）
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url; a.download = file.name;
                 document.body.appendChild(a); a.click(); a.remove();
                 setTimeout(() => URL.revokeObjectURL(url), 60000);
+                showMsg('無法開啟分享表單', `已改用下載，如果沒有收到檔案，請改用 Safari 瀏覽器（不要從主畫面 App）開啟網頁再匯出。\n\n原因：${lastErr}`);
             } catch (e) {
                 showMsg('匯出失敗', e && e.name === 'QuotaExceededError' ? '記憶體或空間不足，請減少圖片後再匯出。' : (e.message || '無法打包'));
             } finally {
@@ -3164,7 +3174,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = 'd22c20bc';
+        const APP_BUILD = 'f006987f';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
