@@ -782,6 +782,7 @@
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
                 <h3 id="rdListTitle" class="text-sm font-black text-neutral-900 pr-7">內建閱讀</h3>
+                <button id="rdLinkBtn" onclick="closeReaderList(); openComicLink(rdComicId, true)" class="hidden w-full bg-white active:scale-95 text-neutral-900 py-2 rounded-xl font-bold transition text-xs border border-[#a6051a]/40">前往漫畫網站</button>
                 <div id="rdChapters" class="space-y-1.5"></div>
                 <div class="border-t border-[#e5e5e5] pt-3 space-y-2">
                     <label class="block text-[11px] font-bold text-neutral-600">新增一話（從相簿或檔案選多張圖，依檔名排序）</label>
@@ -2419,6 +2420,7 @@ function importData(e) {
             const comic = comics.find(c => c.id === rdComicId);
             if (!comic) return;
             document.getElementById('rdListTitle').textContent = comic.title;
+            document.getElementById('rdLinkBtn').classList.toggle('hidden', getLinks(comic).length === 0);
             document.getElementById('readerListModal').classList.remove('hidden');
             await rdRenderList();
         }
@@ -2706,7 +2708,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = 'aa41a885';
+        const APP_BUILD = '953d293a';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
@@ -2891,9 +2893,19 @@ function importData(e) {
             sheet.classList.remove('hidden');
         }
 
-        function openComicLink(id) {
+        // 點卡片：有匯入過圖片就開內建閱讀，否則跳到網址
+        async function openComicLink(id, skipReader) {
             const comic = comics.find(c => c.id === id);
             if (!comic) return;
+            if (!skipReader && !privacyMode) {
+                try {
+                    if ((await rdGetChapters(id)).length) {
+                        activeComicId = id;
+                        openReaderList();
+                        return;
+                    }
+                } catch (e) {}
+            }
             const links = getLinks(comic);
             if (links.length === 0) {
                 showMsg('尚未設定網址', '這部漫畫還沒有網址。長按卡片可以編輯並加上網址。');
