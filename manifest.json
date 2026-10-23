@@ -1,6 +1,6 @@
 {
-  "name": "TOPTOON 漫畫紀錄網",
-  "short_name": "TOPTOON",
+  "name": "漫記 MANGAKI 漫畫紀錄",
+  "short_name": "漫記",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
