@@ -611,7 +611,7 @@
                 </button>
                 <div class="flex items-center space-x-3 pr-6">
                     <div id="modalEmojiContainer" class="w-12 h-12 bg-[#fafafa] rounded-xl flex items-center justify-center text-2xl  shadow-inner flex-shrink-0 overflow-hidden">
-                        📖
+                        <i class="fa-solid fa-book-open" style="color:#b5b5b5"></i>
                     </div>
                     <div>
                         <h3 id="modalTitle" class="text-base font-bold">漫畫名稱</h3>
@@ -1079,7 +1079,7 @@
                 return;
             }
             const parent = imgEl.parentElement;
-            parent.innerHTML = '<div class="w-full h-full flex items-center justify-center text-3xl">📖</div>';
+            parent.innerHTML = '<div class="w-full h-full flex items-center justify-center text-3xl"><i class="fa-solid fa-book-open" style="color:#b5b5b5"></i></div>';
         }
 
         function saveComics() {
@@ -1322,7 +1322,7 @@
                         <img src="${escapeHtml(coverSrc)}" referrerpolicy="no-referrer" loading="lazy" onload="fitCover(this)" class="w-full h-full object-contain group-hover:scale-105 transition duration-300" onerror="handleImgError(this)">
                      </div>` :
                     `<div class="w-full cover-box bg-[#fafafa] rounded-xl flex items-center justify-center text-3xl relative">
-                        📖
+                        <i class="fa-solid fa-book-open" style="color:#b5b5b5"></i>
                      </div>`;
 
                 return `
@@ -1434,13 +1434,14 @@
         
             const modalEmojiContainer = document.getElementById('modalEmojiContainer');
             const coverSrc = safeUrl(comic.coverUrl);
-            modalEmojiContainer.innerText = '📖';
+            const bookIcon = '<i class="fa-solid fa-book-open" style="color:#b5b5b5"></i>';
+            modalEmojiContainer.innerHTML = bookIcon;
             if (coverSrc) {
                 const img = document.createElement('img');
                 img.referrerPolicy = 'no-referrer';
                 img.src = coverSrc;
                 img.className = 'w-full h-full object-contain';
-                img.onerror = () => { modalEmojiContainer.innerText = '📖'; };
+                img.onerror = () => { modalEmojiContainer.innerHTML = bookIcon; };
                 modalEmojiContainer.innerText = '';
                 modalEmojiContainer.appendChild(img);
             }
@@ -1932,7 +1933,12 @@ function importData(e) {
             try { status = JSON.parse(localStorage.getItem(GH_STATUS_KEY)); } catch (e) {}
             if (!status) { el.innerText = ''; return; }
             const t = new Date(status.time).toLocaleString('zh-TW', { hour12: false });
-            el.innerText = `${status.ok ? '✅' : '⚠️'} ${t}　${status.text}`;
+            const icon = document.createElement('i');
+            icon.className = 'fa-solid ' + (status.ok ? 'fa-circle-check' : 'fa-triangle-exclamation');
+            icon.style.color = status.ok ? '#111' : '#a6051a';
+            icon.style.marginRight = '6px';
+            el.textContent = `${t}　${status.text}`;
+            el.insertBefore(icon, el.firstChild);
         }
 
         function ghCfgError(cfg) {
@@ -2149,7 +2155,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '0b24cf46';
+        const APP_BUILD = '31312e4e';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
