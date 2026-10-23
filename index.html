@@ -1247,7 +1247,7 @@
             document.getElementById('msgTitle').innerText = title;
             document.getElementById('msgText').innerText = text;
             // 失敗／錯誤類訊息用警告圖示，其餘用打勾
-            const isProblem = /失敗|錯誤|格式|不完整|不足|無法|沒有資料|沒有漫畫|尚未|驗證/.test(title);
+            const isProblem = /失敗|錯誤|格式|不完整|不足|無法|沒有資料|沒有漫畫|尚未|驗證|找不到|遺失|沒有可匯入|請先/.test(title);
             const icon = document.getElementById('msgIcon');
             icon.innerHTML = `<i class="fa-solid ${isProblem ? 'fa-triangle-exclamation' : 'fa-check'}"></i>`;
             document.getElementById('msgModal').classList.remove('hidden');
@@ -2356,7 +2356,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '08b8be03';
+        const APP_BUILD = 'b18ca619';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
@@ -2633,7 +2633,7 @@ function importData(e) {
                 return;
             }
             const ok = await openReader(comic, entry.albumIndex);
-            if (!ok) showMsg('找不到圖片', '這一集的圖片不在這支手機上（備份檔不含圖片）。請長按卡片，在「內頁圖片」按這一集的「重新選擇」，再選一次圖片。');
+            if (!ok) showMsg('找不到圖片', '這一集的圖片不在這支手機上（備份檔不含圖片）。\n\n如果你之前有匯出過圖片檔，請到「設定」按「匯入圖片」。\n沒有的話，請長按卡片，在「內頁圖片」按這一集的「重新選擇」，再選一次圖片。');
         }
 
         async function openComicLink(id) {
