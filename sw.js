@@ -1,5 +1,5 @@
 // TOPTOON service worker：網路優先（自動取得最新版），離線時用快取
-const CACHE = 'toptoon-v1';
+const CACHE = 'mangaki-v2';
 const PRECACHE = ['./', './index.html', './manifest.json', './icon.png'];
 
 self.addEventListener('install', event => {
@@ -35,8 +35,10 @@ self.addEventListener('fetch', event => {
                     if (res.ok) {
                         const copy = res.clone();
                         caches.open(CACHE).then(c => c.put(req, copy));
+                        return res;
                     }
-                    return res;
+                    // 部署中或暫時 404/5xx：有快取就先用快取，不要讓使用者看到錯誤頁
+                    return caches.match(req, { ignoreSearch: true }).then(hit => hit || res);
                 })
                 .catch(() => caches.match(req, { ignoreSearch: true }).then(hit => hit || caches.match('./index.html')))
         );
