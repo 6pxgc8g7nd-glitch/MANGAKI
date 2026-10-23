@@ -107,7 +107,6 @@ function renderComics() {
     }
 
     renderStatusTabs();
-    updatePrivacyBtn();
     const filteredComics = getFilteredComics();
 
     document.getElementById('comicCount').innerText = `共 ${filteredComics.length} 部`;

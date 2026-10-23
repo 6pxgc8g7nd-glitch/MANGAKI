@@ -40,10 +40,6 @@
                         <i class="fa-solid fa-compass text-[19px]"></i>
                         <span class="text-[11px] leading-none mt-1">分類</span>
                     </button>
-                    <button onclick="switchTab('add')" id="nav-add" class="nav-btn flex flex-col items-center justify-center">
-                        <i class="fa-solid fa-square-plus text-[19px]"></i>
-                        <span class="text-[11px] leading-none mt-1">新增</span>
-                    </button>
                     <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn flex flex-col items-center justify-center">
                         <i class="fa-solid fa-gear text-[19px]"></i>
                         <span class="text-[11px] leading-none mt-1">設定</span>
@@ -71,7 +67,6 @@
                         </h3>
                         <div class="flex items-center space-x-2">
                             <span id="comicCount" class="text-[11px] text-neutral-600 font-medium">共 0 部</span>
-                            <button id="privacyBtn" onclick="togglePrivacy()" class="privacy-btn" aria-label="隱私遮蔽模式"><i class="fa-solid fa-eye"></i></button>
                         </div>
                     </div>
                     
@@ -252,7 +247,7 @@
                         <input type="checkbox" id="assistToggle" checked onchange="setAssistEnabled(this.checked)" class="accent-[#a6051a] w-4 h-4">
                         <span>顯示懸浮按鈕</span>
                     </label>
-                    <p class="text-[10px] text-neutral-500">可拖曳、會吸附左右邊緣；點一下展開：一鍵遮蔽、回到頂端、新增漫畫、立即備份。設定頁和閱讀器不顯示。</p>
+                    <p class="text-[10px] text-neutral-500">可拖曳、會吸附左右邊緣；點一下展開：一鍵遮蔽、回到頂端、新增漫畫、立即備份。設定頁和閱讀器不顯示。新增漫畫與遮蔽只能從這顆按鈕進入，關閉後就沒有入口。</p>
                 </div>
                 <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 space-y-3">
                     <div class="flex items-center justify-between">

@@ -209,14 +209,6 @@ function assignDecoys(list) {
     return map;
 }
 
-function updatePrivacyBtn() {
-    const btn = document.getElementById('privacyBtn');
-    if (!btn) return;
-    btn.classList.toggle('is-on', privacyMode);
-    btn.innerHTML = `<i class="fa-solid ${privacyMode ? 'fa-eye-slash' : 'fa-eye'}"></i>`;
-    btn.setAttribute('aria-pressed', String(privacyMode));
-}
-
 function togglePrivacy() {
     privacyMode = !privacyMode;
     try { localStorage.setItem(PRIVACY_KEY, privacyMode ? '1' : '0'); } catch (e) {}

@@ -13,7 +13,11 @@ function assistEnabled() {
     try { return localStorage.getItem(ASSIST_ON_KEY) !== '0'; } catch (e) { return true; }
 }
 
-function setAssistEnabled(on) {
+async function setAssistEnabled(on) {
+    if (!on && !(await showConfirm('關閉懸浮按鈕', '新增漫畫和一鍵遮蔽只能從這顆按鈕進入。\n\n關閉後就沒有入口了，要關閉嗎？', { okText: '關閉' }))) {
+        assistRefresh();   // 取消：把開關還原
+        return;
+    }
     try { localStorage.setItem(ASSIST_ON_KEY, on ? '1' : '0'); } catch (e) {}
     assistRefresh();
 }
