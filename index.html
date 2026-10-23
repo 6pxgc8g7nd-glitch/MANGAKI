@@ -255,6 +255,11 @@
         }
         .app-container .cover-box { border-bottom: none; }
 
+
+        /* 分頁標題：純文字 */
+        .page-title { font-size: 20px; font-weight: 900; color: var(--ink); line-height: 1.2; letter-spacing: 0.02em; }
+        .page-sub { font-size: 12px; font-weight: 600; color: #6b6b6b; margin-top: 2px; }
+
         /* ===== 頂部導覽：Logo + 圖示按鈕，下方文字分頁 ===== */
         .app-container > header .nav-btn {
             min-width: 44px;
@@ -415,14 +420,9 @@
 
             <!-- TAB 2: 分類 (Categories) -->
             <section id="tab-categories" class="hidden space-y-3.5">
-                <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 flex items-center space-x-3">
-                    <div class="w-9 h-9 rounded-xl bg-[#a6051a]/10 text-[#a6051a] flex items-center justify-center text-base border border-[#a6051a]/30 flex-shrink-0">
-                        <i class="fa-solid fa-compass"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-xs font-black tracking-wide text-neutral-900">漫畫分類</h2>
-                        <p class="text-[10px] text-neutral-600">點擊下方分類標籤可快速篩選對應漫畫</p>
-                    </div>
+                <div class="px-1">
+                    <h2 class="page-title">漫畫分類</h2>
+                    <p class="page-sub">點擊下方分類標籤可快速篩選對應漫畫</p>
                 </div>
 
                 <!-- Genre Grid -->
@@ -433,14 +433,9 @@
 
             <!-- TAB 3: 新增 (Add) -->
             <section id="tab-add" class="hidden space-y-3.5">
-                <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 flex items-center space-x-3">
-                    <div class="w-9 h-9 rounded-xl bg-[#a6051a]/10 text-[#a6051a] flex items-center justify-center text-base border border-[#a6051a]/30 flex-shrink-0">
-                        <i class="fa-solid fa-circle-plus"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-xs font-black tracking-wide text-neutral-900">新增漫畫</h2>
-                        <p class="text-[10px] text-neutral-600">記錄漫畫名稱、分類、狀態、網址與封面</p>
-                    </div>
+                <div class="px-1">
+                    <h2 class="page-title">新增漫畫</h2>
+                    <p class="page-sub">記錄漫畫名稱、分類、狀態、網址與封面</p>
                 </div>
 
                 <form id="addComicForm" onsubmit="handleAddNewComic(event)" class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 space-y-3">
@@ -517,14 +512,9 @@
 
             <!-- TAB 4: 設定 (Settings) -->
             <section id="tab-settings" class="hidden space-y-3.5">
-                <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 flex items-center space-x-3">
-                    <div class="w-9 h-9 rounded-xl bg-[#a6051a]/10 text-[#a6051a] flex items-center justify-center text-base border border-[#a6051a]/30 flex-shrink-0">
-                        <i class="fa-solid fa-gear"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-xs font-black tracking-wide text-neutral-900">設定與備份</h2>
-                        <p class="text-[10px] text-neutral-600">管理您的漫畫資料與備份</p>
-                    </div>
+                <div class="px-1">
+                    <h2 class="page-title">設定與備份</h2>
+                    <p class="page-sub">管理您的漫畫資料與備份</p>
                 </div>
 
                 <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 space-y-3">
