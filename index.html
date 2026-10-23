@@ -324,110 +324,7 @@
         .link-pick .lp-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
 
 
-        /* 內頁圖片集編輯列 */
-        .album-pick {
-            flex: 1; min-width: 0; height: 34px;
-            display: flex; align-items: center; justify-content: center; gap: 6px;
-            border: 2px solid var(--ink); border-radius: 10px; background: #fff; color: var(--ink);
-            font-size: 12px; font-weight: 800; white-space: nowrap;
-        }
-        .album-pick i { color: var(--red); }
-        .album-pick.has-pages { background: var(--yellow); }
-        .album-pick.missing { background: #fff0f0; border-color: var(--red); color: var(--red); }
-        .album-pick.busy { opacity: .6; pointer-events: none; }
-        .album-pick:active { transform: scale(.97); }
         .link-pick .lp-ic { font-size: 11px; color: var(--red); margin-left: 4px; }
-
-        /* 閱讀器 */
-        #reader { position: fixed; inset: 0; z-index: 200; background: #000; display: none; }
-        #reader.open { display: block; }
-        #readerScroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
-        #readerPages { max-width: 720px; margin: 0 auto; }
-        .rd-img { display: block; width: 100%; height: auto; background: #111; }
-        #readerBar {
-            position: absolute; left: 0; right: 0; top: 0; z-index: 2;
-            display: flex; align-items: center; gap: 10px;
-            padding: calc(env(safe-area-inset-top) + 8px) 12px 8px;
-            background: linear-gradient(to bottom, rgba(0,0,0,.92), rgba(0,0,0,.72));
-            color: #fff; transition: transform .25s ease, opacity .25s ease;
-        }
-        #reader.bar-hidden #readerBar { transform: translateY(-100%); opacity: 0; pointer-events: none; }
-        #readerClose { width: 36px; height: 36px; flex: none; border: 2px solid #fff; border-radius: 10px; color: #fff; font-size: 16px; }
-        #readerTitle { flex: 1; min-width: 0; font-size: 14px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        #readerPage { flex: none; font-size: 12px; font-weight: 800; color: var(--yellow); }
-        #readerEnd { max-width: 720px; margin: 0 auto; padding: 28px 16px calc(40px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 10px; }
-        .rd-btn { padding: 13px 0; border: 2px solid #fff; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 800; background: transparent; }
-        .rd-btn.primary { background: var(--yellow); color: var(--ink); border-color: var(--ink); }
-        .rd-btn:active { transform: scale(.97); }
-
-
-        /* 閱讀器：翻頁模式 */
-        #reader[data-mode="paged"] #readerScroll { display: none; }
-        #reader[data-mode="scroll"] #readerPaged { display: none; }
-        #readerPaged { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; touch-action: none; user-select: none; -webkit-user-select: none; }
-        #rpImg { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block; -webkit-touch-callout: none; -webkit-user-drag: none; }
-        #rpImg.hide { display: none; }
-        #rpEnd { display: none; width: 100%; max-width: 420px; padding: 0 20px; flex-direction: column; gap: 10px; }
-        #rpEnd.show { display: flex; }
-        #rpEnd .rd-title { color: #fff; font-size: 16px; font-weight: 900; text-align: center; margin-bottom: 6px; }
-        #rpImg.flip-next { animation: flipNext .16s ease-out; }
-        #rpImg.flip-prev { animation: flipPrev .16s ease-out; }
-        @keyframes flipNext { from { opacity: .2; transform: translateX(var(--fx, 28px)); } to { opacity: 1; transform: none; } }
-        @keyframes flipPrev { from { opacity: .2; transform: translateX(calc(var(--fx, 28px) * -1)); } to { opacity: 1; transform: none; } }
-        .rd-chip { flex: none; height: 30px; padding: 0 9px; border: 2px solid #fff; border-radius: 9px; color: #fff; font-size: 11px; font-weight: 800; white-space: nowrap; }
-        .rd-chip:active { transform: scale(.94); }
-        @media (prefers-reduced-motion: reduce) { #rpImg.flip-next, #rpImg.flip-prev { animation: none; } }
-
-
-        /* 閱讀器：底部進度條（拖曳快速跳頁） */
-        #readerFoot {
-            position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
-            display: flex; align-items: center; gap: 12px;
-            padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
-            background: linear-gradient(to top, rgba(0,0,0,.94), rgba(0,0,0,.72));
-            color: #fff; font-size: 12px; font-weight: 800;
-            transition: transform .25s ease, opacity .25s ease;
-        }
-        #reader.bar-hidden #readerFoot { transform: translateY(100%); opacity: 0; pointer-events: none; }
-        #rfCur { color: var(--yellow); min-width: 28px; text-align: right; font-variant-numeric: tabular-nums; }
-        #rfTotal { min-width: 28px; font-variant-numeric: tabular-nums; }
-        #readerSlider {
-            -webkit-appearance: none; appearance: none;
-            flex: 1; min-width: 0; height: 32px; margin: 0; background: transparent; touch-action: none;
-            --pct: 0%;
-        }
-        #readerSlider::-webkit-slider-runnable-track {
-            height: 8px; border-radius: 4px; border: 2px solid #fff;
-            background: linear-gradient(to right, var(--yellow) var(--pct), rgba(255,255,255,.18) var(--pct));
-        }
-        #readerSlider::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none;
-            width: 28px; height: 28px; margin-top: -11px; border-radius: 50%;
-            background: var(--yellow); border: 3px solid #111; box-shadow: 0 0 0 2px #fff;
-        }
-        #readerSlider::-moz-range-track { height: 8px; border-radius: 4px; border: 2px solid #fff; background: rgba(255,255,255,.18); }
-        #readerSlider::-moz-range-progress { height: 8px; border-radius: 4px; background: var(--yellow); }
-        #readerSlider::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--yellow); border: 3px solid #111; box-shadow: 0 0 0 2px #fff; }
-        #readerSlider:disabled { opacity: .4; }
-        #rfBubble {
-            position: absolute; left: 50%; bottom: calc(86px + env(safe-area-inset-bottom)); z-index: 3;
-            transform: translateX(-50%); display: none;
-            padding: 8px 18px; border: 3px solid #111; border-radius: 14px;
-            background: var(--yellow); color: #111; font-size: 22px; font-weight: 900;
-            box-shadow: 3px 3px 0 #111; pointer-events: none; font-variant-numeric: tabular-nums;
-        }
-        #rfBubble.show { display: block; }
-
-
-        /* 閱讀器：圖片載入失敗的提示 */
-        #rdToast {
-            position: absolute; left: 50%; top: 50%; z-index: 3; transform: translate(-50%, -50%);
-            display: none; max-width: 80%; padding: 12px 18px; border: 3px solid #111; border-radius: 14px;
-            background: var(--yellow); color: #111; font-size: 14px; font-weight: 800; text-align: center; line-height: 1.5;
-            box-shadow: 3px 3px 0 #111; pointer-events: none;
-        }
-        #rdToast.show { display: block; }
-        .rd-img.rd-fail { min-height: 160px; background: #3a0a0a; color: #fff; font-size: 13px; font-weight: 800; text-align: center; padding: 60px 12px; box-sizing: border-box; }
 
         /* ===== 頂部導覽：Logo + 圖示按鈕，下方文字分頁 ===== */
         .app-container > header .nav-btn {
@@ -653,14 +550,6 @@
                         <div id="addLinks" class="link-editor"></div>
                         <button type="button" onclick="addLinkRow(document.getElementById('addLinks'))" class="link-add-btn"><i class="fa-solid fa-plus"></i><span>新增一集連結</span></button>
                     </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
-                            <i class="fa-regular fa-images text-[#a6051a] text-[10px]"></i>
-                            <span>內頁圖片（可加多集，直接在 App 內閱讀）</span>
-                        </label>
-                        <div id="addAlbums" class="link-editor"></div>
-                        <button type="button" onclick="addAlbumRow(document.getElementById('addAlbums'))" class="link-add-btn"><i class="fa-solid fa-plus"></i><span>新增一集圖片</span></button>
-                    </div>
 
                     <div>
                         <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
@@ -716,20 +605,6 @@
                         </label>
                     </div>
                     <button onclick="copyBackupText()" class="text-[10px] text-neutral-500 underline">下載失敗？複製備份文字</button>
-                    <p class="text-[10px] text-neutral-500 leading-relaxed">內頁圖片不會包含在上面的備份或 GitHub 備份裡，請另外用下面的按鈕整批匯出。換手機時，先還原備份，再匯入圖片。</p>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button id="imgExportBtn" onclick="exportAllImages()" class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40 flex items-center justify-center space-x-1.5">
-                            <i class="fa-regular fa-images text-xs text-[#a6051a]"></i>
-                            <span>匯出圖片</span>
-                        </button>
-                        <label id="imgImportBtn" class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40 flex items-center justify-center space-x-1.5 cursor-pointer">
-                            <i class="fa-solid fa-file-import text-xs text-[#a6051a]"></i>
-                            <span>匯入圖片</span>
-                            <input type="file" accept=".zip,application/zip,application/x-zip-compressed" onchange="importAllImages(event)" class="hidden">
-                        </label>
-                    </div>
-                    <p id="imgIoStatus" class="text-[10px] text-neutral-600 min-h-[14px]"></p>
-                    <p id="imgUsage" class="text-[10px] text-neutral-500"></p>
                 </div>
 
                 <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 space-y-3">
@@ -862,14 +737,6 @@
                     </div>
                     <div>
                         <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
-                            <i class="fa-regular fa-images text-[#a6051a] text-[10px]"></i>
-                            <span>內頁圖片（可加多集，直接在 App 內閱讀）</span>
-                        </label>
-                        <div id="editAlbums" class="link-editor"></div>
-                        <button type="button" onclick="addAlbumRow(document.getElementById('editAlbums'))" class="link-add-btn"><i class="fa-solid fa-plus"></i><span>新增一集圖片</span></button>
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
                             <i class="fa-solid fa-image text-[#a6051a] text-[10px]"></i>
                             <span>封面網址</span>
                         </label>
@@ -940,31 +807,6 @@
 
     </div>
 
-    <!-- 內頁閱讀器：上下捲動、一張接一張 -->
-    <div id="reader" aria-hidden="true" data-mode="paged">
-        <div id="readerBar">
-            <button type="button" id="readerClose" aria-label="關閉"><i class="fa-solid fa-xmark"></i></button>
-            <div id="readerTitle"></div>
-            <button type="button" id="readerMode" class="rd-chip" aria-label="閱讀方式"></button>
-            <div id="readerPage"></div>
-        </div>
-        <div id="readerPaged">
-            <img id="rpImg" alt="">
-            <div id="rpEnd"></div>
-        </div>
-        <div id="readerScroll">
-            <div id="readerPages"></div>
-            <div id="readerEnd"></div>
-        </div>
-        <div id="rdToast" aria-live="polite"></div>
-        <div id="rfBubble" aria-hidden="true"></div>
-        <div id="readerFoot">
-            <span id="rfCur">1</span>
-            <input type="range" id="readerSlider" min="1" max="1" step="1" value="1" aria-label="拖曳快速跳頁">
-            <span id="rfTotal">1</span>
-        </div>
-    </div>
-
     <script>
         // 舊名稱（toptoon_*）的儲存資料搬到新名稱（mangaki_*）；新的已存在就不覆蓋，確認寫入後才刪舊的
         (function migrateStorageKeys() {
@@ -993,6 +835,21 @@
             } catch (e) { console.error('MANGAKI 搬移舊資料失敗：', e); }
         })();
 
+        // 內頁圖片功能已移除：第一次開啟時，清掉手機上以前存的圖片資料與閱讀進度
+        (function purgeLegacyImages() {
+            try {
+                if (localStorage.getItem('mangaki_images_purged') === '1') return;
+                Object.keys(localStorage)
+                    .filter(k => k.startsWith('mangaki_rpos_') || k.startsWith('mangaki_rpage_') || k === 'mangaki_reader_mode')
+                    .forEach(k => localStorage.removeItem(k));
+                if (!window.indexedDB) { localStorage.setItem('mangaki_images_purged', '1'); return; }
+                const req = indexedDB.deleteDatabase('mangaki-images');
+                req.onsuccess = () => { try { localStorage.setItem('mangaki_images_purged', '1'); } catch (e) {} };
+                req.onerror = () => {};
+                req.onblocked = () => {};   // 有別的分頁佔用時，下次開啟再試
+            } catch (e) { console.error('MANGAKI 清除舊圖片失敗：', e); }
+        })();
+
         // 讀取資料；內容損毀或不是陣列時，先把原始內容另存一份再回到空清單，避免整頁白屏
         function loadComics() {
             let raw = null;
@@ -1000,7 +857,14 @@
                 raw = localStorage.getItem('mangaki_comics');
                 if (raw === null) return [];
                 const parsed = JSON.parse(raw);
-                if (Array.isArray(parsed)) return parsed.filter(c => c && typeof c === 'object' && typeof c.id === 'string');
+                if (Array.isArray(parsed)) {
+                    // 內頁圖片功能已移除：丟掉舊的 albums 欄位，以及只有圖片、沒有網址的集數
+                    return parsed.filter(c => c && typeof c === 'object' && typeof c.id === 'string').map(c => {
+                        const { albums, ...rest } = c;
+                        if (Array.isArray(rest.links)) rest.links = rest.links.filter(l => l && l.url).map(l => ({ label: l.label || '', url: l.url }));
+                        return rest;
+                    });
+                }
                 throw new Error('mangaki_comics 不是陣列');
             } catch (error) {
                 console.error('MANGAKI 讀取資料失敗：', error);
@@ -1321,7 +1185,6 @@
             try {
                 localStorage.setItem('mangaki_comics', JSON.stringify(comics));
                 ghScheduleAuto();
-                cleanupOrphanImagesSoon();
             } catch (error) {
                 console.error('MANGAKI 儲存失敗：', error);
                 showMsg('儲存失敗', '無法寫入瀏覽器儲存空間，請先匯出備份。');
@@ -1450,7 +1313,7 @@
             scrollMainTop();
             if(tabName === 'home') renderComics();
             if(tabName === 'categories') renderCategories();
-            if(tabName === 'settings') { ghRenderSettings(); renderUpdateInfo(); updateImgUsage(); }
+            if(tabName === 'settings') { ghRenderSettings(); renderUpdateInfo(); }
         }
         function goHome() {
             currentPage = 1;
@@ -1675,7 +1538,6 @@
                 genre: document.getElementById('inputGenre').value.trim(),
                 status: statusInput ? statusInput.value : '連載中',
                 links: addLinksValue,
-                albums: readAlbums(document.getElementById('addAlbums')),
                 url: latestUrl(addLinksValue),
                 coverUrl: safeUrl(document.getElementById('inputCoverUrl').value.trim()),
                 progress: parseProgress(document.getElementById('inputProgress').value),
@@ -1686,7 +1548,6 @@
             saveComics();
             document.getElementById('addComicForm').reset();
             initLinkEditor(document.getElementById('addLinks'), []);
-            initAlbumEditor(document.getElementById('addAlbums'), []);
             syncCustomSelects();
             showMsg('新增成功', '已成功將漫畫加入追蹤清單！');
             switchTab('home');
@@ -1738,8 +1599,6 @@
             document.getElementById('editInputTitle').value = comic.title;
             document.getElementById('editInputGenre').value = comic.genre;
             initLinkEditor(document.getElementById('editLinks'), getLinks(comic));
-            initAlbumEditor(document.getElementById('editAlbums'), getAlbums(comic));
-            markMissingAlbums(document.getElementById('editAlbums'));
             document.getElementById('editInputCoverUrl').value = comic.coverUrl || '';
             document.getElementById('editInputProgress').value = comic.progress > 0 ? comic.progress : '';
             const editDay = getUpdateDay(comic);
@@ -1769,7 +1628,6 @@
             comics[comicIndex].status = statusInput ? statusInput.value : '連載中';
             const editedLinks = readLinks(document.getElementById('editLinks'));
             comics[comicIndex].links = editedLinks;
-            comics[comicIndex].albums = readAlbums(document.getElementById('editAlbums'));
             comics[comicIndex].url = latestUrl(editedLinks);
             comics[comicIndex].coverUrl = safeUrl(document.getElementById('editInputCoverUrl').value.trim());
             comics[comicIndex].progress = parseProgress(document.getElementById('editInputProgress').value);
@@ -1954,13 +1812,6 @@ function validateComic(comic) {
     }
 
     if (
-        comic.albums !== undefined &&
-        (!Array.isArray(comic.albums) || comic.albums.some(a => !a || typeof a !== 'object'))
-    ) {
-        return false;
-    }
-
-    if (
         comic.links !== undefined &&
         (!Array.isArray(comic.links) || comic.links.some(l => !l || typeof l !== 'object' || (l.url !== undefined && typeof l.url !== 'string') || (l.label !== undefined && typeof l.label !== 'string')))
     ) {
@@ -2124,7 +1975,6 @@ function importData(e) {
                     genre: String(comic.genre).trim(),
                     status: comic.status || '連載中',
                     links: getLinks(comic),
-                    albums: getAlbums(comic),
                     url: latestUrl(getLinks(comic)),
                     coverUrl: safeUrl(comic.coverUrl),
                     progress: parseProgress(comic.progress),
@@ -2448,7 +2298,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '5829fcdd';
+        const APP_BUILD = '3a524de4';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
@@ -2580,20 +2430,6 @@ function importData(e) {
             return legacy ? [{ label: '', url: legacy }] : [];
         }
 
-        // 內頁圖片集（跟網址無關，各自獨立）。相容剛推出時綁在連結上的資料（links[i].id / pages）
-        function getAlbums(comic) {
-            const out = [];
-            const add = a => {
-                if (!a || !a.id || !(Number(a.pages) > 0)) return;
-                const id = String(a.id);
-                if (out.some(o => o.id === id)) return;
-                out.push({ label: String(a.label || '').trim(), id, pages: Number(a.pages) });
-            };
-            if (Array.isArray(comic.albums)) comic.albums.forEach(add);
-            if (Array.isArray(comic.links)) comic.links.forEach(add);
-            return out;
-        }
-
         function latestUrl(links) { return links.length ? links[links.length - 1].url : ''; }
 
         function addLinkRow(box, link) {
@@ -2611,105 +2447,35 @@ function importData(e) {
             box.appendChild(row);
         }
 
-        // ---- 內頁圖片集編輯器：每列 = 集數名稱 + 選圖片 + 刪除 ----
-        function newId() {
-            return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
-        }
-
-        function setRowPages(row, n) {
-            row.dataset.pages = String(n);
-            const btn = row.querySelector('.album-pick');
-            btn.classList.remove('missing');
-            btn.classList.toggle('has-pages', n > 0);
-            btn.querySelector('.ap-text').textContent = n > 0 ? `${n} 張・重新選擇` : '選擇圖片';
-        }
-
-        function addAlbumRow(box, album) {
-            const row = document.createElement('div');
-            row.className = 'link-row album-row';
-            row.innerHTML = '<input type="text" class="lk-label" maxlength="20" placeholder="第幾話" autocomplete="off">' +
-                '<button type="button" class="album-pick"><i class="fa-regular fa-images"></i><span class="ap-text"></span></button>' +
-                '<button type="button" class="link-del" aria-label="刪除這集圖片"><i class="fa-solid fa-xmark"></i></button>';
-            row.querySelector('.lk-label').value = (album && album.label) || '';
-            row.dataset.id = (album && album.id) || newId();
-            setRowPages(row, (album && album.pages) || 0);
-            row.querySelector('.album-pick').onclick = () => pickEpisodeImages(row);
-            row.querySelector('.link-del').onclick = () => {
-                row.remove();
-                if (!box.children.length) addAlbumRow(box);
-            };
-            box.appendChild(row);
-        }
-
-        // 還原備份後，圖片資料不在這支手機上：在編輯視窗標出來，提示重新選擇
-        async function markMissingAlbums(box) {
-            try {
-                const stored = new Set(await listStoredEpisodes());
-                box.querySelectorAll('.album-row').forEach(row => {
-                    if ((Number(row.dataset.pages) || 0) > 0 && !stored.has(row.dataset.id)) {
-                        const btn = row.querySelector('.album-pick');
-                        btn.classList.add('missing');
-                        btn.classList.remove('has-pages');
-                        btn.querySelector('.ap-text').textContent = '圖片遺失・請重選';
-                    }
-                });
-            } catch (e) { console.error(e); }
-        }
-
-        function initAlbumEditor(box, albums) {
-            box.innerHTML = '';
-            (albums && albums.length ? albums : [null]).forEach(a => addAlbumRow(box, a));
-        }
-
-        function readAlbums(box) {
-            return Array.from(box.querySelectorAll('.album-row')).map(row => ({
-                label: row.querySelector('.lk-label').value.trim(),
-                id: row.dataset.id || '',
-                pages: Number(row.dataset.pages) || 0
-            })).filter(a => a.id && a.pages > 0);
-        }
-
         function initLinkEditor(box, links) {
             box.innerHTML = '';
             (links && links.length ? links : [null]).forEach(l => addLinkRow(box, l));
         }
 
         function readLinks(box) {
-            return Array.from(box.querySelectorAll('.link-row:not(.album-row)')).map(row => ({
+            return Array.from(box.querySelectorAll('.link-row')).map(row => ({
                 label: row.querySelector('.lk-label').value.trim(),
                 url: safeUrl(row.querySelector('.lk-url').value.trim())
             })).filter(l => l.url);
         }
 
-        // 點卡片：沒有連結提示；只有一個直接開；多個就依序列出集數
-        // 點卡片可開啟的項目：先列內頁圖片集（直接在 App 內閱讀），再列網址
-        function getEntries(comic) {
-            return [
-                ...getAlbums(comic).map((a, i) => ({ type: 'album', label: a.label, albumIndex: i, id: a.id })),
-                ...getLinks(comic).map(l => ({ type: 'link', label: l.label, url: l.url }))
-            ];
-        }
-
-        function openLinkSheet(comic, entries, storedSet) {
+        // 點卡片：沒有網址提示；只有一個直接開；多個就依序列出集數
+        function openLinkSheet(links) {
             const sheet = document.getElementById('optionSheet');
             const list = document.getElementById('optionSheetList');
-            document.getElementById('optionSheetTitle').innerText = `選擇要開啟的項目（共 ${entries.length} 項）`;
+            document.getElementById('optionSheetTitle').innerText = `選擇要開啟的集數（共 ${links.length} 集）`;
             list.className = 'grid grid-cols-3 gap-2';
             list.innerHTML = '';
             const close = () => { sheet.classList.add('hidden'); sheet.onclick = null; document.getElementById('optionSheetCancel').onclick = null; };
-            entries.forEach((en, i) => {
+            links.forEach((l, i) => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'option-item link-pick';
                 const name = document.createElement('span');
                 name.className = 'lp-name';
-                name.textContent = en.label || String(i + 1);
+                name.textContent = l.label || String(i + 1);
                 btn.appendChild(name);
-                const ic = document.createElement('i');
-                const missing = en.type === 'album' && storedSet && !storedSet.has(en.id);
-                ic.className = missing ? 'fa-solid fa-triangle-exclamation lp-ic' : (en.type === 'album' ? 'fa-regular fa-images lp-ic' : 'fa-solid fa-link lp-ic');
-                btn.appendChild(ic);
-                btn.onclick = () => { close(); openEntry(comic.id, en); };
+                btn.onclick = () => { close(); window.open(l.url, '_blank', 'noopener,noreferrer'); };
                 list.appendChild(btn);
             });
             document.getElementById('optionSheetCancel').onclick = close;
@@ -2717,863 +2483,17 @@ function importData(e) {
             sheet.classList.remove('hidden');
         }
 
-        async function openEntry(comicId, entry) {
-            const comic = comics.find(c => c.id === comicId);
-            if (!comic) return;
-            if (entry.type === 'link') {
-                window.open(entry.url, '_blank', 'noopener,noreferrer');
-                return;
-            }
-            const ok = await openReader(comic, entry.albumIndex);
-            if (!ok) showMsg('找不到圖片', '這一集的圖片不在這支手機上（備份檔不含圖片）。\n\n如果你之前有匯出過圖片檔，請到「設定」按「匯入圖片」。\n沒有的話，請長按卡片，在「內頁圖片」按這一集的「重新選擇」，再選一次圖片。');
-        }
-
-        async function openComicLink(id) {
+        function openComicLink(id) {
             const comic = comics.find(c => c.id === id);
             if (!comic) return;
-            const entries = getEntries(comic);
-            if (entries.length === 0) {
-                showMsg('尚未設定網址或圖片', '這部漫畫還沒有網址或內頁圖片。長按卡片可以編輯。');
-            } else if (entries.length === 1) {
-                openEntry(id, entries[0]);
+            const links = getLinks(comic);
+            if (links.length === 0) {
+                showMsg('尚未設定網址', '這部漫畫還沒有網址。長按卡片可以編輯並加上網址。');
+            } else if (links.length === 1) {
+                window.open(links[0].url, '_blank', 'noopener,noreferrer');
             } else {
-                let stored = null;
-                try { stored = new Set(await listStoredEpisodes()); } catch (e) {}
-                openLinkSheet(comic, entries, stored);
+                openLinkSheet(links);
             }
-        }
-
-        // ================================
-        // 內頁圖片：存在這支手機的 IndexedDB（不含在備份檔內）＋ 上下捲動的閱讀器
-        // ================================
-        const IMG_DB_NAME = 'mangaki-images';
-        let imgDbPromise = null;
-
-        function imgDb() {
-            if (!imgDbPromise) {
-                imgDbPromise = new Promise((resolve, reject) => {
-                    const req = indexedDB.open(IMG_DB_NAME, 1);
-                    req.onupgradeneeded = () => {
-                        const st = req.result.createObjectStore('pages', { keyPath: ['ep', 'i'] });
-                        st.createIndex('ep', 'ep');
-                    };
-                    req.onsuccess = () => resolve(req.result);
-                    req.onerror = () => reject(req.error);
-                });
-            }
-            return imgDbPromise;
-        }
-
-        const idbDone = tx => new Promise((resolve, reject) => {
-            tx.oncomplete = () => resolve();
-            tx.onerror = () => reject(tx.error);
-            tx.onabort = () => reject(tx.error);
-        });
-
-        async function deleteEpisodePages(ep) {
-            const db = await imgDb();
-            const tx = db.transaction('pages', 'readwrite');
-            tx.objectStore('pages').delete(IDBKeyRange.bound([ep, 0], [ep, Number.MAX_SAFE_INTEGER]));
-            await idbDone(tx);
-        }
-
-        async function putEpisodePages(ep, pages) {
-            await deleteEpisodePages(ep);
-            const db = await imgDb();
-            const tx = db.transaction('pages', 'readwrite');
-            const st = tx.objectStore('pages');
-            pages.forEach((pg, i) => st.put({ ep, i, blob: pg.blob, w: pg.w, h: pg.h }));
-            await idbDone(tx);
-        }
-
-        async function getEpisodePages(ep) {
-            const db = await imgDb();
-            const rows = await new Promise((resolve, reject) => {
-                const req = db.transaction('pages').objectStore('pages').index('ep').getAll(ep);
-                req.onsuccess = () => resolve(req.result);
-                req.onerror = () => reject(req.error);
-            });
-            return rows.sort((a, b) => a.i - b.i);
-        }
-
-        async function listStoredEpisodes() {
-            const db = await imgDb();
-            return new Promise((resolve, reject) => {
-                const ids = [];
-                const req = db.transaction('pages').objectStore('pages').index('ep').openKeyCursor(null, 'nextunique');
-                req.onsuccess = () => {
-                    const cur = req.result;
-                    if (cur) { ids.push(cur.key); cur.continue(); } else resolve(ids);
-                };
-                req.onerror = () => reject(req.error);
-            });
-        }
-
-        // 沒有任何漫畫引用的圖片就刪掉（刪集數、刪漫畫、放棄編輯後留下的）
-        let cleanupTimer = null;
-        function cleanupOrphanImagesSoon() {
-            clearTimeout(cleanupTimer);
-            cleanupTimer = setTimeout(async () => {
-                try {
-                    // 沒有資料時不清理，避免資料讀取失敗時誤刪所有圖片
-                    if (!comics.length || !window.indexedDB) return;
-                    const used = new Set();
-                    comics.forEach(c => getAlbums(c).forEach(a => used.add(a.id)));
-                    const stored = await listStoredEpisodes();
-                    for (const ep of stored) if (!used.has(ep)) await deleteEpisodePages(ep);
-                    updateImgUsage();
-                } catch (e) { console.error('MANGAKI 清理圖片失敗：', e); }
-            }, 400);
-        }
-
-        // 縮成寬 1200px 的 JPEG；太長的條漫切成多段（每段最高 4000px），接起來看不出來
-        async function processImage(file) {
-            const bmp = await createImageBitmap(file);
-            const MAX_W = 1200, SLICE_H = 4000;
-            const scale = Math.min(1, MAX_W / bmp.width);
-            const w = Math.max(1, Math.round(bmp.width * scale));
-            const totalH = Math.max(1, Math.round(bmp.height * scale));
-            const out = [];
-            for (let y0 = 0; y0 < totalH; y0 += SLICE_H) {
-                const h = Math.min(SLICE_H, totalH - y0);
-                const cv = document.createElement('canvas');
-                cv.width = w; cv.height = h;
-                const ctx = cv.getContext('2d');
-                // JPEG 沒有透明度：先鋪白底，否則有透明背景的 PNG / WebP 會變成整片黑色
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, w, h);
-                ctx.drawImage(bmp, 0, y0 / scale, bmp.width, h / scale, 0, 0, w, h);
-                const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.82));
-                if (!blob) throw new Error('無法轉換圖片');
-                out.push({ blob, w, h });
-                cv.width = cv.height = 0;
-            }
-            if (bmp.close) bmp.close();
-            return out;
-        }
-
-        const natural = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
-
-        function pickEpisodeImages(row) {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.multiple = true;
-            input.onchange = async () => {
-                const files = Array.from(input.files || []).filter(f => f.type.startsWith('image/'));
-                if (!files.length) return;
-                const had = Number(row.dataset.pages) || 0;
-                if (had > 0) {
-                    const go = await showConfirm('取代圖片', `這一集已有 ${had} 張圖片，要用新選的 ${files.length} 張取代嗎？`, { okText: '取代' });
-                    if (!go) return;
-                }
-                files.sort((a, b) => natural.compare(a.name, b.name));
-                const btn = row.querySelector('.album-pick');
-                const cnt = btn.querySelector('.ap-text');
-                btn.classList.add('busy');
-                try {
-                    const pages = [];
-                    const failed = [];
-                    for (let i = 0; i < files.length; i++) {
-                        cnt.textContent = `處理中 ${i + 1}/${files.length}`;
-                        try {
-                            pages.push(...await processImage(files[i]));
-                        } catch (err) {
-                            console.error('MANGAKI 無法處理圖片：', files[i].name, err);
-                            failed.push(files[i].name);
-                        }
-                    }
-                    if (!pages.length) throw new Error('所選的圖片都無法處理');
-                    await putEpisodePages(row.dataset.id, pages);
-                    setRowPages(row, pages.length);
-                    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
-                    updateImgUsage();
-                    if (failed.length) {
-                        const names = failed.slice(0, 5).join('、') + (failed.length > 5 ? '…' : '');
-                        showMsg('部分圖片無法處理', `有 ${failed.length} 張圖片沒有加進去：${names}\n\n其餘 ${files.length - failed.length} 張已儲存。這些檔案可能已損毀或格式不支援。`);
-                    }
-                } catch (e) {
-                    console.error('MANGAKI 儲存圖片失敗：', e);
-                    setRowPages(row, had);
-                    showMsg('儲存圖片失敗', '圖片無法處理或手機儲存空間不足，請減少張數後再試。');
-                } finally {
-                    btn.classList.remove('busy');
-                }
-            };
-            input.click();
-        }
-
-        async function updateImgUsage() {
-            const el = document.getElementById('imgUsage');
-            if (!el || !(navigator.storage && navigator.storage.estimate)) return;
-            try {
-                const { usage } = await navigator.storage.estimate();
-                el.textContent = usage ? `App 已使用儲存空間約 ${(usage / 1048576).toFixed(1)} MB` : '';
-            } catch (e) {}
-        }
-
-        // ---------- 內頁圖片整批匯出 / 匯入（單一 ZIP 檔，不壓縮、可在電腦上直接解開）----------
-        const CRC_TABLE = (() => {
-            const t = new Uint32Array(256);
-            for (let n = 0; n < 256; n++) {
-                let c = n;
-                for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
-                t[n] = c >>> 0;
-            }
-            return t;
-        })();
-
-        function crc32(u8) {
-            let c = 0xFFFFFFFF;
-            for (let i = 0; i < u8.length; i++) c = CRC_TABLE[(c ^ u8[i]) & 0xFF] ^ (c >>> 8);
-            return (c ^ 0xFFFFFFFF) >>> 0;
-        }
-
-        // 組出 ZIP：entries = [{ name, blob? , bytes?, crc, size }]
-        function buildZip(entries) {
-            const enc = new TextEncoder();
-            const parts = [];
-            const central = [];
-            let offset = 0;
-            const d = new Date();
-            const dosTime = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
-            const dosDate = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
-            for (const e of entries) {
-                const name = enc.encode(e.name);
-                const lh = new DataView(new ArrayBuffer(30));
-                lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
-                lh.setUint16(10, dosTime, true); lh.setUint16(12, dosDate, true);
-                lh.setUint32(14, e.crc, true); lh.setUint32(18, e.size, true); lh.setUint32(22, e.size, true);
-                lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
-                parts.push(lh.buffer, name, e.blob || e.bytes);
-                const ch = new DataView(new ArrayBuffer(46));
-                ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true);
-                ch.setUint16(12, dosTime, true); ch.setUint16(14, dosDate, true);
-                ch.setUint32(16, e.crc, true); ch.setUint32(20, e.size, true); ch.setUint32(24, e.size, true);
-                ch.setUint16(28, name.length, true); ch.setUint32(42, offset, true);
-                central.push(ch.buffer, name);
-                offset += 30 + name.length + e.size;
-            }
-            const cdSize = central.reduce((a, b) => a + (b.byteLength !== undefined ? b.byteLength : b.size), 0);
-            const end = new DataView(new ArrayBuffer(22));
-            end.setUint32(0, 0x06054b50, true); end.setUint16(8, entries.length, true); end.setUint16(10, entries.length, true);
-            end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
-            return new Blob([...parts, ...central, end.buffer], { type: 'application/zip' });
-        }
-
-        // 匯出／匯入時保持螢幕不熄滅（iPhone 螢幕一暗或切到別的 App，處理就會暫停，看起來像卡住）
-        let ioWakeLock = null;
-        async function keepAwake(on) {
-            try {
-                if (on) {
-                    if (navigator.wakeLock && !ioWakeLock) ioWakeLock = await navigator.wakeLock.request('screen');
-                } else if (ioWakeLock) {
-                    await ioWakeLock.release();
-                    ioWakeLock = null;
-                }
-            } catch (e) { ioWakeLock = null; }
-        }
-
-        // 進度文字：百分比 + 已經過幾秒
-        function ioProgress(label, done, total, t0) {
-            const pct = total ? Math.round(done / total * 100) : 0;
-            const sec = Math.round((performance.now() - t0) / 1000);
-            setImgIoStatus(`${label} ${pct}%（${done}/${total}，已 ${sec} 秒）請保持畫面開啟`);
-        }
-
-        function setImgIoStatus(text) {
-            const el = document.getElementById('imgIoStatus');
-            if (el) el.textContent = text || '';
-        }
-
-        // 只匯出「目前有漫畫引用」的圖片，並附上一份說明檔（漫畫名稱、集數）
-        async function buildImagesZip(onProgress) {
-            const stored = new Set(await listStoredEpisodes());
-            const eps = [];
-            comics.forEach(c => getAlbums(c).forEach(a => { if (stored.has(a.id) && !eps.some(e => e.id === a.id)) eps.push({ id: a.id, comic: c.title, label: a.label }); }));
-            if (!eps.length) return null;
-            const entries = [];
-            const manifest = { app: 'MANGAKI', version: 1, exportTime: new Date().toISOString(), episodes: [] };
-            let total = 0, done = 0;
-            const pagesByEp = [];
-            for (const ep of eps) { const pages = await getEpisodePages(ep.id); pagesByEp.push(pages); total += pages.length; }
-            if (total > 65000) throw new Error('圖片數量太多');
-            let bytesTotal = 0;
-            // 一次同時讀幾張來算檢查碼，比一張一張等快
-            const crcOf = async blob => crc32(new Uint8Array(await blob.arrayBuffer()));
-            for (let i = 0; i < eps.length; i++) {
-                const ep = eps[i];
-                const mEp = { id: ep.id, comic: ep.comic, label: ep.label, pages: [] };
-                const pgs = pagesByEp[i];
-                const crcs = new Array(pgs.length);
-                const LANES = 4;
-                let next = 0;
-                await Promise.all(Array.from({ length: LANES }, async () => {
-                    while (next < pgs.length) { const k = next++; crcs[k] = await crcOf(pgs[k].blob); }
-                }));
-                for (let k = 0; k < pgs.length; k++) {
-                    const pg = pgs[k];
-                    const name = `${ep.id}/${String(k).padStart(4, '0')}.jpg`;
-                    entries.push({ name, blob: pg.blob, crc: crcs[k], size: pg.blob.size });
-                    bytesTotal += pg.blob.size;
-                    if (bytesTotal > 3.5 * 1024 * 1024 * 1024) throw new Error('圖片總量太大');
-                    mEp.pages.push({ name, w: pg.w, h: pg.h });
-                }
-                done += pgs.length;
-                if (onProgress) onProgress(done, total);
-                manifest.episodes.push(mEp);
-            }
-            const mBytes = new TextEncoder().encode(JSON.stringify(manifest, null, 1));
-            entries.unshift({ name: 'manifest.json', bytes: mBytes, crc: crc32(mBytes), size: mBytes.length });
-            return { blob: buildZip(entries), episodes: eps.length, pages: total, size: bytesTotal };
-        }
-
-        async function exportAllImages() {
-            const btn = document.getElementById('imgExportBtn');
-            if (btn.disabled) return;
-            btn.disabled = true;
-            try {
-                await keepAwake(true);
-                const t0 = performance.now();
-                setImgIoStatus('準備中…請保持畫面開啟');
-                const res = await buildImagesZip((d, t) => ioProgress('整理圖片', d, t, t0));
-                if (res) setImgIoStatus('正在建立檔案，檔案大時會需要一些時間…');
-                if (!res) { setImgIoStatus(''); showMsg('沒有圖片', '目前這支手機上沒有可以匯出的內頁圖片。'); return; }
-                const ymd = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-                const file = new File([res.blob], `mangaki_images_${ymd}.zip`, { type: 'application/zip' });
-                const mb = (res.size / 1048576).toFixed(1);
-                setImgIoStatus('');
-                // iPhone：用分享選單存到「檔案」(iCloud / Google 雲端硬碟 / 在我的 iPhone)；不行就直接下載
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try {
-                        await navigator.share({ files: [file], title: 'MANGAKI 圖片' });
-                        showMsg('匯出完成', `已匯出 ${res.episodes} 集、${res.pages} 張圖片（約 ${mb} MB）。`);
-                        return;
-                    } catch (err) {
-                        if (err && err.name === 'AbortError') return;
-                        console.error('MANGAKI 分享圖片失敗，改用下載：', err);
-                    }
-                }
-                downloadBackup(file);
-                showMsg('匯出完成', `已匯出 ${res.episodes} 集、${res.pages} 張圖片（約 ${mb} MB）。若沒有收到檔案，請改用 Safari 開啟或稍後再試。`);
-            } catch (e) {
-                console.error('MANGAKI 匯出圖片失敗：', e);
-                setImgIoStatus('');
-                showMsg('匯出失敗', '整理圖片時發生錯誤，可能是圖片太多或手機記憶體不足。');
-            } finally {
-                btn.disabled = false;
-                keepAwake(false);
-            }
-        }
-
-        // ----- 匯入：讀 ZIP 的目錄，只取需要的檔案 -----
-        async function readZipEntries(file) {
-            const tailSize = Math.min(file.size, 70000);
-            const tail = new DataView(await file.slice(file.size - tailSize).arrayBuffer());
-            let eocd = -1;
-            for (let i = tail.byteLength - 22; i >= 0; i--) { if (tail.getUint32(i, true) === 0x06054b50) { eocd = i; break; } }
-            if (eocd < 0) throw new Error('不是有效的 ZIP 檔');
-            const count = tail.getUint16(eocd + 10, true);
-            const cdSize = tail.getUint32(eocd + 12, true);
-            const cdOffset = tail.getUint32(eocd + 16, true);
-            if (cdOffset === 0xFFFFFFFF || count === 0xFFFF) throw new Error('檔案太大，不支援');
-            const cd = new DataView(await file.slice(cdOffset, cdOffset + cdSize).arrayBuffer());
-            const dec = new TextDecoder();
-            const map = new Map();
-            let p = 0;
-            for (let i = 0; i < count; i++) {
-                if (cd.getUint32(p, true) !== 0x02014b50) throw new Error('ZIP 目錄損毀');
-                const method = cd.getUint16(p + 10, true);
-                const csize = cd.getUint32(p + 20, true);
-                const nlen = cd.getUint16(p + 28, true), elen = cd.getUint16(p + 30, true), clen = cd.getUint16(p + 32, true);
-                const lho = cd.getUint32(p + 42, true);
-                const name = dec.decode(new Uint8Array(cd.buffer, cd.byteOffset + p + 46, nlen));
-                map.set(name, { method, csize, lho });
-                p += 46 + nlen + elen + clen;
-            }
-            return map;
-        }
-
-        async function readZipEntryBlob(file, entry, type) {
-            const lh = new DataView(await file.slice(entry.lho, entry.lho + 30).arrayBuffer());
-            if (lh.getUint32(0, true) !== 0x04034b50) throw new Error('ZIP 資料損毀');
-            const start = entry.lho + 30 + lh.getUint16(26, true) + lh.getUint16(28, true);
-            const raw = file.slice(start, start + entry.csize, type);
-            if (entry.method === 0) return raw;
-            if (entry.method === 8 && typeof DecompressionStream !== 'undefined') {
-                const stream = raw.stream().pipeThrough(new DecompressionStream('deflate-raw'));
-                return new Blob([await new Response(stream).arrayBuffer()], { type });
-            }
-            throw new Error('不支援的壓縮格式');
-        }
-
-        // 一整集的檔案在 ZIP 裡通常是連續的：一次讀出整段，再在記憶體裡切開，
-        // 比每張圖都各讀一次（含檔頭）快很多，尤其在 iPhone 上
-        async function readEpisodeBlobs(file, entries, pages) {
-            const list = pages.map(pg => ({ pg, entry: entries.get(pg.name) })).filter(x => x.entry);
-            if (!list.length) return [];
-            const MARGIN = 1024;
-            const lo = Math.min(...list.map(x => x.entry.lho));
-            const hi = Math.min(file.size, Math.max(...list.map(x => x.entry.lho + 30 + MARGIN + x.entry.csize)));
-            const buf = await file.slice(lo, hi).arrayBuffer();
-            const out = [];
-            for (const { pg, entry } of list) {
-                const off = entry.lho - lo;
-                const dv = new DataView(buf, off, 30);
-                if (dv.getUint32(0, true) !== 0x04034b50) throw new Error('ZIP 資料損毀');
-                const start = off + 30 + dv.getUint16(26, true) + dv.getUint16(28, true);
-                const raw = new Blob([buf.slice(start, start + entry.csize)], { type: 'image/jpeg' });
-                let blob = raw;
-                if (entry.method === 8) {
-                    if (typeof DecompressionStream === 'undefined') throw new Error('不支援的壓縮格式');
-                    blob = new Blob([await new Response(raw.stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer()], { type: 'image/jpeg' });
-                } else if (entry.method !== 0) {
-                    throw new Error('不支援的壓縮格式');
-                }
-                out.push({ blob, w: Number(pg.w) || 1200, h: Number(pg.h) || 1800 });
-            }
-            return out;
-        }
-
-        async function importImagesFromFile(file, onProgress) {
-            const entries = await readZipEntries(file);
-            const mEntry = entries.get('manifest.json');
-            if (!mEntry) throw new Error('這不是 MANGAKI 匯出的圖片檔（缺少 manifest.json）');
-            const manifest = JSON.parse(await (await readZipEntryBlob(file, mEntry, 'application/json')).text());
-            if (!manifest || !Array.isArray(manifest.episodes)) throw new Error('圖片檔內容不正確');
-            const wanted = new Set();
-            comics.forEach(c => getAlbums(c).forEach(a => wanted.add(a.id)));
-            const result = { episodes: 0, pages: 0, skipped: 0 };
-            const todo = manifest.episodes.filter(ep => wanted.has(ep.id));
-            result.skipped = manifest.episodes.length - todo.length;
-            // 讀下一集的同時，寫入上一集（兩件事重疊進行）
-            let pending = todo.length ? readEpisodeBlobs(file, entries, todo[0].pages) : null;
-            for (let i = 0; i < todo.length; i++) {
-                const pages = await pending;
-                pending = i + 1 < todo.length ? readEpisodeBlobs(file, entries, todo[i + 1].pages) : null;
-                if (pages.length) {
-                    await putEpisodePages(todo[i].id, pages);
-                    result.episodes++;
-                    result.pages += pages.length;
-                }
-                if (onProgress) onProgress(i + 1, todo.length);
-            }
-            return result;
-        }
-
-        async function importAllImages(e) {
-            const input = e.target;
-            const file = input.files && input.files[0];
-            if (!file) return;
-            if (!comics.length) {
-                input.value = '';
-                showMsg('請先還原漫畫備份', '圖片要對應到漫畫才能匯入。請先用「還原」或「從 GitHub 還原」把漫畫清單還原，再匯入圖片。');
-                return;
-            }
-            const label = document.getElementById('imgImportBtn');
-            label.classList.add('opacity-50', 'pointer-events-none');
-            try {
-                await keepAwake(true);
-                const t0 = performance.now();
-                setImgIoStatus('讀取中…請保持畫面開啟');
-                const r = await importImagesFromFile(file, (d, t) => ioProgress('匯入中', d, t, t0));
-                setImgIoStatus('');
-                updateImgUsage();
-                if (r.episodes === 0) {
-                    showMsg('沒有可匯入的圖片', r.skipped ? `檔案裡的 ${r.skipped} 集在目前的漫畫清單裡找不到對應的集數。請先還原漫畫備份檔，再匯入圖片。` : '檔案裡沒有圖片。');
-                } else {
-                    showMsg('匯入完成', `已匯入 ${r.episodes} 集、${r.pages} 張圖片。` + (r.skipped ? `另有 ${r.skipped} 集因為找不到對應的漫畫而略過。` : ''));
-                }
-            } catch (err) {
-                console.error('MANGAKI 匯入圖片失敗：', err);
-                setImgIoStatus('');
-                showMsg('匯入失敗', (err && err.message) ? err.message : '無法讀取這個檔案。');
-            } finally {
-                label.classList.remove('opacity-50', 'pointer-events-none');
-                input.value = '';
-                keepAwake(false);
-            }
-        }
-
-        // ---------- 閱讀器（翻頁 / 捲動兩種方式）----------
-        const READER_MODE_KEY = 'mangaki_reader_mode';   // 'paged' | 'scroll'
-        const reader = {
-            comicId: null, index: 0, pages: [], link: null,
-            mode: 'paged', dir: 'ltr', cur: 0,
-            urls: new Map(), loadObs: null, unloadObs: null, raf: 0, hideTimer: null, saveTimer: null,
-            pUrls: new Map(), pageIdx: 0, scrubbing: false, scrubRaf: 0
-        };
-
-        const lsGet = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
-        const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
-
-        function readerEpisodes(comic) {
-            return getAlbums(comic).map((l, i) => ({ l, i }));
-        }
-
-        // 「上一集 / 下一集 / 關閉」按鈕，翻頁與捲動共用
-        function buildEndButtons(el, comic, index, withTitle) {
-            el.innerHTML = '';
-            if (withTitle) { const t = document.createElement('div'); t.className = 'rd-title'; t.textContent = '這一集看完了'; el.appendChild(t); }
-            const eps = readerEpisodes(comic);
-            const pos = eps.findIndex(x => x.i === index);
-            const mk = (text, cls, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'rd-btn ' + cls; b.textContent = text; b.onclick = fn; el.appendChild(b); };
-            if (pos > 0) mk(`上一集：${eps[pos - 1].l.label || eps[pos - 1].i + 1}`, '', () => switchReaderEpisode(eps[pos - 1].i));
-            if (pos >= 0 && pos < eps.length - 1) mk(`下一集：${eps[pos + 1].l.label || eps[pos + 1].i + 1}`, 'primary', () => switchReaderEpisode(eps[pos + 1].i));
-            mk('關閉', '', () => closeReader());
-        }
-
-        async function openReader(comic, index) {
-            const link = getAlbums(comic)[index];
-            if (!link) return false;
-            let pages = [];
-            try { pages = await getEpisodePages(link.id); } catch (e) { console.error(e); }
-            if (!pages.length) return false;
-
-            closeReader(true);
-            reader.comicId = comic.id;
-            reader.index = index;
-            reader.pages = pages;
-            reader.link = link;
-            reader.mode = lsGet(READER_MODE_KEY, 'paged') === 'scroll' ? 'scroll' : 'paged';
-            reader.dir = 'ltr';   // 固定由左往右：點右邊／往左滑 = 下一頁
-
-            const root = document.getElementById('reader');
-            document.getElementById('readerTitle').textContent = `${privacyMode ? decoyTitle(comic.id) : comic.title}　${link.label || ''}`.trim();
-            buildEndButtons(document.getElementById('readerEnd'), comic, index, false);
-            buildEndButtons(document.getElementById('rpEnd'), comic, index, true);
-
-            root.classList.add('open');
-            root.classList.remove('bar-hidden');
-
-            // 回到上次的位置
-            const startPage = Math.min(pages.length - 1, Math.max(0, Number(lsGet('mangaki_rpage_' + link.id, 0)) || 0));
-            const startRatio = Number(lsGet('mangaki_rpos_' + link.id, 0)) || 0;
-            applyReaderMode(startPage, startRatio);
-
-            clearTimeout(reader.hideTimer);
-            reader.hideTimer = setTimeout(() => root.classList.add('bar-hidden'), 2500);
-            return true;
-        }
-
-        // 套用目前的閱讀方式，並停在指定位置（頁碼或捲動比例）
-        function applyReaderMode(pageIdx, ratio) {
-            const root = document.getElementById('reader');
-            root.dataset.mode = reader.mode;
-            const modeBtn = document.getElementById('readerMode');
-            modeBtn.textContent = reader.mode === 'paged' ? '翻頁' : '捲動';
-
-            teardownScrollView();
-            teardownPagedView();
-            if (reader.mode === 'paged') {
-                showPage(pageIdx, null);
-            } else {
-                buildScrollView(pageIdx, ratio);
-            }
-        }
-
-        // ----- 翻頁模式 -----
-        function pageUrl(i) {
-            if (!reader.pUrls.has(i)) reader.pUrls.set(i, URL.createObjectURL(reader.pages[i].blob));
-            return reader.pUrls.get(i);
-        }
-
-        function showPage(i, flip) {
-            const n = reader.pages.length;
-            i = Math.max(0, Math.min(n, i));            // n = 結尾頁
-            reader.pageIdx = i;
-            reader.cur = Math.min(i, n - 1);
-            syncSlider(Math.min(i + 1, n), n);
-            const img = document.getElementById('rpImg');
-            const end = document.getElementById('rpEnd');
-            if (i >= n) {
-                img.classList.add('hide');
-                end.classList.add('show');
-                document.getElementById('readerPage').textContent = `${n} / ${n}`;
-            } else {
-                end.classList.remove('show');
-                img.classList.remove('hide');
-                reader.pageRetry = 0;
-                img.src = pageUrl(i);
-                document.getElementById('readerPage').textContent = `${i + 1} / ${n}`;
-                img.classList.remove('flip-next', 'flip-prev');
-                if (flip) {
-                    // 方向跟閱讀方向一致：往「前進」那一側滑出下一頁
-                    void img.offsetWidth;
-                    img.style.setProperty('--fx', (reader.dir === 'rtl' ? -28 : 28) + 'px');
-                    img.classList.add(flip === 'next' ? 'flip-next' : 'flip-prev');
-                }
-            }
-            // 只保留目前頁前後幾張，其餘釋放
-            [...reader.pUrls.keys()].forEach(k => {
-                if (k < i - 2 || k > i + 3) { URL.revokeObjectURL(reader.pUrls.get(k)); reader.pUrls.delete(k); }
-            });
-            if (!reader.scrubbing) {
-                for (let k = i + 1; k <= i + 2 && k < n; k++) { const pre = new Image(); pre.src = pageUrl(k); }
-                lsSet('mangaki_rpage_' + reader.link.id, String(i >= n ? 0 : i));
-            }
-        }
-
-        function flipPage(step) {
-            const target = reader.pageIdx + step;
-            if (target < 0 || target > reader.pages.length) return;
-            showPage(target, step > 0 ? 'next' : 'prev');
-        }
-
-        function teardownPagedView() {
-            reader.pUrls.forEach(u => URL.revokeObjectURL(u));
-            reader.pUrls.clear();
-            const img = document.getElementById('rpImg');
-            img.removeAttribute('src');
-            img.classList.remove('flip-next', 'flip-prev');
-            document.getElementById('rpEnd').classList.remove('show');
-        }
-
-        // ----- 捲動模式 -----
-        function buildScrollView(pageIdx, ratio) {
-            const scroller = document.getElementById('readerScroll');
-            const box = document.getElementById('readerPages');
-            box.innerHTML = '';
-            reader.loadObs = new IntersectionObserver(es => es.forEach(e => {
-                if (!e.isIntersecting) return;
-                const img = e.target;
-                if (!img.getAttribute('src')) setScrollImg(img);
-            }), { root: scroller, rootMargin: '1500px 0px' });
-            // 離得很遠的圖片卸載，避免整集長條圖同時佔用記憶體
-            reader.unloadObs = new IntersectionObserver(es => es.forEach(e => {
-                if (e.isIntersecting) return;
-                const img = e.target;
-                const url = reader.urls.get(img);
-                if (url) { img.removeAttribute('src'); URL.revokeObjectURL(url); reader.urls.delete(img); }
-            }), { root: scroller, rootMargin: '5000px 0px' });
-
-            reader.pages.forEach(pg => {
-                const img = document.createElement('img');
-                img.className = 'rd-img';
-                img.alt = '';
-                img.decoding = 'async';
-                img.style.aspectRatio = `${pg.w} / ${pg.h}`;
-                img._blob = pg.blob;
-                box.appendChild(img);
-                reader.loadObs.observe(img);
-                reader.unloadObs.observe(img);
-            });
-            document.getElementById('readerPage').textContent = `1 / ${reader.pages.length}`;
-            syncSlider(1, reader.pages.length);
-            scroller.scrollTop = 0;
-            requestAnimationFrame(() => {
-                const imgs = box.querySelectorAll('.rd-img');
-                if (ratio > 0) scroller.scrollTop = ratio * Math.max(0, scroller.scrollHeight - scroller.clientHeight);
-                else if (pageIdx > 0 && imgs[pageIdx]) scroller.scrollTop = imgs[pageIdx].offsetTop;
-                updateReaderPage();
-            });
-        }
-
-        // 捲動模式：用資料產生圖片網址；載入失敗時自動重試（換一個新網址），仍失敗才標示出來，點一下可再試
-        function setScrollImg(img) {
-            const old = reader.urls.get(img);
-            if (old) URL.revokeObjectURL(old);
-            const url = URL.createObjectURL(img._blob);
-            reader.urls.set(img, url);
-            img.onerror = () => {
-                img._retry = (img._retry || 0) + 1;
-                if (img._retry <= 2) { setTimeout(() => { if (reader.urls.has(img)) setScrollImg(img); }, 250 * img._retry); return; }
-                img.classList.add('rd-fail');
-                img.alt = `第 ${[...img.parentNode.children].indexOf(img) + 1} 頁無法顯示，點一下重試`;
-            };
-            img.onload = () => { img._retry = 0; img.classList.remove('rd-fail'); };
-            img.src = url;
-        }
-
-        // 翻頁模式：失敗時重試一次，仍失敗就提示
-        function showToast(text, ms) {
-            const t = document.getElementById('rdToast');
-            t.textContent = text;
-            t.classList.add('show');
-            clearTimeout(reader.toastTimer);
-            reader.toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2600);
-        }
-
-        function teardownScrollView() {
-            if (reader.loadObs) reader.loadObs.disconnect();
-            if (reader.unloadObs) reader.unloadObs.disconnect();
-            reader.loadObs = reader.unloadObs = null;
-            reader.urls.forEach(u => URL.revokeObjectURL(u));
-            reader.urls.clear();
-            document.getElementById('readerPages').innerHTML = '';
-        }
-
-        function updateReaderPage() {
-            const scroller = document.getElementById('readerScroll');
-            const imgs = document.querySelectorAll('#readerPages .rd-img');
-            if (!imgs.length) return;
-            const probe = scroller.scrollTop + scroller.clientHeight * 0.4;
-            let lo = 0, hi = imgs.length - 1;
-            while (lo < hi) {
-                const mid = (lo + hi + 1) >> 1;
-                if (imgs[mid].offsetTop <= probe) lo = mid; else hi = mid - 1;
-            }
-            reader.cur = lo;
-            document.getElementById('readerPage').textContent = `${lo + 1} / ${imgs.length}`;
-            syncSlider(lo + 1, imgs.length);
-        }
-
-        function saveReaderPos() {
-            if (reader.comicId == null || !reader.link) return;
-            const id = reader.link.id;
-            if (reader.mode === 'scroll') {
-                const scroller = document.getElementById('readerScroll');
-                const max = Math.max(1, scroller.scrollHeight - scroller.clientHeight);
-                const ratio = scroller.scrollTop / max;
-                lsSet('mangaki_rpos_' + id, ratio > 0.985 ? '0' : ratio.toFixed(4));
-                lsSet('mangaki_rpage_' + id, String(reader.cur));
-            } else {
-                lsSet('mangaki_rpos_' + id, '0');
-            }
-        }
-
-        function switchReaderEpisode(index) {
-            const comic = comics.find(c => c.id === reader.comicId);
-            if (!comic) return;
-            const link = getAlbums(comic)[index];
-            try { localStorage.removeItem('mangaki_rpos_' + link.id); localStorage.removeItem('mangaki_rpage_' + link.id); } catch (e) {}
-            openReader(comic, index);
-        }
-
-        function closeReader(keepOpen) {
-            if (reader.comicId != null) saveReaderPos();
-            teardownScrollView();
-            teardownPagedView();
-            clearTimeout(reader.hideTimer);
-            if (!keepOpen) {
-                document.getElementById('reader').classList.remove('open');
-                reader.comicId = null;
-                reader.link = null;
-            }
-        }
-
-        function toggleReaderMode() {
-            if (!reader.link) return;
-            saveReaderPos();
-            const cur = reader.cur;
-            reader.mode = reader.mode === 'paged' ? 'scroll' : 'paged';
-            lsSet(READER_MODE_KEY, reader.mode);
-            applyReaderMode(cur, 0);
-        }
-
-        // 底部進度條：同步目前頁數；拖曳中不被捲動/翻頁事件覆蓋
-        function syncSlider(idx, total) {
-            if (reader.scrubbing) return;
-            const slider = document.getElementById('readerSlider');
-            slider.max = String(Math.max(1, total));
-            slider.value = String(idx);
-            slider.disabled = total <= 1;
-            slider.style.setProperty('--pct', total > 1 ? ((idx - 1) / (total - 1) * 100) + '%' : '0%');
-            document.getElementById('rfCur').textContent = String(idx);
-            document.getElementById('rfTotal').textContent = String(total);
-        }
-
-        // 跳到指定頁（0 起算）：翻頁模式直接換頁，捲動模式捲到那一張
-        function goToPage(idx) {
-            const n = reader.pages.length;
-            idx = Math.max(0, Math.min(n - 1, idx));
-            if (reader.mode === 'paged') {
-                showPage(idx, null);
-            } else {
-                const imgs = document.querySelectorAll('#readerPages .rd-img');
-                if (imgs[idx]) document.getElementById('readerScroll').scrollTop = imgs[idx].offsetTop;
-            }
-        }
-
-        function initSlider() {
-            const slider = document.getElementById('readerSlider');
-            const bubble = document.getElementById('rfBubble');
-            const root = document.getElementById('reader');
-            const showBubble = v => { bubble.textContent = `${v} / ${slider.max}`; bubble.classList.add('show'); };
-            const finish = () => {
-                if (!reader.scrubbing) return;
-                reader.scrubbing = false;
-                bubble.classList.remove('show');
-                goToPage(Number(slider.value) - 1);
-                syncSlider(Number(slider.value), reader.pages.length);
-                clearTimeout(reader.hideTimer);
-                reader.hideTimer = setTimeout(() => root.classList.add('bar-hidden'), 2500);
-            };
-            slider.addEventListener('pointerdown', () => { reader.scrubbing = true; clearTimeout(reader.hideTimer); showBubble(slider.value); });
-            slider.addEventListener('input', () => {
-                const v = Number(slider.value);
-                reader.scrubbing = true;
-                slider.style.setProperty('--pct', Number(slider.max) > 1 ? ((v - 1) / (Number(slider.max) - 1) * 100) + '%' : '0%');
-                document.getElementById('rfCur').textContent = String(v);
-                showBubble(v);
-                // 拖曳中即時換頁（用 rAF 限速，避免一直重畫）
-                if (!reader.scrubRaf) reader.scrubRaf = requestAnimationFrame(() => { reader.scrubRaf = 0; goToPage(Number(slider.value) - 1); });
-            });
-            slider.addEventListener('change', finish);
-            slider.addEventListener('pointerup', finish);
-            slider.addEventListener('pointercancel', finish);
-        }
-
-        function initReader() {
-            initSlider();
-            const scroller = document.getElementById('readerScroll');
-            const root = document.getElementById('reader');
-            scroller.addEventListener('scroll', () => {
-                if (!reader.raf) reader.raf = requestAnimationFrame(() => { reader.raf = 0; updateReaderPage(); });
-                clearTimeout(reader.saveTimer);
-                reader.saveTimer = setTimeout(saveReaderPos, 600);
-            }, { passive: true });
-            // 捲動模式：點一下切換上方工具列
-            scroller.addEventListener('click', e => {
-                if (e.target.closest('.rd-btn')) return;
-                const bad = e.target.closest('.rd-img.rd-fail');
-                if (bad) { bad._retry = 0; bad.classList.remove('rd-fail'); setScrollImg(bad); return; }
-                root.classList.toggle('bar-hidden');
-            });
-
-            // 翻頁模式：點左右兩側翻頁、中間切換工具列、左右滑動翻頁
-            const paged = document.getElementById('readerPaged');
-            let sx = 0, sy = 0, down = false;
-            paged.addEventListener('pointerdown', e => { if (e.target.closest('.rd-btn')) return; down = true; sx = e.clientX; sy = e.clientY; });
-            paged.addEventListener('pointerup', e => {
-                if (!down) return;
-                down = false;
-                const dx = e.clientX - sx, dy = e.clientY - sy;
-                const forward = reader.dir === 'ltr' ? 1 : -1;      // 手指往左滑 = 往前翻（左→右閱讀）
-                if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.4) {
-                    flipPage(dx < 0 ? forward : -forward);
-                    return;
-                }
-                if (Math.abs(dx) > 12 || Math.abs(dy) > 12) return;  // 不是點擊
-                const w = paged.clientWidth;
-                if (e.clientX < w * 0.3) flipPage(-forward);
-                else if (e.clientX > w * 0.7) flipPage(forward);
-                else root.classList.toggle('bar-hidden');
-            });
-            paged.addEventListener('pointercancel', () => { down = false; });
-            document.addEventListener('keydown', e => {
-                if (!root.classList.contains('open') || reader.mode !== 'paged') return;
-                const forward = reader.dir === 'ltr' ? 1 : -1;
-                if (e.key === 'ArrowRight') flipPage(forward);
-                else if (e.key === 'ArrowLeft') flipPage(-forward);
-                else if (e.key === 'Escape') closeReader();
-            });
-
-            const rp = document.getElementById('rpImg');
-            rp.addEventListener('error', () => {
-                if (!rp.getAttribute('src') || reader.pageIdx >= reader.pages.length) return;
-                reader.pageRetry = (reader.pageRetry || 0) + 1;
-                const i = reader.pageIdx;
-                if (reader.pageRetry <= 2) {
-                    const old = reader.pUrls.get(i);
-                    if (old) { URL.revokeObjectURL(old); reader.pUrls.delete(i); }
-                    setTimeout(() => { if (reader.pageIdx === i) rp.src = pageUrl(i); }, 250 * reader.pageRetry);
-                } else {
-                    showToast(`第 ${i + 1} 頁無法顯示。\n往前或往後翻再回來，或重新選這一集的圖片。`, 4000);
-                }
-            });
-            document.getElementById('readerClose').onclick = () => closeReader();
-            document.getElementById('readerMode').onclick = toggleReaderMode;
         }
 
         // 卡片手勢：點擊 → 前往連結；長按 → 編輯
@@ -3622,11 +2542,8 @@ function importData(e) {
         window.onload = function() {
             initCustomSelects();
             initLinkEditor(document.getElementById('addLinks'), []);
-            initAlbumEditor(document.getElementById('addAlbums'), []);
             initCardGestures();
-            initReader();
             renderComics();
-            cleanupOrphanImagesSoon();
         };
     </script>
 </body>
