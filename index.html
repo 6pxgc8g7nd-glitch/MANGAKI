@@ -665,7 +665,19 @@
                         </label>
                     </div>
                     <button onclick="copyBackupText()" class="text-[10px] text-neutral-500 underline">下載失敗？複製備份文字</button>
-                    <p class="text-[10px] text-neutral-500 leading-relaxed">內頁圖片只存在這支手機，不會包含在備份或 GitHub 備份裡。</p>
+                    <p class="text-[10px] text-neutral-500 leading-relaxed">內頁圖片不會包含在上面的備份或 GitHub 備份裡，請另外用下面的按鈕整批匯出。換手機時，先還原備份，再匯入圖片。</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="imgExportBtn" onclick="exportAllImages()" class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40 flex items-center justify-center space-x-1.5">
+                            <i class="fa-regular fa-images text-xs text-[#a6051a]"></i>
+                            <span>匯出圖片</span>
+                        </button>
+                        <label id="imgImportBtn" class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40 flex items-center justify-center space-x-1.5 cursor-pointer">
+                            <i class="fa-solid fa-file-import text-xs text-[#a6051a]"></i>
+                            <span>匯入圖片</span>
+                            <input type="file" accept=".zip,application/zip,application/x-zip-compressed" onchange="importAllImages(event)" class="hidden">
+                        </label>
+                    </div>
+                    <p id="imgIoStatus" class="text-[10px] text-neutral-600 min-h-[14px]"></p>
                     <p id="imgUsage" class="text-[10px] text-neutral-500"></p>
                 </div>
 
@@ -1716,7 +1728,7 @@ function downloadBackup(blob) {
     const downloadUrl = URL.createObjectURL(blob);
     const downloadLink = document.createElement('a');
     downloadLink.href = downloadUrl;
-    downloadLink.download = getBackupFileName();
+    downloadLink.download = (blob && blob.name) || getBackupFileName();
     downloadLink.style.display = 'none';
     document.body.appendChild(downloadLink);
     downloadLink.click();
@@ -2344,7 +2356,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = 'fe71466c';
+        const APP_BUILD = '08b8be03';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
@@ -2791,6 +2803,229 @@ function importData(e) {
                 const { usage } = await navigator.storage.estimate();
                 el.textContent = usage ? `App 已使用儲存空間約 ${(usage / 1048576).toFixed(1)} MB` : '';
             } catch (e) {}
+        }
+
+        // ---------- 內頁圖片整批匯出 / 匯入（單一 ZIP 檔，不壓縮、可在電腦上直接解開）----------
+        const CRC_TABLE = (() => {
+            const t = new Uint32Array(256);
+            for (let n = 0; n < 256; n++) {
+                let c = n;
+                for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+                t[n] = c >>> 0;
+            }
+            return t;
+        })();
+
+        function crc32(u8) {
+            let c = 0xFFFFFFFF;
+            for (let i = 0; i < u8.length; i++) c = CRC_TABLE[(c ^ u8[i]) & 0xFF] ^ (c >>> 8);
+            return (c ^ 0xFFFFFFFF) >>> 0;
+        }
+
+        // 組出 ZIP：entries = [{ name, blob? , bytes?, crc, size }]
+        function buildZip(entries) {
+            const enc = new TextEncoder();
+            const parts = [];
+            const central = [];
+            let offset = 0;
+            const d = new Date();
+            const dosTime = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+            const dosDate = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+            for (const e of entries) {
+                const name = enc.encode(e.name);
+                const lh = new DataView(new ArrayBuffer(30));
+                lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+                lh.setUint16(10, dosTime, true); lh.setUint16(12, dosDate, true);
+                lh.setUint32(14, e.crc, true); lh.setUint32(18, e.size, true); lh.setUint32(22, e.size, true);
+                lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
+                parts.push(lh.buffer, name, e.blob || e.bytes);
+                const ch = new DataView(new ArrayBuffer(46));
+                ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true);
+                ch.setUint16(12, dosTime, true); ch.setUint16(14, dosDate, true);
+                ch.setUint32(16, e.crc, true); ch.setUint32(20, e.size, true); ch.setUint32(24, e.size, true);
+                ch.setUint16(28, name.length, true); ch.setUint32(42, offset, true);
+                central.push(ch.buffer, name);
+                offset += 30 + name.length + e.size;
+            }
+            const cdSize = central.reduce((a, b) => a + (b.byteLength !== undefined ? b.byteLength : b.size), 0);
+            const end = new DataView(new ArrayBuffer(22));
+            end.setUint32(0, 0x06054b50, true); end.setUint16(8, entries.length, true); end.setUint16(10, entries.length, true);
+            end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
+            return new Blob([...parts, ...central, end.buffer], { type: 'application/zip' });
+        }
+
+        function setImgIoStatus(text) {
+            const el = document.getElementById('imgIoStatus');
+            if (el) el.textContent = text || '';
+        }
+
+        // 只匯出「目前有漫畫引用」的圖片，並附上一份說明檔（漫畫名稱、集數）
+        async function buildImagesZip(onProgress) {
+            const stored = new Set(await listStoredEpisodes());
+            const eps = [];
+            comics.forEach(c => getAlbums(c).forEach(a => { if (stored.has(a.id) && !eps.some(e => e.id === a.id)) eps.push({ id: a.id, comic: c.title, label: a.label }); }));
+            if (!eps.length) return null;
+            const entries = [];
+            const manifest = { app: 'MANGAKI', version: 1, exportTime: new Date().toISOString(), episodes: [] };
+            let total = 0, done = 0;
+            const pagesByEp = [];
+            for (const ep of eps) { const pages = await getEpisodePages(ep.id); pagesByEp.push(pages); total += pages.length; }
+            if (total > 65000) throw new Error('圖片數量太多');
+            let bytesTotal = 0;
+            for (let i = 0; i < eps.length; i++) {
+                const ep = eps[i];
+                const mEp = { id: ep.id, comic: ep.comic, label: ep.label, pages: [] };
+                for (let k = 0; k < pagesByEp[i].length; k++) {
+                    const pg = pagesByEp[i][k];
+                    const name = `${ep.id}/${String(k).padStart(4, '0')}.jpg`;
+                    const bytes = new Uint8Array(await pg.blob.arrayBuffer());
+                    entries.push({ name, blob: pg.blob, crc: crc32(bytes), size: pg.blob.size });
+                    bytesTotal += pg.blob.size;
+                    if (bytesTotal > 3.5 * 1024 * 1024 * 1024) throw new Error('圖片總量太大');
+                    mEp.pages.push({ name, w: pg.w, h: pg.h });
+                    done++;
+                    if (onProgress && done % 5 === 0) onProgress(done, total);
+                }
+                manifest.episodes.push(mEp);
+            }
+            const mBytes = new TextEncoder().encode(JSON.stringify(manifest, null, 1));
+            entries.unshift({ name: 'manifest.json', bytes: mBytes, crc: crc32(mBytes), size: mBytes.length });
+            return { blob: buildZip(entries), episodes: eps.length, pages: total, size: bytesTotal };
+        }
+
+        async function exportAllImages() {
+            const btn = document.getElementById('imgExportBtn');
+            if (btn.disabled) return;
+            btn.disabled = true;
+            try {
+                setImgIoStatus('準備中…');
+                const res = await buildImagesZip((d, t) => setImgIoStatus(`整理圖片 ${d}/${t}`));
+                if (!res) { setImgIoStatus(''); showMsg('沒有圖片', '目前這支手機上沒有可以匯出的內頁圖片。'); return; }
+                const ymd = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+                const file = new File([res.blob], `mangaki_images_${ymd}.zip`, { type: 'application/zip' });
+                const mb = (res.size / 1048576).toFixed(1);
+                setImgIoStatus('');
+                // iPhone：用分享選單存到「檔案」(iCloud / Google 雲端硬碟 / 在我的 iPhone)；不行就直接下載
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({ files: [file], title: 'MANGAKI 圖片' });
+                        showMsg('匯出完成', `已匯出 ${res.episodes} 集、${res.pages} 張圖片（約 ${mb} MB）。`);
+                        return;
+                    } catch (err) {
+                        if (err && err.name === 'AbortError') return;
+                        console.error('TOPTOON 分享圖片失敗，改用下載：', err);
+                    }
+                }
+                downloadBackup(file);
+                showMsg('匯出完成', `已匯出 ${res.episodes} 集、${res.pages} 張圖片（約 ${mb} MB）。若沒有收到檔案，請改用 Safari 開啟或稍後再試。`);
+            } catch (e) {
+                console.error('TOPTOON 匯出圖片失敗：', e);
+                setImgIoStatus('');
+                showMsg('匯出失敗', '整理圖片時發生錯誤，可能是圖片太多或手機記憶體不足。');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // ----- 匯入：讀 ZIP 的目錄，只取需要的檔案 -----
+        async function readZipEntries(file) {
+            const tailSize = Math.min(file.size, 70000);
+            const tail = new DataView(await file.slice(file.size - tailSize).arrayBuffer());
+            let eocd = -1;
+            for (let i = tail.byteLength - 22; i >= 0; i--) { if (tail.getUint32(i, true) === 0x06054b50) { eocd = i; break; } }
+            if (eocd < 0) throw new Error('不是有效的 ZIP 檔');
+            const count = tail.getUint16(eocd + 10, true);
+            const cdSize = tail.getUint32(eocd + 12, true);
+            const cdOffset = tail.getUint32(eocd + 16, true);
+            if (cdOffset === 0xFFFFFFFF || count === 0xFFFF) throw new Error('檔案太大，不支援');
+            const cd = new DataView(await file.slice(cdOffset, cdOffset + cdSize).arrayBuffer());
+            const dec = new TextDecoder();
+            const map = new Map();
+            let p = 0;
+            for (let i = 0; i < count; i++) {
+                if (cd.getUint32(p, true) !== 0x02014b50) throw new Error('ZIP 目錄損毀');
+                const method = cd.getUint16(p + 10, true);
+                const csize = cd.getUint32(p + 20, true);
+                const nlen = cd.getUint16(p + 28, true), elen = cd.getUint16(p + 30, true), clen = cd.getUint16(p + 32, true);
+                const lho = cd.getUint32(p + 42, true);
+                const name = dec.decode(new Uint8Array(cd.buffer, cd.byteOffset + p + 46, nlen));
+                map.set(name, { method, csize, lho });
+                p += 46 + nlen + elen + clen;
+            }
+            return map;
+        }
+
+        async function readZipEntryBlob(file, entry, type) {
+            const lh = new DataView(await file.slice(entry.lho, entry.lho + 30).arrayBuffer());
+            if (lh.getUint32(0, true) !== 0x04034b50) throw new Error('ZIP 資料損毀');
+            const start = entry.lho + 30 + lh.getUint16(26, true) + lh.getUint16(28, true);
+            const raw = file.slice(start, start + entry.csize, type);
+            if (entry.method === 0) return raw;
+            if (entry.method === 8 && typeof DecompressionStream !== 'undefined') {
+                const stream = raw.stream().pipeThrough(new DecompressionStream('deflate-raw'));
+                return new Blob([await new Response(stream).arrayBuffer()], { type });
+            }
+            throw new Error('不支援的壓縮格式');
+        }
+
+        async function importImagesFromFile(file, onProgress) {
+            const entries = await readZipEntries(file);
+            const mEntry = entries.get('manifest.json');
+            if (!mEntry) throw new Error('這不是 MANGAKI 匯出的圖片檔（缺少 manifest.json）');
+            const manifest = JSON.parse(await (await readZipEntryBlob(file, mEntry, 'application/json')).text());
+            if (!manifest || !Array.isArray(manifest.episodes)) throw new Error('圖片檔內容不正確');
+            const wanted = new Set();
+            comics.forEach(c => getAlbums(c).forEach(a => wanted.add(a.id)));
+            const result = { episodes: 0, pages: 0, skipped: 0 };
+            let doneEps = 0;
+            for (const ep of manifest.episodes) {
+                if (!wanted.has(ep.id)) { result.skipped++; continue; }
+                const pages = [];
+                for (const pg of ep.pages) {
+                    const entry = entries.get(pg.name);
+                    if (!entry) continue;
+                    pages.push({ blob: await readZipEntryBlob(file, entry, 'image/jpeg'), w: Number(pg.w) || 1200, h: Number(pg.h) || 1800 });
+                }
+                if (pages.length) {
+                    await putEpisodePages(ep.id, pages);
+                    result.episodes++;
+                    result.pages += pages.length;
+                }
+                doneEps++;
+                if (onProgress) onProgress(doneEps, manifest.episodes.length);
+            }
+            return result;
+        }
+
+        async function importAllImages(e) {
+            const input = e.target;
+            const file = input.files && input.files[0];
+            if (!file) return;
+            if (!comics.length) {
+                input.value = '';
+                showMsg('請先還原漫畫備份', '圖片要對應到漫畫才能匯入。請先用「還原」或「從 GitHub 還原」把漫畫清單還原，再匯入圖片。');
+                return;
+            }
+            const label = document.getElementById('imgImportBtn');
+            label.classList.add('opacity-50', 'pointer-events-none');
+            try {
+                setImgIoStatus('讀取中…');
+                const r = await importImagesFromFile(file, (d, t) => setImgIoStatus(`匯入中 ${d}/${t} 集`));
+                setImgIoStatus('');
+                updateImgUsage();
+                if (r.episodes === 0) {
+                    showMsg('沒有可匯入的圖片', r.skipped ? `檔案裡的 ${r.skipped} 集在目前的漫畫清單裡找不到對應的集數。請先還原漫畫備份檔，再匯入圖片。` : '檔案裡沒有圖片。');
+                } else {
+                    showMsg('匯入完成', `已匯入 ${r.episodes} 集、${r.pages} 張圖片。` + (r.skipped ? `另有 ${r.skipped} 集因為找不到對應的漫畫而略過。` : ''));
+                }
+            } catch (err) {
+                console.error('TOPTOON 匯入圖片失敗：', err);
+                setImgIoStatus('');
+                showMsg('匯入失敗', (err && err.message) ? err.message : '無法讀取這個檔案。');
+            } finally {
+                label.classList.remove('opacity-50', 'pointer-events-none');
+                input.value = '';
+            }
         }
 
         // ---------- 閱讀器（翻頁 / 捲動兩種方式）----------
