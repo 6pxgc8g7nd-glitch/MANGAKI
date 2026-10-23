@@ -782,7 +782,6 @@
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
                 <h3 id="rdListTitle" class="text-sm font-black text-neutral-900 pr-7">內建閱讀</h3>
-                <button id="rdLinkBtn" onclick="closeReaderList(); openComicLink(rdComicId, true)" class="hidden w-full bg-white active:scale-95 text-neutral-900 py-2 rounded-xl font-bold transition text-xs border border-[#a6051a]/40">前往漫畫網站</button>
                 <div id="rdChapters" class="space-y-1.5"></div>
                 <div class="border-t border-[#e5e5e5] pt-3 space-y-2">
                     <label class="block text-[11px] font-bold text-neutral-600">新增一話（從相簿或檔案選多張圖，依檔名排序）</label>
@@ -2431,7 +2430,6 @@ function importData(e) {
             const comic = comics.find(c => c.id === rdComicId);
             if (!comic) return;
             document.getElementById('rdListTitle').textContent = comic.title;
-            document.getElementById('rdLinkBtn').classList.toggle('hidden', getLinks(comic).length === 0);
             document.getElementById('readerListModal').classList.remove('hidden');
             await rdRenderList();
         }
@@ -2692,6 +2690,16 @@ function importData(e) {
             const scroll = document.getElementById('rdScroll');
             const mid = scroll.getBoundingClientRect().top + scroll.clientHeight / 2;
             const imgs = scroll.querySelectorAll('img');
+            // 捲到最後一頁的底部：稍等一下（還在底部才算）就自動進入下一話
+            const atBottom = scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 4;
+            if (atBottom && !rd.advancing && rd.chIdx < rdChapterList.length - 1) {
+                rd.advancing = true;
+                const cur = rd;
+                setTimeout(() => {
+                    const still = rd === cur && scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 4;
+                    if (still) rdStep(1, false); else if (rd === cur) cur.advancing = false;
+                }, 500);
+            }
             for (let i = 0; i < imgs.length; i++) {
                 const r = imgs[i].getBoundingClientRect();
                 if (r.top <= mid && r.bottom > mid) {
@@ -2748,7 +2756,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = 'b7d8c0c9';
+        const APP_BUILD = '1ad103f0';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
