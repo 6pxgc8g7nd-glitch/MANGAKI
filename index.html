@@ -1016,8 +1016,8 @@
         ];
 
         // 遮蔽模式的假名稱：由漫畫編號固定產生，且主題與該漫畫的假封面一致
-        function decoyTitle(id) {
-            const set = DECOY_NAMES[decoyIndex(id)];
+        function decoyTitle(id, idx = decoyIndex(id)) {
+            const set = DECOY_NAMES[idx];
             let h = 7;
             for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) | 0;
             const a = Math.abs(h);
@@ -1025,9 +1025,23 @@
             return set.p[a % p] + set.n[Math.floor(a / p) % n] + set.s[Math.floor(a / (p * n)) % set.s.length];
         }
 
-        function decoyCover(id) {
-            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="300" height="400">${DECOY_ART[decoyIndex(id)]()}${DECOY_FRAME}</svg>`;
+        function decoyCover(id, idx = decoyIndex(id)) {
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="300" height="400">${DECOY_ART[idx]()}${DECOY_FRAME}</svg>`;
             return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        }
+
+        // 同一頁的封面不重複：先用編號算出偏好的款式，被用掉就順延到下一個空位
+        function assignDecoys(list) {
+            const map = new Map();
+            let used = new Set();
+            list.forEach(c => {
+                if (used.size >= DECOY_ART.length) used = new Set();
+                let k = decoyIndex(c.id);
+                while (used.has(k)) k = (k + 1) % DECOY_ART.length;
+                used.add(k);
+                map.set(c.id, k);
+            });
+            return map;
         }
 
         function updatePrivacyBtn() {
@@ -1282,8 +1296,9 @@
 
             container.className = "grid grid-cols-2 gap-3 items-start";
 
+            const decoyMap = privacyMode ? assignDecoys(paginatedComics) : null;
             container.innerHTML = paginatedComics.map(comic => {
-                const coverSrc = privacyMode ? decoyCover(comic.id) : safeUrl(comic.coverUrl);
+                const coverSrc = privacyMode ? decoyCover(comic.id, decoyMap.get(comic.id)) : safeUrl(comic.coverUrl);
                 const coverDisplay = coverSrc ?
                     `<div class="w-full cover-box bg-[#fafafa] rounded-xl overflow-hidden relative ">
                         <img src="${escapeHtml(coverSrc)}" referrerpolicy="no-referrer" loading="lazy" onload="fitCover(this)" class="w-full h-full object-contain group-hover:scale-105 transition duration-300" onerror="handleImgError(this)">
@@ -1296,7 +1311,7 @@
                     <div data-id="${escapeHtml(comic.id)}" class="group bg-[#ffffff] hover:bg-[#f0f0f0]  rounded-xl shadow transition cursor-pointer overflow-hidden flex flex-col active:scale-[0.98]">
                         <div class="relative">
                             ${coverDisplay}
-                            <div class="cover-title"><h4>${escapeHtml(privacyMode ? decoyTitle(comic.id) : comic.title)}</h4></div>
+                            <div class="cover-title"><h4>${escapeHtml(privacyMode ? decoyTitle(comic.id, decoyMap.get(comic.id)) : comic.title)}</h4></div>
                         </div>
                     </div>
                 `;
@@ -2116,7 +2131,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '08b399e2';
+        const APP_BUILD = 'dd627eba';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
