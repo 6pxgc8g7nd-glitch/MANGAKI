@@ -149,6 +149,13 @@
         .app-container > nav .nav-btn.text-white { color: var(--yellow) !important; }
         .app-container > nav .nav-btn.text-white i { transform: translateY(-1px) scale(1.15); }
 
+        /* iPhone 主畫面 App：env() 偶爾回報 0，保底留出動態島高度 */
+        @supports (-webkit-touch-callout: none) {
+            @media (display-mode: standalone) {
+                .app-container > header { padding-top: max(calc(0.75rem + env(safe-area-inset-top)), 3.5rem) !important; }
+            }
+        }
+
         /* 彈窗背景去掉模糊，改成網點 */
         #comicModal, #editModal, #msgModal { backdrop-filter: none !important; background: rgba(17,17,17,0.55) !important; }
     </style>
