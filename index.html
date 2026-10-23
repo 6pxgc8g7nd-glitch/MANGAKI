@@ -935,6 +935,14 @@
             document.getElementById('msgModal').classList.add('hidden');
         }
 
+        // 回到內容區最上方（立即，不用平滑捲動，避免換頁時被內容高度變化打斷）
+        function scrollMainTop() {
+            const main = document.querySelector('.app-container > main');
+            if (!main) return;
+            main.scrollTop = 0;
+            requestAnimationFrame(() => { main.scrollTop = 0; });
+        }
+
         function switchTab(tabName) {
             document.querySelectorAll('.app-container > main > section').forEach(sec => sec.classList.add('hidden'));
             const targetSection = document.getElementById(`tab-${tabName}`);
@@ -948,6 +956,7 @@
             // 狀態分頁（全部／連載中／已完結）只在首頁顯示
             document.getElementById('statusTabs').classList.toggle('hidden', tabName !== 'home');
 
+            scrollMainTop();
             if(tabName === 'home') renderComics();
             if(tabName === 'categories') renderCategories();
             if(tabName === 'settings') { ghRenderSettings(); renderUpdateInfo(); }
@@ -957,11 +966,6 @@
             activeGenreFilter = '全部';
             activeStatusFilter = '全部';
             switchTab('home');
-        
-            const main = document.querySelector('.app-container > main');
-            if (main) {
-                main.scrollTo({ top: 0, behavior: 'smooth' });
-            }
         }
 
         function filterByGenre(genre) {
@@ -994,6 +998,7 @@
             activeStatusFilter = status;
             currentPage = 1;
             renderComics();
+            scrollMainTop();
         }
 
         function renderStatusTabs() {
@@ -1119,10 +1124,7 @@
             renderComics();
 
             // 換頁後回到漫畫列表頂端
-            const main = document.querySelector('.app-container > main');
-            if (main) {
-                main.scrollTo({ top: 0, behavior: 'smooth' });
-            }
+            scrollMainTop();
         }
 
         function renderCategories() {
