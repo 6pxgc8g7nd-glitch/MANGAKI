@@ -803,16 +803,16 @@
                 <img id="rdPageImg" alt="" class="max-w-full max-h-full object-contain" draggable="false">
             </div>
             <div id="rdBar" class="absolute top-0 inset-x-0 flex items-center gap-2 px-3 py-2 bg-black/80 text-xs" style="padding-top: max(0.5rem, env(safe-area-inset-top));">
-                <button onclick="rdClose()" class="p-2" aria-label="返回"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" ><path d="M15 18l-6-6 6-6"/></svg></button>
+                <button onclick="rdClose()" class="p-3" aria-label="返回"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" ><path d="M15 18l-6-6 6-6"/></svg></button>
                 <span id="rdBarTitle" class="flex-1 truncate font-bold"></span>
-                <button id="rdModeBtn" onclick="rdToggleMode()" class="p-2" aria-label="切換閱讀模式"></button>
+                <button id="rdModeBtn" onclick="rdToggleMode()" class="p-3" aria-label="切換閱讀模式"></button>
             </div>
             <div id="rdFoot" class="absolute bottom-0 inset-x-0 px-4 pt-2 bg-black/80 text-xs" style="padding-bottom: max(0.5rem, env(safe-area-inset-bottom));">
                 <input type="range" id="rdSlider" min="1" max="1" value="1" step="1" oninput="rdSeek(Number(this.value) - 1)" class="w-full" style="accent-color:#ffd400; height:28px;" aria-label="閱讀進度">
                 <div class="flex items-center justify-between">
-                    <button onclick="rdStep(-1, true)" class="p-2" aria-label="上一話"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" ><path d="M6 5v14"/><path d="M19 6v12L9 12z" fill="currentColor"/></svg></button>
+                    <button onclick="rdStep(-1, true)" class="p-3" aria-label="上一話"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" ><path d="M6 5v14"/><path d="M19 6v12L9 12z" fill="currentColor"/></svg></button>
                     <span id="rdPageNo" class="font-bold"></span>
-                    <button onclick="rdStep(1, true)" class="p-2" aria-label="下一話"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" ><path d="M18 5v14"/><path d="M5 6v12l10-6z" fill="currentColor"/></svg></button>
+                    <button onclick="rdStep(1, true)" class="p-3" aria-label="下一話"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" ><path d="M18 5v14"/><path d="M5 6v12l10-6z" fill="currentColor"/></svg></button>
                 </div>
             </div>
         </div>
@@ -2630,8 +2630,8 @@ function importData(e) {
         }
 
         // 圖示 = 目前的模式：上下箭頭是捲動，雙頁是翻頁
-        const RD_ICON_SCROLL = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M7 9l5-5 5 5"/><path d="M7 15l5 5 5-5"/></svg>';
-        const RD_ICON_PAGED = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="8" height="14" rx="1"/><rect x="13" y="5" width="8" height="14" rx="1"/></svg>';
+        const RD_ICON_SCROLL = '<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M7 9l5-5 5 5"/><path d="M7 15l5 5 5-5"/></svg>';
+        const RD_ICON_PAGED = '<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="8" height="14" rx="1"/><rect x="13" y="5" width="8" height="14" rx="1"/></svg>';
         function rdUpdateButtons() {
             document.getElementById('rdModeBtn').innerHTML = rdCfg.mode === 'scroll' ? RD_ICON_SCROLL : RD_ICON_PAGED;
         }
@@ -2847,7 +2847,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '00b94c6f';
+        const APP_BUILD = '4fa95c8f';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
