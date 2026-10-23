@@ -298,6 +298,32 @@
         .page-jump-item { justify-content: center; padding: 10px 0; }
         .page-jump-item i { display: none; }
 
+
+        /* 多集連結編輯器 */
+        .link-editor { display: flex; flex-direction: column; gap: 8px; }
+        .link-row { display: flex; align-items: center; gap: 6px; }
+        .link-row input { padding: 9px 10px !important; font-size: 12px !important; border-radius: 10px !important; }
+        .link-row .lk-label { width: 84px; flex: none; }
+        .link-row .lk-url { flex: 1; min-width: 0; }
+        .link-del {
+            width: 34px; height: 34px; flex: none;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid var(--ink); border-radius: 10px; background: #fff; color: var(--red); font-size: 13px;
+        }
+        .link-del:active { transform: scale(.92); }
+        .link-add-btn {
+            margin-top: 8px;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            width: 100%; padding: 8px 0;
+            border: 2px dashed var(--ink); border-radius: 10px; background: transparent;
+            font-size: 12px; font-weight: 800; color: var(--ink);
+        }
+        .link-add-btn i { color: var(--red); }
+        .link-add-btn:active { background: rgba(0,0,0,.05); }
+        .link-pick { justify-content: space-between; text-align: left; }
+        .link-pick .tag { font-size: 10px; background: var(--red); color: #fff; border-radius: 6px; padding: 1px 6px; margin-left: 6px; }
+        .link-pick i { visibility: visible !important; color: var(--ink) !important; }
+
         /* ===== 頂部導覽：Logo + 圖示按鈕，下方文字分頁 ===== */
         .app-container > header .nav-btn {
             min-width: 44px;
@@ -517,9 +543,10 @@
                     <div>
                         <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
                             <i class="fa-solid fa-link text-[#a6051a] text-[10px]"></i>
-                            <span>網址</span>
+                            <span>網址（可加多集，最後一筆視為最新）</span>
                         </label>
-                        <input type="url" id="inputUrl" placeholder="" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
+                        <div id="addLinks" class="link-editor"></div>
+                        <button type="button" onclick="addLinkRow(document.getElementById('addLinks'))" class="link-add-btn"><i class="fa-solid fa-plus"></i><span>新增一集連結</span></button>
                     </div>
 
                     <div>
@@ -701,9 +728,10 @@
                     <div>
                         <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
                             <i class="fa-solid fa-link text-[#a6051a] text-[10px]"></i>
-                            <span>網址</span>
+                            <span>網址（可加多集，最後一筆視為最新）</span>
                         </label>
-                        <input type="url" id="editInputUrl" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
+                        <div id="editLinks" class="link-editor"></div>
+                        <button type="button" onclick="addLinkRow(document.getElementById('editLinks'))" class="link-add-btn"><i class="fa-solid fa-plus"></i><span>新增一集連結</span></button>
                     </div>
                     <div>
                         <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
@@ -1452,12 +1480,14 @@
         function handleAddNewComic(e) {
             e.preventDefault();
             const statusInput = document.querySelector('input[name="inputStatus"]:checked');
+            const addLinksValue = readLinks(document.getElementById('addLinks'));
             const newComic = {
                 id: Date.now().toString(),
                 title: document.getElementById('inputTitle').value.trim(),
                 genre: document.getElementById('inputGenre').value.trim(),
                 status: statusInput ? statusInput.value : '連載中',
-                url: safeUrl(document.getElementById('inputUrl').value.trim()),
+                links: addLinksValue,
+                url: latestUrl(addLinksValue),
                 coverUrl: safeUrl(document.getElementById('inputCoverUrl').value.trim()),
                 progress: parseProgress(document.getElementById('inputProgress').value),
                 updateDay: parseUpdateDay(document.getElementById('inputUpdated').value)
@@ -1466,6 +1496,7 @@
             comics.unshift(newComic);
             saveComics();
             document.getElementById('addComicForm').reset();
+            initLinkEditor(document.getElementById('addLinks'), []);
             syncCustomSelects();
             showMsg('新增成功', '已成功將漫畫加入追蹤清單！');
             switchTab('home');
@@ -1516,7 +1547,7 @@
 
             document.getElementById('editInputTitle').value = comic.title;
             document.getElementById('editInputGenre').value = comic.genre;
-            document.getElementById('editInputUrl').value = comic.url || '';
+            initLinkEditor(document.getElementById('editLinks'), getLinks(comic));
             document.getElementById('editInputCoverUrl').value = comic.coverUrl || '';
             document.getElementById('editInputProgress').value = comic.progress > 0 ? comic.progress : '';
             const editDay = getUpdateDay(comic);
@@ -1544,7 +1575,9 @@
             comics[comicIndex].title = document.getElementById('editInputTitle').value.trim();
             comics[comicIndex].genre = document.getElementById('editInputGenre').value.trim();
             comics[comicIndex].status = statusInput ? statusInput.value : '連載中';
-            comics[comicIndex].url = safeUrl(document.getElementById('editInputUrl').value.trim());
+            const editedLinks = readLinks(document.getElementById('editLinks'));
+            comics[comicIndex].links = editedLinks;
+            comics[comicIndex].url = latestUrl(editedLinks);
             comics[comicIndex].coverUrl = safeUrl(document.getElementById('editInputCoverUrl').value.trim());
             comics[comicIndex].progress = parseProgress(document.getElementById('editInputProgress').value);
             comics[comicIndex].updateDay = parseUpdateDay(document.getElementById('editInputUpdated').value);
@@ -1728,6 +1761,13 @@ function validateComic(comic) {
     }
 
     if (
+        comic.links !== undefined &&
+        (!Array.isArray(comic.links) || comic.links.some(l => !l || typeof l !== 'object' || (l.url !== undefined && typeof l.url !== 'string') || (l.label !== undefined && typeof l.label !== 'string')))
+    ) {
+        return false;
+    }
+
+    if (
         comic.coverUrl !== undefined &&
         typeof comic.coverUrl !== 'string'
     ) {
@@ -1883,7 +1923,8 @@ function importData(e) {
                     title: String(comic.title).trim(),
                     genre: String(comic.genre).trim(),
                     status: comic.status || '連載中',
-                    url: safeUrl(comic.url),
+                    links: getLinks(comic),
+                    url: latestUrl(getLinks(comic)),
                     coverUrl: safeUrl(comic.coverUrl),
                     progress: parseProgress(comic.progress),
                     updateDay: getUpdateDay(comic)
@@ -2199,7 +2240,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = 'a671fc96';
+        const APP_BUILD = '71bd9a6f';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
@@ -2318,6 +2359,80 @@ function importData(e) {
             }).catch(err => console.error('TOPTOON service worker 註冊失敗：', err));
         }
 
+        // ================================
+        // 多集連結：每部漫畫 links = [{label, url}, ...]，最後一筆視為最新一集
+        // ================================
+        function getLinks(comic) {
+            if (Array.isArray(comic.links)) {
+                return comic.links
+                    .map(l => ({ label: String((l && l.label) || '').trim(), url: safeUrl(l && l.url) }))
+                    .filter(l => l.url);
+            }
+            const legacy = safeUrl(comic.url);
+            return legacy ? [{ label: '', url: legacy }] : [];
+        }
+
+        function latestUrl(links) { return links.length ? links[links.length - 1].url : ''; }
+
+        function addLinkRow(box, link) {
+            const row = document.createElement('div');
+            row.className = 'link-row';
+            row.innerHTML = '<input type="text" class="lk-label" maxlength="20" placeholder="第幾話" autocomplete="off">' +
+                '<input type="url" class="lk-url" placeholder="https://" autocomplete="off" autocapitalize="off" spellcheck="false">' +
+                '<button type="button" class="link-del" aria-label="刪除這集"><i class="fa-solid fa-xmark"></i></button>';
+            row.querySelector('.lk-label').value = (link && link.label) || '';
+            row.querySelector('.lk-url').value = (link && link.url) || '';
+            row.querySelector('.link-del').onclick = () => {
+                row.remove();
+                if (!box.children.length) addLinkRow(box);
+            };
+            box.appendChild(row);
+        }
+
+        function initLinkEditor(box, links) {
+            box.innerHTML = '';
+            (links && links.length ? links : [null]).forEach(l => addLinkRow(box, l));
+        }
+
+        function readLinks(box) {
+            return Array.from(box.querySelectorAll('.link-row')).map(row => ({
+                label: row.querySelector('.lk-label').value.trim(),
+                url: safeUrl(row.querySelector('.lk-url').value.trim())
+            })).filter(l => l.url);
+        }
+
+        // 點卡片：沒有連結提示；只有一個直接開；多個就列出集數（最新在最上面）
+        function openLinkSheet(comic, links) {
+            const sheet = document.getElementById('optionSheet');
+            const list = document.getElementById('optionSheetList');
+            document.getElementById('optionSheetTitle').innerText = '選擇要開啟的集數';
+            list.className = 'grid grid-cols-1 gap-2';
+            list.innerHTML = '';
+            const close = () => { sheet.classList.add('hidden'); sheet.onclick = null; document.getElementById('optionSheetCancel').onclick = null; };
+            links.map((l, i) => ({ l, i })).reverse().forEach(({ l, i }) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'option-item link-pick' + (i === links.length - 1 ? ' is-selected' : '');
+                const name = document.createElement('span');
+                name.textContent = l.label || `連結 ${i + 1}`;
+                if (i === links.length - 1) {
+                    const tag = document.createElement('span');
+                    tag.className = 'tag';
+                    tag.textContent = '最新';
+                    name.appendChild(tag);
+                }
+                const icon = document.createElement('i');
+                icon.className = 'fa-solid fa-arrow-up-right-from-square';
+                btn.appendChild(name);
+                btn.appendChild(icon);
+                btn.onclick = () => { close(); window.open(l.url, '_blank', 'noopener,noreferrer'); };
+                list.appendChild(btn);
+            });
+            document.getElementById('optionSheetCancel').onclick = close;
+            sheet.onclick = e => { if (e.target === sheet) close(); };
+            sheet.classList.remove('hidden');
+        }
+
         // 卡片手勢：點擊 → 前往連結；長按 → 編輯
         const LONG_PRESS_MS = 500;
         const MOVE_TOLERANCE = 10;
@@ -2325,11 +2440,13 @@ function importData(e) {
         function openComicLink(id) {
             const comic = comics.find(c => c.id === id);
             if (!comic) return;
-            const href = safeUrl(comic.url);
-            if (href) {
-                window.open(href, '_blank', 'noopener,noreferrer');
-            } else {
+            const links = getLinks(comic);
+            if (links.length === 0) {
                 showMsg('尚未設定網址', '這部漫畫還沒有網址。長按卡片可以編輯並加上網址。');
+            } else if (links.length === 1) {
+                window.open(links[0].url, '_blank', 'noopener,noreferrer');
+            } else {
+                openLinkSheet(comic, links);
             }
         }
 
@@ -2374,6 +2491,7 @@ function importData(e) {
         // Initialize on load
         window.onload = function() {
             initCustomSelects();
+            initLinkEditor(document.getElementById('addLinks'), []);
             initCardGestures();
             renderComics();
         };
