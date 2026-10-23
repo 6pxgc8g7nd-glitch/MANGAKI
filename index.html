@@ -7,6 +7,8 @@
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MANGAKI">
     <meta name="theme-color" content="#ffd400">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -185,10 +187,24 @@
         }
         .app-container > header > * { position: relative; z-index: 1; }
 
-        /* 主畫面 App：iOS 會在畫面頂端做漸層模糊，標題往下移一點避開 */
-        @media (display-mode: standalone) {
-            .app-container > header { padding-top: 20px !important; }
+
+        /* ===== 像真的 App：沉浸式、不像網頁的操作手感 ===== */
+        html, body { overscroll-behavior: none; }
+        body { -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+        input, textarea { -webkit-user-select: text; user-select: text; }
+        main { overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; }
+        main::-webkit-scrollbar { display: none; }
+        a, button, img { -webkit-touch-callout: none; -webkit-user-drag: none; }
+
+        /* 手機寬度：滿版，不要外框與陰影（只有大螢幕才保留手機外框） */
+        @media (max-width: 480px) {
+            .app-container { box-shadow: none !important; }
         }
+
+        /* 切換分頁的淡入動畫 */
+        @keyframes tabIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+        main > section:not(.hidden) { animation: tabIn 0.18s ease-out; }
+        @media (prefers-reduced-motion: reduce) { main > section:not(.hidden) { animation: none; } }
 
         /* 彈窗背景去掉模糊，改成網點 */
         #comicModal, #editModal, #msgModal { backdrop-filter: none !important; background: rgba(17,17,17,0.55) !important; }
@@ -199,7 +215,7 @@
     <div class="app-container">
 
         <!-- Top Header -->
-        <header style="padding-top: calc(0.75rem + env(safe-area-inset-top));" class="w-full pb-3 px-4 bg-[#ffffff] shadow-md flex items-center justify-between flex-shrink-0 z-50 border-b border-[#e5e5e5]/50">
+        <header style="border-top: env(safe-area-inset-top) solid #111; padding-top: 0.75rem;" class="w-full pb-3 px-4 bg-[#ffffff] shadow-md flex items-center justify-between flex-shrink-0 z-50 border-b border-[#e5e5e5]/50">
             <div onclick="goHome()" class="flex items-center space-x-2 cursor-pointer active:opacity-80 transition">
                 <h1 class="text-xl font-black tracking-wider">
                     <span class="text-[#a6051a]">MANGA</span><span class="text-neutral-900">KI</span>
