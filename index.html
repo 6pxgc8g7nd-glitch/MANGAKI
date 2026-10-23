@@ -260,6 +260,21 @@
         .page-title { font-size: 20px; font-weight: 900; color: var(--ink); line-height: 1.2; letter-spacing: 0.02em; }
         .page-sub { font-size: 12px; font-weight: 600; color: #6b6b6b; margin-top: 2px; }
 
+
+        /* 隱私遮蔽按鈕 */
+        .privacy-btn {
+            width: 30px; height: 30px;
+            display: flex; align-items: center; justify-content: center;
+            background: #ffffff;
+            border: 2px solid var(--ink);
+            border-radius: 50%;
+            font-size: 13px;
+            color: var(--ink);
+            box-shadow: 2px 2px 0 var(--ink);
+        }
+        .privacy-btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+        .privacy-btn.is-on { background: var(--yellow); color: var(--red); }
+
         /* ===== 頂部導覽：Logo + 圖示按鈕，下方文字分頁 ===== */
         .app-container > header .nav-btn {
             min-width: 44px;
@@ -405,7 +420,10 @@
                             <i class="fa-solid fa-bookmark text-[#a6051a] text-xs"></i>
                             <span>漫畫清單</span>
                         </h3>
-                        <span id="comicCount" class="text-[11px] text-neutral-600 font-medium">共 0 部</span>
+                        <div class="flex items-center space-x-2">
+                            <span id="comicCount" class="text-[11px] text-neutral-600 font-medium">共 0 部</span>
+                            <button id="privacyBtn" onclick="togglePrivacy()" class="privacy-btn" aria-label="隱私遮蔽模式"><i class="fa-solid fa-eye"></i></button>
+                        </div>
                     </div>
                     
                     <!-- Active Filter Banner -->
@@ -817,6 +835,103 @@
             return genreStr.split(/[,，]/).map(g => g.trim()).filter(g => g.length > 0);
         }
 
+        // ================================
+        // 隱私遮蔽模式：封面換成隨機（但固定）的圖案
+        // ================================
+        const PRIVACY_KEY = 'mangaki_privacy';
+        let privacyMode = false;
+        try { privacyMode = localStorage.getItem(PRIVACY_KEY) === '1'; } catch (e) {}
+
+        function starPts(cx, cy, r1, r2, n) {
+            const pts = [];
+            for (let i = 0; i < n * 2; i++) {
+                const r = i % 2 === 0 ? r1 : r2;
+                const a = -Math.PI / 2 + Math.PI * i / n;
+                pts.push(`${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`);
+            }
+            return pts.join(' ');
+        }
+
+        const sk = (w = 7) => `stroke="#111" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"`;
+        const DECOY_DOTS = '<defs><pattern id="d" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="7" cy="7" r="2.4" fill="#000" fill-opacity=".13"/></pattern></defs><rect width="300" height="400" fill="url(#d)"/>';
+        const DECOY_FRAME = '<rect x="4" y="4" width="292" height="392" rx="14" fill="none" stroke="#111" stroke-width="8"/>';
+
+        // 8 款漫畫風插畫封面（300×400）
+        const DECOY_ART = [
+            // 0 夜空月亮
+            () => `<rect width="300" height="400" fill="#1d2b78"/>${DECOY_DOTS}
+                <circle cx="205" cy="125" r="62" fill="#ffd400" ${sk()}/><circle cx="228" cy="108" r="52" fill="#1d2b78"/>
+                <polygon points="${starPts(70,80,22,6,4)}" fill="#fff" ${sk(4)}/><polygon points="${starPts(130,190,14,4,4)}" fill="#fff" ${sk(3)}/><polygon points="${starPts(255,230,16,5,4)}" fill="#fff" ${sk(3)}/>
+                <path d="M0 320 Q60 250 130 310 T260 290 T300 310 V400 H0Z" fill="#0b1240" ${sk()}/><path d="M0 365 Q80 320 160 360 T300 345 V400 H0Z" fill="#a6051a" ${sk()}/>`,
+            // 1 日出山景
+            () => `<rect width="300" height="400" fill="#ffd400"/>${DECOY_DOTS}
+                <circle cx="150" cy="230" r="78" fill="#a6051a" ${sk()}/>
+                <polygon points="-10,400 70,210 150,320 210,230 310,400" fill="#2f9e6b" ${sk()}/><polygon points="40,400 150,260 270,400" fill="#1d7a52" ${sk()}/>
+                <polygon points="${starPts(60,70,18,5,4)}" fill="#fff" ${sk(4)}/>`,
+            // 2 貓咪
+            () => `<rect width="300" height="400" fill="#fff8dc"/>${DECOY_DOTS}
+                <polygon points="60,200 70,80 140,150" fill="#fff" ${sk()}/><polygon points="240,200 230,80 160,150" fill="#fff" ${sk()}/>
+                <ellipse cx="150" cy="235" rx="105" ry="90" fill="#fff" ${sk()}/>
+                <ellipse cx="112" cy="225" rx="13" ry="20" fill="#111"/><ellipse cx="188" cy="225" rx="13" ry="20" fill="#111"/>
+                <ellipse cx="82" cy="262" rx="16" ry="11" fill="#ff5a6e"/><ellipse cx="218" cy="262" rx="16" ry="11" fill="#ff5a6e"/>
+                <ellipse cx="150" cy="255" rx="9" ry="6" fill="#a6051a" ${sk(3)}/><path d="M150 262 q-14 16 -28 4 M150 262 q14 16 28 4" fill="none" ${sk(4)}/>
+                <polygon points="${starPts(250,60,20,6,4)}" fill="#ffd400" ${sk(4)}/>`,
+            // 3 咖啡杯
+            () => `<rect width="300" height="400" fill="#ff9fb2"/>${DECOY_DOTS}
+                <path d="M95 150 q-15 -35 8 -60 M150 150 q-15 -35 8 -60 M205 150 q-15 -35 8 -60" fill="none" ${sk(6)}/>
+                <path d="M70 180 H230 V270 Q230 330 150 330 Q70 330 70 270Z" fill="#fff" ${sk()}/>
+                <path d="M230 205 Q285 205 285 245 Q285 285 228 285" fill="none" ${sk()}/>
+                <ellipse cx="150" cy="180" rx="80" ry="14" fill="#7a4a2a" ${sk()}/>
+                <ellipse cx="150" cy="345" rx="110" ry="16" fill="#ffd400" ${sk()}/>
+                <polygon points="${starPts(50,70,16,5,4)}" fill="#fff" ${sk(4)}/>`,
+            // 4 幾何
+            () => `<rect width="300" height="400" fill="#16a6a0"/>${DECOY_DOTS}
+                <circle cx="120" cy="150" r="80" fill="#ffd400" ${sk()}/>
+                <polygon points="160,370 250,200 290,370" fill="#a6051a" ${sk()}/>
+                <rect x="40" y="250" width="110" height="110" rx="10" fill="#fff" ${sk()} transform="rotate(-12 95 305)"/>
+                <circle cx="230" cy="90" r="26" fill="#fff" ${sk()}/>`,
+            // 5 花
+            () => `<rect width="300" height="400" fill="#a4e45b"/>${DECOY_DOTS}
+                <path d="M150 230 V380" fill="none" ${sk(10)}/>
+                <path d="M150 320 Q90 300 80 250 Q140 260 150 320Z" fill="#2f9e6b" ${sk()}/><path d="M150 345 Q215 330 225 280 Q160 285 150 345Z" fill="#2f9e6b" ${sk()}/>
+                ${[0,72,144,216,288].map(a=>`<circle cx="${150+62*Math.cos((a-90)*Math.PI/180)}" cy="${170+62*Math.sin((a-90)*Math.PI/180)}" r="42" fill="#ff5a6e" ${sk()}/>`).join('')}
+                <circle cx="150" cy="170" r="36" fill="#ffd400" ${sk()}/>`,
+            // 6 城市
+            () => `<rect width="300" height="400" fill="#ffd400"/>${DECOY_DOTS}
+                <circle cx="220" cy="110" r="50" fill="#fff" ${sk()}/>
+                <rect x="20" y="210" width="70" height="190" fill="#a6051a" ${sk()}/><rect x="95" y="150" width="80" height="250" fill="#111"/><rect x="180" y="240" width="100" height="160" fill="#2b6cb0" ${sk()}/>
+                ${[0,1,2,3,4].map(i=>`<rect x="108" y="${170+i*40}" width="22" height="22" fill="#ffd400"/><rect x="140" y="${170+i*40}" width="22" height="22" fill="#fff"/>`).join('')}
+                ${[0,1,2].map(i=>`<rect x="34" y="${232+i*45}" width="18" height="18" fill="#ffd400"/><rect x="60" y="${232+i*45}" width="18" height="18" fill="#fff"/>`).join('')}`,
+            // 7 海
+            () => `<rect width="300" height="400" fill="#4cc9f0"/>${DECOY_DOTS}
+                <circle cx="215" cy="100" r="46" fill="#ffd400" ${sk()}/>
+                <polygon points="150,120 150,260 70,260" fill="#fff" ${sk()}/><polygon points="160,150 160,260 225,260" fill="#a6051a" ${sk()}/>
+                <path d="M60 270 H240 L215 310 H85Z" fill="#111" ${sk()}/>
+                <path d="M-10 330 Q40 300 90 330 T190 330 T310 330 V410 H-10Z" fill="#fff" ${sk()}/><path d="M-10 375 Q40 350 90 375 T190 375 T310 375 V410 H-10Z" fill="#1d6fa5" ${sk()}/>`
+        ];
+
+        function decoyCover(id) {
+            let h = 5381;
+            const str = String(id);
+            for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0;
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="300" height="400">${DECOY_ART[(h >>> 0) % DECOY_ART.length]()}${DECOY_FRAME}</svg>`;
+            return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        }
+
+        function updatePrivacyBtn() {
+            const btn = document.getElementById('privacyBtn');
+            if (!btn) return;
+            btn.classList.toggle('is-on', privacyMode);
+            btn.innerHTML = `<i class="fa-solid ${privacyMode ? 'fa-eye-slash' : 'fa-eye'}"></i>`;
+            btn.setAttribute('aria-pressed', String(privacyMode));
+        }
+
+        function togglePrivacy() {
+            privacyMode = !privacyMode;
+            try { localStorage.setItem(PRIVACY_KEY, privacyMode ? '1' : '0'); } catch (e) {}
+            renderComics();
+        }
+
         // 封面框依圖片比例調整（限制在 3:4 ～ 1:1 之間），圖片完整顯示、不裁切
         function fitCover(imgEl) {
             if (!imgEl.naturalWidth || !imgEl.naturalHeight || !imgEl.parentElement) return;
@@ -1026,6 +1141,7 @@
             }
 
             renderStatusTabs();
+            updatePrivacyBtn();
             const filteredComics = getFilteredComics();
 
             document.getElementById('comicCount').innerText = `共 ${filteredComics.length} 部`;
@@ -1055,7 +1171,7 @@
             container.className = "grid grid-cols-2 gap-3 items-start";
 
             container.innerHTML = paginatedComics.map(comic => {
-                const coverSrc = safeUrl(comic.coverUrl);
+                const coverSrc = privacyMode ? decoyCover(comic.id) : safeUrl(comic.coverUrl);
                 const coverDisplay = coverSrc ?
                     `<div class="w-full cover-box bg-[#fafafa] rounded-xl overflow-hidden relative ">
                         <img src="${escapeHtml(coverSrc)}" referrerpolicy="no-referrer" loading="lazy" onload="fitCover(this)" class="w-full h-full object-contain group-hover:scale-105 transition duration-300" onerror="handleImgError(this)">
@@ -1888,7 +2004,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '19c29caa';
+        const APP_BUILD = 'f1a4016f';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
