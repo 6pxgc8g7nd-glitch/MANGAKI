@@ -418,6 +418,17 @@
         }
         #rfBubble.show { display: block; }
 
+
+        /* 閱讀器：圖片載入失敗的提示 */
+        #rdToast {
+            position: absolute; left: 50%; top: 50%; z-index: 3; transform: translate(-50%, -50%);
+            display: none; max-width: 80%; padding: 12px 18px; border: 3px solid #111; border-radius: 14px;
+            background: var(--yellow); color: #111; font-size: 14px; font-weight: 800; text-align: center; line-height: 1.5;
+            box-shadow: 3px 3px 0 #111; pointer-events: none;
+        }
+        #rdToast.show { display: block; }
+        .rd-img.rd-fail { min-height: 160px; background: #3a0a0a; color: #fff; font-size: 13px; font-weight: 800; text-align: center; padding: 60px 12px; box-sizing: border-box; }
+
         /* ===== 頂部導覽：Logo + 圖示按鈕，下方文字分頁 ===== */
         .app-container > header .nav-btn {
             min-width: 44px;
@@ -945,6 +956,7 @@
             <div id="readerPages"></div>
             <div id="readerEnd"></div>
         </div>
+        <div id="rdToast" aria-live="polite"></div>
         <div id="rfBubble" aria-hidden="true"></div>
         <div id="readerFoot">
             <span id="rfCur">1</span>
@@ -2436,7 +2448,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '7dfef73c';
+        const APP_BUILD = '5829fcdd';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
@@ -3281,6 +3293,7 @@ function importData(e) {
             } else {
                 end.classList.remove('show');
                 img.classList.remove('hide');
+                reader.pageRetry = 0;
                 img.src = pageUrl(i);
                 document.getElementById('readerPage').textContent = `${i + 1} / ${n}`;
                 img.classList.remove('flip-next', 'flip-prev');
@@ -3324,11 +3337,7 @@ function importData(e) {
             reader.loadObs = new IntersectionObserver(es => es.forEach(e => {
                 if (!e.isIntersecting) return;
                 const img = e.target;
-                if (!img.getAttribute('src')) {
-                    const url = URL.createObjectURL(img._blob);
-                    reader.urls.set(img, url);
-                    img.src = url;
-                }
+                if (!img.getAttribute('src')) setScrollImg(img);
             }), { root: scroller, rootMargin: '1500px 0px' });
             // 離得很遠的圖片卸載，避免整集長條圖同時佔用記憶體
             reader.unloadObs = new IntersectionObserver(es => es.forEach(e => {
@@ -3358,6 +3367,31 @@ function importData(e) {
                 else if (pageIdx > 0 && imgs[pageIdx]) scroller.scrollTop = imgs[pageIdx].offsetTop;
                 updateReaderPage();
             });
+        }
+
+        // 捲動模式：用資料產生圖片網址；載入失敗時自動重試（換一個新網址），仍失敗才標示出來，點一下可再試
+        function setScrollImg(img) {
+            const old = reader.urls.get(img);
+            if (old) URL.revokeObjectURL(old);
+            const url = URL.createObjectURL(img._blob);
+            reader.urls.set(img, url);
+            img.onerror = () => {
+                img._retry = (img._retry || 0) + 1;
+                if (img._retry <= 2) { setTimeout(() => { if (reader.urls.has(img)) setScrollImg(img); }, 250 * img._retry); return; }
+                img.classList.add('rd-fail');
+                img.alt = `第 ${[...img.parentNode.children].indexOf(img) + 1} 頁無法顯示，點一下重試`;
+            };
+            img.onload = () => { img._retry = 0; img.classList.remove('rd-fail'); };
+            img.src = url;
+        }
+
+        // 翻頁模式：失敗時重試一次，仍失敗就提示
+        function showToast(text, ms) {
+            const t = document.getElementById('rdToast');
+            t.textContent = text;
+            t.classList.add('show');
+            clearTimeout(reader.toastTimer);
+            reader.toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2600);
         }
 
         function teardownScrollView() {
@@ -3492,6 +3526,8 @@ function importData(e) {
             // 捲動模式：點一下切換上方工具列
             scroller.addEventListener('click', e => {
                 if (e.target.closest('.rd-btn')) return;
+                const bad = e.target.closest('.rd-img.rd-fail');
+                if (bad) { bad._retry = 0; bad.classList.remove('rd-fail'); setScrollImg(bad); return; }
                 root.classList.toggle('bar-hidden');
             });
 
@@ -3523,6 +3559,19 @@ function importData(e) {
                 else if (e.key === 'Escape') closeReader();
             });
 
+            const rp = document.getElementById('rpImg');
+            rp.addEventListener('error', () => {
+                if (!rp.getAttribute('src') || reader.pageIdx >= reader.pages.length) return;
+                reader.pageRetry = (reader.pageRetry || 0) + 1;
+                const i = reader.pageIdx;
+                if (reader.pageRetry <= 2) {
+                    const old = reader.pUrls.get(i);
+                    if (old) { URL.revokeObjectURL(old); reader.pUrls.delete(i); }
+                    setTimeout(() => { if (reader.pageIdx === i) rp.src = pageUrl(i); }, 250 * reader.pageRetry);
+                } else {
+                    showToast(`第 ${i + 1} 頁無法顯示。\n往前或往後翻再回來，或重新選這一集的圖片。`, 4000);
+                }
+            });
             document.getElementById('readerClose').onclick = () => closeReader();
             document.getElementById('readerMode').onclick = toggleReaderMode;
         }
