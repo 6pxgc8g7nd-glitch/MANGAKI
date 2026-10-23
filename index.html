@@ -359,6 +359,25 @@
         .rd-btn.primary { background: var(--yellow); color: var(--ink); border-color: var(--ink); }
         .rd-btn:active { transform: scale(.97); }
 
+
+        /* 閱讀器：翻頁模式 */
+        #reader[data-mode="paged"] #readerScroll { display: none; }
+        #reader[data-mode="scroll"] #readerPaged { display: none; }
+        #reader[data-mode="scroll"] #readerDir { display: none; }
+        #readerPaged { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; touch-action: none; user-select: none; -webkit-user-select: none; }
+        #rpImg { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block; -webkit-touch-callout: none; -webkit-user-drag: none; }
+        #rpImg.hide { display: none; }
+        #rpEnd { display: none; width: 100%; max-width: 420px; padding: 0 20px; flex-direction: column; gap: 10px; }
+        #rpEnd.show { display: flex; }
+        #rpEnd .rd-title { color: #fff; font-size: 16px; font-weight: 900; text-align: center; margin-bottom: 6px; }
+        #rpImg.flip-next { animation: flipNext .16s ease-out; }
+        #rpImg.flip-prev { animation: flipPrev .16s ease-out; }
+        @keyframes flipNext { from { opacity: .2; transform: translateX(var(--fx, 28px)); } to { opacity: 1; transform: none; } }
+        @keyframes flipPrev { from { opacity: .2; transform: translateX(calc(var(--fx, 28px) * -1)); } to { opacity: 1; transform: none; } }
+        .rd-chip { flex: none; height: 30px; padding: 0 9px; border: 2px solid #fff; border-radius: 9px; color: #fff; font-size: 11px; font-weight: 800; white-space: nowrap; }
+        .rd-chip:active { transform: scale(.94); }
+        @media (prefers-reduced-motion: reduce) { #rpImg.flip-next, #rpImg.flip-prev { animation: none; } }
+
         /* ===== 頂部導覽：Logo + 圖示按鈕，下方文字分頁 ===== */
         .app-container > header .nav-btn {
             min-width: 44px;
@@ -859,11 +878,17 @@
     </div>
 
     <!-- 內頁閱讀器：上下捲動、一張接一張 -->
-    <div id="reader" aria-hidden="true">
+    <div id="reader" aria-hidden="true" data-mode="paged">
         <div id="readerBar">
             <button type="button" id="readerClose" aria-label="關閉"><i class="fa-solid fa-xmark"></i></button>
             <div id="readerTitle"></div>
+            <button type="button" id="readerDir" class="rd-chip" aria-label="翻頁方向"></button>
+            <button type="button" id="readerMode" class="rd-chip" aria-label="閱讀方式"></button>
             <div id="readerPage"></div>
+        </div>
+        <div id="readerPaged">
+            <img id="rpImg" alt="">
+            <div id="rpEnd"></div>
         </div>
         <div id="readerScroll">
             <div id="readerPages"></div>
@@ -2319,7 +2344,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = 'f1be6b38';
+        const APP_BUILD = '463e74c7';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
@@ -2749,11 +2774,33 @@ function importData(e) {
             } catch (e) {}
         }
 
-        // ---------- 閱讀器 ----------
-        const reader = { comicId: null, index: 0, urls: new Map(), loadObs: null, unloadObs: null, raf: 0, hideTimer: null, saveTimer: null };
+        // ---------- 閱讀器（翻頁 / 捲動兩種方式）----------
+        const READER_MODE_KEY = 'mangaki_reader_mode';   // 'paged' | 'scroll'
+        const READER_DIR_KEY = 'mangaki_reader_dir';     // 'ltr'（點右邊下一頁）| 'rtl'（日式，點左邊下一頁）
+        const reader = {
+            comicId: null, index: 0, pages: [], link: null,
+            mode: 'paged', dir: 'ltr', cur: 0,
+            urls: new Map(), loadObs: null, unloadObs: null, raf: 0, hideTimer: null, saveTimer: null,
+            pUrls: new Map(), pageIdx: 0
+        };
+
+        const lsGet = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
+        const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 
         function readerEpisodes(comic) {
             return getAlbums(comic).map((l, i) => ({ l, i }));
+        }
+
+        // 「上一集 / 下一集 / 關閉」按鈕，翻頁與捲動共用
+        function buildEndButtons(el, comic, index, withTitle) {
+            el.innerHTML = '';
+            if (withTitle) { const t = document.createElement('div'); t.className = 'rd-title'; t.textContent = '這一集看完了'; el.appendChild(t); }
+            const eps = readerEpisodes(comic);
+            const pos = eps.findIndex(x => x.i === index);
+            const mk = (text, cls, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'rd-btn ' + cls; b.textContent = text; b.onclick = fn; el.appendChild(b); };
+            if (pos > 0) mk(`上一集：${eps[pos - 1].l.label || eps[pos - 1].i + 1}`, '', () => switchReaderEpisode(eps[pos - 1].i));
+            if (pos >= 0 && pos < eps.length - 1) mk(`下一集：${eps[pos + 1].l.label || eps[pos + 1].i + 1}`, 'primary', () => switchReaderEpisode(eps[pos + 1].i));
+            mk('關閉', '', () => closeReader());
         }
 
         async function openReader(comic, index) {
@@ -2766,13 +2813,105 @@ function importData(e) {
             closeReader(true);
             reader.comicId = comic.id;
             reader.index = index;
+            reader.pages = pages;
+            reader.link = link;
+            reader.mode = lsGet(READER_MODE_KEY, 'paged') === 'scroll' ? 'scroll' : 'paged';
+            reader.dir = lsGet(READER_DIR_KEY, 'ltr') === 'rtl' ? 'rtl' : 'ltr';
 
             const root = document.getElementById('reader');
+            document.getElementById('readerTitle').textContent = `${privacyMode ? decoyTitle(comic.id) : comic.title}　${link.label || ''}`.trim();
+            buildEndButtons(document.getElementById('readerEnd'), comic, index, false);
+            buildEndButtons(document.getElementById('rpEnd'), comic, index, true);
+
+            root.classList.add('open');
+            root.classList.remove('bar-hidden');
+
+            // 回到上次的位置
+            const startPage = Math.min(pages.length - 1, Math.max(0, Number(lsGet('mangaki_rpage_' + link.id, 0)) || 0));
+            const startRatio = Number(lsGet('mangaki_rpos_' + link.id, 0)) || 0;
+            applyReaderMode(startPage, startRatio);
+
+            clearTimeout(reader.hideTimer);
+            reader.hideTimer = setTimeout(() => root.classList.add('bar-hidden'), 2500);
+            return true;
+        }
+
+        // 套用目前的閱讀方式，並停在指定位置（頁碼或捲動比例）
+        function applyReaderMode(pageIdx, ratio) {
+            const root = document.getElementById('reader');
+            root.dataset.mode = reader.mode;
+            const modeBtn = document.getElementById('readerMode');
+            const dirBtn = document.getElementById('readerDir');
+            modeBtn.textContent = reader.mode === 'paged' ? '翻頁' : '捲動';
+            dirBtn.textContent = reader.dir === 'ltr' ? '左→右' : '右→左';
+
+            teardownScrollView();
+            teardownPagedView();
+            if (reader.mode === 'paged') {
+                showPage(pageIdx, null);
+            } else {
+                buildScrollView(pageIdx, ratio);
+            }
+        }
+
+        // ----- 翻頁模式 -----
+        function pageUrl(i) {
+            if (!reader.pUrls.has(i)) reader.pUrls.set(i, URL.createObjectURL(reader.pages[i].blob));
+            return reader.pUrls.get(i);
+        }
+
+        function showPage(i, flip) {
+            const n = reader.pages.length;
+            i = Math.max(0, Math.min(n, i));            // n = 結尾頁
+            reader.pageIdx = i;
+            reader.cur = Math.min(i, n - 1);
+            const img = document.getElementById('rpImg');
+            const end = document.getElementById('rpEnd');
+            if (i >= n) {
+                img.classList.add('hide');
+                end.classList.add('show');
+                document.getElementById('readerPage').textContent = `${n} / ${n}`;
+            } else {
+                end.classList.remove('show');
+                img.classList.remove('hide');
+                img.src = pageUrl(i);
+                document.getElementById('readerPage').textContent = `${i + 1} / ${n}`;
+                img.classList.remove('flip-next', 'flip-prev');
+                if (flip) {
+                    // 方向跟閱讀方向一致：往「前進」那一側滑出下一頁
+                    void img.offsetWidth;
+                    img.style.setProperty('--fx', (reader.dir === 'rtl' ? -28 : 28) + 'px');
+                    img.classList.add(flip === 'next' ? 'flip-next' : 'flip-prev');
+                }
+            }
+            // 只保留目前頁前後幾張，其餘釋放
+            [...reader.pUrls.keys()].forEach(k => {
+                if (k < i - 2 || k > i + 3) { URL.revokeObjectURL(reader.pUrls.get(k)); reader.pUrls.delete(k); }
+            });
+            for (let k = i + 1; k <= i + 2 && k < n; k++) { const pre = new Image(); pre.src = pageUrl(k); }
+            lsSet('mangaki_rpage_' + reader.link.id, String(i >= n ? 0 : i));
+        }
+
+        function flipPage(step) {
+            const target = reader.pageIdx + step;
+            if (target < 0 || target > reader.pages.length) return;
+            showPage(target, step > 0 ? 'next' : 'prev');
+        }
+
+        function teardownPagedView() {
+            reader.pUrls.forEach(u => URL.revokeObjectURL(u));
+            reader.pUrls.clear();
+            const img = document.getElementById('rpImg');
+            img.removeAttribute('src');
+            img.classList.remove('flip-next', 'flip-prev');
+            document.getElementById('rpEnd').classList.remove('show');
+        }
+
+        // ----- 捲動模式 -----
+        function buildScrollView(pageIdx, ratio) {
             const scroller = document.getElementById('readerScroll');
             const box = document.getElementById('readerPages');
-            document.getElementById('readerTitle').textContent = `${privacyMode ? decoyTitle(comic.id) : comic.title}　${link.label || ''}`.trim();
             box.innerHTML = '';
-
             reader.loadObs = new IntersectionObserver(es => es.forEach(e => {
                 if (!e.isIntersecting) return;
                 const img = e.target;
@@ -2790,7 +2929,7 @@ function importData(e) {
                 if (url) { img.removeAttribute('src'); URL.revokeObjectURL(url); reader.urls.delete(img); }
             }), { root: scroller, rootMargin: '5000px 0px' });
 
-            pages.forEach(pg => {
+            reader.pages.forEach(pg => {
                 const img = document.createElement('img');
                 img.className = 'rd-img';
                 img.alt = '';
@@ -2801,32 +2940,23 @@ function importData(e) {
                 reader.loadObs.observe(img);
                 reader.unloadObs.observe(img);
             });
-
-            // 結尾：上一集／下一集
-            const eps = readerEpisodes(comic);
-            const pos = eps.findIndex(x => x.i === index);
-            const end = document.getElementById('readerEnd');
-            end.innerHTML = '';
-            const mk = (text, cls, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'rd-btn ' + cls; b.textContent = text; b.onclick = fn; end.appendChild(b); };
-            if (pos > 0) mk(`上一集：${eps[pos - 1].l.label || eps[pos - 1].i + 1}`, '', () => switchReaderEpisode(eps[pos - 1].i));
-            if (pos >= 0 && pos < eps.length - 1) mk(`下一集：${eps[pos + 1].l.label || eps[pos + 1].i + 1}`, 'primary', () => switchReaderEpisode(eps[pos + 1].i));
-            mk('關閉', '', () => closeReader());
-
-            root.classList.add('open');
-            root.classList.remove('bar-hidden');
-            document.getElementById('readerPage').textContent = `1 / ${pages.length}`;
-
-            // 回到上次看到的位置
-            let ratio = 0;
-            try { ratio = Number(localStorage.getItem('mangaki_rpos_' + link.id)) || 0; } catch (e) {}
+            document.getElementById('readerPage').textContent = `1 / ${reader.pages.length}`;
             scroller.scrollTop = 0;
             requestAnimationFrame(() => {
-                scroller.scrollTop = ratio * Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+                const imgs = box.querySelectorAll('.rd-img');
+                if (ratio > 0) scroller.scrollTop = ratio * Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+                else if (pageIdx > 0 && imgs[pageIdx]) scroller.scrollTop = imgs[pageIdx].offsetTop;
                 updateReaderPage();
             });
-            clearTimeout(reader.hideTimer);
-            reader.hideTimer = setTimeout(() => root.classList.add('bar-hidden'), 2500);
-            return true;
+        }
+
+        function teardownScrollView() {
+            if (reader.loadObs) reader.loadObs.disconnect();
+            if (reader.unloadObs) reader.unloadObs.disconnect();
+            reader.loadObs = reader.unloadObs = null;
+            reader.urls.forEach(u => URL.revokeObjectURL(u));
+            reader.urls.clear();
+            document.getElementById('readerPages').innerHTML = '';
         }
 
         function updateReaderPage() {
@@ -2839,42 +2969,57 @@ function importData(e) {
                 const mid = (lo + hi + 1) >> 1;
                 if (imgs[mid].offsetTop <= probe) lo = mid; else hi = mid - 1;
             }
+            reader.cur = lo;
             document.getElementById('readerPage').textContent = `${lo + 1} / ${imgs.length}`;
         }
 
         function saveReaderPos() {
-            if (reader.comicId == null) return;
-            const comic = comics.find(c => c.id === reader.comicId);
-            const link = comic && getAlbums(comic)[reader.index];
-            if (!link || !link.id) return;
-            const scroller = document.getElementById('readerScroll');
-            const max = Math.max(1, scroller.scrollHeight - scroller.clientHeight);
-            const ratio = scroller.scrollTop / max;
-            try { localStorage.setItem('mangaki_rpos_' + link.id, ratio > 0.985 ? '0' : ratio.toFixed(4)); } catch (e) {}
+            if (reader.comicId == null || !reader.link) return;
+            const id = reader.link.id;
+            if (reader.mode === 'scroll') {
+                const scroller = document.getElementById('readerScroll');
+                const max = Math.max(1, scroller.scrollHeight - scroller.clientHeight);
+                const ratio = scroller.scrollTop / max;
+                lsSet('mangaki_rpos_' + id, ratio > 0.985 ? '0' : ratio.toFixed(4));
+                lsSet('mangaki_rpage_' + id, String(reader.cur));
+            } else {
+                lsSet('mangaki_rpos_' + id, '0');
+            }
         }
 
         function switchReaderEpisode(index) {
             const comic = comics.find(c => c.id === reader.comicId);
             if (!comic) return;
-            saveReaderPos();
             const link = getAlbums(comic)[index];
-            try { localStorage.removeItem('mangaki_rpos_' + link.id); } catch (e) {}
+            try { localStorage.removeItem('mangaki_rpos_' + link.id); localStorage.removeItem('mangaki_rpage_' + link.id); } catch (e) {}
             openReader(comic, index);
         }
 
         function closeReader(keepOpen) {
             if (reader.comicId != null) saveReaderPos();
-            if (reader.loadObs) reader.loadObs.disconnect();
-            if (reader.unloadObs) reader.unloadObs.disconnect();
-            reader.urls.forEach(u => URL.revokeObjectURL(u));
-            reader.urls.clear();
-            reader.loadObs = reader.unloadObs = null;
+            teardownScrollView();
+            teardownPagedView();
             clearTimeout(reader.hideTimer);
-            document.getElementById('readerPages').innerHTML = '';
             if (!keepOpen) {
                 document.getElementById('reader').classList.remove('open');
                 reader.comicId = null;
+                reader.link = null;
             }
+        }
+
+        function toggleReaderMode() {
+            if (!reader.link) return;
+            saveReaderPos();
+            const cur = reader.cur;
+            reader.mode = reader.mode === 'paged' ? 'scroll' : 'paged';
+            lsSet(READER_MODE_KEY, reader.mode);
+            applyReaderMode(cur, 0);
+        }
+
+        function toggleReaderDir() {
+            reader.dir = reader.dir === 'ltr' ? 'rtl' : 'ltr';
+            lsSet(READER_DIR_KEY, reader.dir);
+            document.getElementById('readerDir').textContent = reader.dir === 'ltr' ? '左→右' : '右→左';
         }
 
         function initReader() {
@@ -2885,12 +3030,43 @@ function importData(e) {
                 clearTimeout(reader.saveTimer);
                 reader.saveTimer = setTimeout(saveReaderPos, 600);
             }, { passive: true });
-            // 點一下切換上方工具列
+            // 捲動模式：點一下切換上方工具列
             scroller.addEventListener('click', e => {
                 if (e.target.closest('.rd-btn')) return;
                 root.classList.toggle('bar-hidden');
             });
+
+            // 翻頁模式：點左右兩側翻頁、中間切換工具列、左右滑動翻頁
+            const paged = document.getElementById('readerPaged');
+            let sx = 0, sy = 0, down = false;
+            paged.addEventListener('pointerdown', e => { if (e.target.closest('.rd-btn')) return; down = true; sx = e.clientX; sy = e.clientY; });
+            paged.addEventListener('pointerup', e => {
+                if (!down) return;
+                down = false;
+                const dx = e.clientX - sx, dy = e.clientY - sy;
+                const forward = reader.dir === 'ltr' ? 1 : -1;      // 手指往左滑 = 往前翻（左→右閱讀）
+                if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+                    flipPage(dx < 0 ? forward : -forward);
+                    return;
+                }
+                if (Math.abs(dx) > 12 || Math.abs(dy) > 12) return;  // 不是點擊
+                const w = paged.clientWidth;
+                if (e.clientX < w * 0.3) flipPage(-forward);
+                else if (e.clientX > w * 0.7) flipPage(forward);
+                else root.classList.toggle('bar-hidden');
+            });
+            paged.addEventListener('pointercancel', () => { down = false; });
+            document.addEventListener('keydown', e => {
+                if (!root.classList.contains('open') || reader.mode !== 'paged') return;
+                const forward = reader.dir === 'ltr' ? 1 : -1;
+                if (e.key === 'ArrowRight') flipPage(forward);
+                else if (e.key === 'ArrowLeft') flipPage(-forward);
+                else if (e.key === 'Escape') closeReader();
+            });
+
             document.getElementById('readerClose').onclick = () => closeReader();
+            document.getElementById('readerMode').onclick = toggleReaderMode;
+            document.getElementById('readerDir').onclick = toggleReaderDir;
         }
 
         // 卡片手勢：點擊 → 前往連結；長按 → 編輯
