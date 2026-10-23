@@ -1246,6 +1246,19 @@ function importData(e) {
             }).catch(err => console.error('TOPTOON service worker 註冊失敗：', err));
         }
 
+        // DEBUG（暫時）：顯示頂部安全區與標題列實際 padding
+        (function(){
+            const probe = document.createElement('div');
+            probe.style.cssText = 'position:absolute;visibility:hidden;padding-top:env(safe-area-inset-top)';
+            document.body.appendChild(probe);
+            const h = document.querySelector('.app-container > header');
+            const tag = document.createElement('span');
+            tag.style.cssText = 'font-size:10px;font-weight:700;color:#111;text-align:right;line-height:1.2';
+            h.appendChild(tag);
+            const upd = () => { tag.innerText = 'env ' + getComputedStyle(probe).paddingTop + '\npad ' + getComputedStyle(h).paddingTop + '\nh ' + Math.round(h.getBoundingClientRect().height) + ' sa ' + (window.matchMedia('(display-mode: standalone)').matches ? 'S' : 'B'); tag.style.whiteSpace='pre'; };
+            upd(); setTimeout(upd, 500);
+        })();
+
         // Initialize on load
         window.onload = function() {
             renderComics();
