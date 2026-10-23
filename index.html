@@ -694,6 +694,10 @@
                     <i class="fa-solid fa-pen-to-square text-[#a6051a]"></i>
                     <span>修改漫畫紀錄</span>
                 </h3>
+                <button type="button" id="editReadBtn" onclick="closeEditModal(); openReaderList()" class="w-full bg-neutral-900 hover:bg-neutral-700 active:scale-95 text-white py-2.5 rounded-xl font-bold transition text-xs flex items-center justify-center space-x-2 shadow">
+                    <i class="fa-solid fa-book-open-reader text-xs"></i>
+                    <span>內建閱讀（我的圖片）</span>
+                </button>
                 <form id="editComicForm" onsubmit="handleUpdateComic(event)" class="space-y-2.5">
                     <div>
                         <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
@@ -1642,6 +1646,7 @@
             const comic = comics.find(c => c.id === activeComicId);
             if (!comic) return;
 
+            document.getElementById('editReadBtn').classList.toggle('hidden', privacyMode);
             document.getElementById('editInputTitle').value = comic.title;
             document.getElementById('editInputGenre').value = comic.genre;
             initLinkEditor(document.getElementById('editLinks'), getLinks(comic));
@@ -2682,7 +2687,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '5a893aa3';
+        const APP_BUILD = '2640ba2c';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
