@@ -363,7 +363,6 @@
         /* 閱讀器：翻頁模式 */
         #reader[data-mode="paged"] #readerScroll { display: none; }
         #reader[data-mode="scroll"] #readerPaged { display: none; }
-        #reader[data-mode="scroll"] #readerDir { display: none; }
         #readerPaged { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; touch-action: none; user-select: none; -webkit-user-select: none; }
         #rpImg { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block; -webkit-touch-callout: none; -webkit-user-drag: none; }
         #rpImg.hide { display: none; }
@@ -882,7 +881,6 @@
         <div id="readerBar">
             <button type="button" id="readerClose" aria-label="關閉"><i class="fa-solid fa-xmark"></i></button>
             <div id="readerTitle"></div>
-            <button type="button" id="readerDir" class="rd-chip" aria-label="翻頁方向"></button>
             <button type="button" id="readerMode" class="rd-chip" aria-label="閱讀方式"></button>
             <div id="readerPage"></div>
         </div>
@@ -2344,7 +2342,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '463e74c7';
+        const APP_BUILD = '2848d852';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
@@ -2776,7 +2774,6 @@ function importData(e) {
 
         // ---------- 閱讀器（翻頁 / 捲動兩種方式）----------
         const READER_MODE_KEY = 'mangaki_reader_mode';   // 'paged' | 'scroll'
-        const READER_DIR_KEY = 'mangaki_reader_dir';     // 'ltr'（點右邊下一頁）| 'rtl'（日式，點左邊下一頁）
         const reader = {
             comicId: null, index: 0, pages: [], link: null,
             mode: 'paged', dir: 'ltr', cur: 0,
@@ -2816,7 +2813,7 @@ function importData(e) {
             reader.pages = pages;
             reader.link = link;
             reader.mode = lsGet(READER_MODE_KEY, 'paged') === 'scroll' ? 'scroll' : 'paged';
-            reader.dir = lsGet(READER_DIR_KEY, 'ltr') === 'rtl' ? 'rtl' : 'ltr';
+            reader.dir = 'ltr';   // 固定由左往右：點右邊／往左滑 = 下一頁
 
             const root = document.getElementById('reader');
             document.getElementById('readerTitle').textContent = `${privacyMode ? decoyTitle(comic.id) : comic.title}　${link.label || ''}`.trim();
@@ -2841,9 +2838,7 @@ function importData(e) {
             const root = document.getElementById('reader');
             root.dataset.mode = reader.mode;
             const modeBtn = document.getElementById('readerMode');
-            const dirBtn = document.getElementById('readerDir');
             modeBtn.textContent = reader.mode === 'paged' ? '翻頁' : '捲動';
-            dirBtn.textContent = reader.dir === 'ltr' ? '左→右' : '右→左';
 
             teardownScrollView();
             teardownPagedView();
@@ -3016,12 +3011,6 @@ function importData(e) {
             applyReaderMode(cur, 0);
         }
 
-        function toggleReaderDir() {
-            reader.dir = reader.dir === 'ltr' ? 'rtl' : 'ltr';
-            lsSet(READER_DIR_KEY, reader.dir);
-            document.getElementById('readerDir').textContent = reader.dir === 'ltr' ? '左→右' : '右→左';
-        }
-
         function initReader() {
             const scroller = document.getElementById('readerScroll');
             const root = document.getElementById('reader');
@@ -3066,7 +3055,6 @@ function importData(e) {
 
             document.getElementById('readerClose').onclick = () => closeReader();
             document.getElementById('readerMode').onclick = toggleReaderMode;
-            document.getElementById('readerDir').onclick = toggleReaderDir;
         }
 
         // 卡片手勢：點擊 → 前往連結；長按 → 編輯
