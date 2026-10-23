@@ -434,7 +434,7 @@
 
         <!-- Top Header -->
         <header style="border-top: env(safe-area-inset-top) solid #111;" class="w-full pb-0 bg-[#ffffff] flex flex-col flex-shrink-0 z-50">
-            <div class="slogan">★ 追更不漏看・專屬你的漫畫書櫃 ★</div>
+            <div class="slogan" onclick="scrollMainTopFast()" role="button" aria-label="回到頂端" style="cursor:pointer">★ 追更不漏看・專屬你的漫畫書櫃 ★</div>
             <div class="flex items-center justify-between px-4 pt-2 pb-2">
                 <div onclick="goHome()" class="flex items-center cursor-pointer active:opacity-80 transition">
                     <h1 class="text-xl font-black tracking-wider">
@@ -1359,6 +1359,23 @@
             if (!main) return;
             main.scrollTop = 0;
             requestAnimationFrame(() => { main.scrollTop = 0; });
+        }
+
+        // 點上方語錄：快速（約 0.25 秒）滑回頂端；清單很長時比系統的平滑捲動快得多
+        let scrollTopAnim = 0;
+        function scrollMainTopFast() {
+            const main = document.querySelector('.app-container > main');
+            if (!main) return;
+            const from = main.scrollTop;
+            cancelAnimationFrame(scrollTopAnim);
+            if (from < 4) { main.scrollTop = 0; return; }
+            const start = performance.now(), dur = 250;
+            const step = now => {
+                const t = Math.min(1, (now - start) / dur);
+                main.scrollTop = from * (1 - (1 - Math.pow(1 - t, 3)));
+                if (t < 1) scrollTopAnim = requestAnimationFrame(step); else main.scrollTop = 0;
+            };
+            scrollTopAnim = requestAnimationFrame(step);
         }
 
         // 分頁順序（決定轉場的滑動方向）
@@ -3261,7 +3278,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = 'baeaef0f';
+        const APP_BUILD = '16543e12';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
