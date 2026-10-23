@@ -1,0 +1,407 @@
+/* MANGAKI 自訂樣式（漫畫風格）；Tailwind 的工具類別在 tailwind.css */
+
+body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background-color: #f5f5f5;
+    color: #171717;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+/* Mobile App Frame Styling */
+.app-container {
+    max-width: 480px;
+    width: 100%;
+    height: 100dvh;
+    margin: 0 auto;
+    background-color: #fafafa;
+    box-shadow: 0 0 25px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+::-webkit-scrollbar-track {
+    background: #f0f0f0;
+}
+::-webkit-scrollbar-thumb {
+    background: #e5e5e5;
+    border-radius: 2px;
+}
+
+/* ===== 漫畫風格：粗黑邊框 + 硬陰影 + 網點底 + 紅黃配色 ===== */
+:root {
+    --ink: #111111;
+    --red: #a6051a;
+    --yellow: #ffd400;
+    --paper: #fff8dc;
+}
+body {
+    background-color: var(--yellow) !important;
+    background-image: radial-gradient(rgba(0,0,0,0.18) 1.2px, transparent 1.4px);
+    background-size: 9px 9px;
+}
+.app-container {
+    background-color: var(--paper) !important;
+    background-image: radial-gradient(rgba(166,5,26,0.10) 1.2px, transparent 1.4px);
+    background-size: 9px 9px;
+    box-shadow: 0 0 0 3px var(--ink), 8px 8px 0 var(--ink) !important;
+}
+::-webkit-scrollbar-track { background: var(--paper); }
+::-webkit-scrollbar-thumb { background: var(--ink); }
+
+/* 標題列 */
+.app-container > header {
+    background: var(--yellow) !important;
+    border-bottom: 3px solid var(--ink) !important;
+    box-shadow: none !important;
+}
+.app-container > header h1 {
+    font-weight: 900;
+    font-size: clamp(1.5rem, 7.4vw, 1.95rem);
+    line-height: 1.15;
+    letter-spacing: 0.06em;
+    text-shadow: 2px 2px 0 var(--ink);
+}
+.app-container > header h1 span:first-child { color: #ffffff !important; }
+.app-container > header h1 span:last-child { color: var(--red) !important; }
+
+/* 白色圓角卡片（漫畫格） */
+.app-container [class*="bg-[#ffffff]"][class*="rounded-xl"] {
+    border: 2.5px solid var(--ink) !important;
+    box-shadow: 4px 4px 0 var(--ink) !important;
+}
+.cover-box { aspect-ratio: 3 / 4; }
+.app-container .cover-box {
+    border-bottom: 2.5px solid var(--ink);
+}
+[data-id].group:active, .genre-card:active { transform: translate(2px, 2px) !important; box-shadow: 2px 2px 0 var(--ink) !important; }
+
+/* 所有紅色細邊框改成黑色 */
+.app-container [class*="border-[#a6051a]/40"] { border-color: var(--ink) !important; border-width: 2px !important; }
+.app-container [class*="border-[#a6051a]/30"] { border-color: var(--ink) !important; }
+.app-container .genre-card[class*="ring-"] { background: var(--yellow) !important; box-shadow: 4px 4px 0 var(--red) !important; }
+
+/* 輸入框 */
+.app-container input[type="text"], .app-container input[type="url"], .app-container input[type="number"], .app-container input[type="date"], .app-container input[type="password"] {
+    background: #ffffff !important;
+    box-shadow: none !important;
+    border: 2px solid var(--ink) !important;
+    font-weight: 700;
+}
+.app-container select { display: none !important; }
+.app-container select-old { -webkit-appearance: none; appearance: none; min-height: 40px; background: #ffffff !important; border: 2px solid var(--ink) !important; box-shadow: none !important; font-weight: 700; background-image: none; }
+.app-container input:focus { box-shadow: 3px 3px 0 var(--red) !important; }
+.app-container label[class*="bg-[#fafafa]"] { background: #ffffff !important; box-shadow: none !important; }
+
+/* 紅色主要按鈕 */
+.app-container button[class*="bg-[#a6051a]"]:not(.nav-btn),
+.app-container a[class*="bg-[#a6051a]"] {
+    border: 2.5px solid var(--ink) !important;
+    box-shadow: 3px 3px 0 var(--ink) !important;
+    font-weight: 900;
+}
+.app-container button[class*="bg-[#a6051a]"]:not(.nav-btn):active,
+.app-container a[class*="bg-[#a6051a]"]:active { box-shadow: 1px 1px 0 var(--ink) !important; }
+/* 次要按鈕 */
+.app-container button[class*="bg-[#fafafa]"], .app-container label.cursor-pointer[class*="bg-[#fafafa]"],
+.app-container button[class*="bg-white"], .app-container button[class*="bg-gray-700"] {
+    box-shadow: 3px 3px 0 var(--ink) !important;
+}
+.app-container button[class*="bg-gray-700"] { background: var(--ink) !important; }
+.app-container button[class*="bg-white"][class*="text-[#a6051a]"] { color: var(--red) !important; }
+.app-container button:disabled { box-shadow: none !important; opacity: 0.5; }
+
+/* 狀態標籤 */
+.app-container [class*="text-[9px]"] {
+    border: 2px solid var(--ink) !important;
+    font-weight: 900;
+    background: var(--yellow) !important;
+    color: var(--ink) !important;
+}
+.app-container [class*="bg-gray-200"] { background: #e5e5e5 !important; }
+
+/* 底部導覽列：黑底 + 黃色選中 */
+.app-container > nav {
+    background: var(--ink) !important;
+    border: 3px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--red) !important;
+}
+.app-container > nav .nav-btn { color: rgba(255,255,255,0.55) !important; }
+.app-container > nav .nav-btn.text-white { color: var(--yellow) !important; }
+.app-container > nav .nav-btn.text-white i { transform: translateY(-1px) scale(1.15); }
+
+
+/* 標題列裝飾：放射速度線 + 網點漸層 + 驚嘆爆炸框 */
+.app-container > header {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--yellow) !important;
+    background-image: repeating-conic-gradient(from 0deg at 86% 55%, rgba(255,255,255,0) 0deg 7deg, rgba(255,255,255,0.35) 7deg 10deg) !important;
+}
+.app-container > header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(166,5,26,0.55) 1.6px, transparent 2px);
+    background-size: 8px 8px;
+    -webkit-mask-image: linear-gradient(to left, #000 0%, transparent 65%);
+    mask-image: linear-gradient(to left, #000 0%, transparent 65%);
+    pointer-events: none;
+}
+.app-container > header::after { display: none; }
+.app-container > header > * { position: relative; z-index: 1; }
+
+
+/* ===== 像真的 App：沉浸式、不像網頁的操作手感 ===== */
+html, body { overscroll-behavior: none; }
+body { -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+input, textarea { -webkit-user-select: text; user-select: text; }
+main { overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; }
+main::-webkit-scrollbar { display: none; }
+a, button, img { -webkit-touch-callout: none; -webkit-user-drag: none; }
+
+/* 手機寬度：滿版，不要外框與陰影（只有大螢幕才保留手機外框） */
+@media (max-width: 480px) {
+    /* 手機：背景用純色，沒有網點。iPhone 主畫面模式下，畫面最底部約 65pt 的範圍網頁畫不到，
+       有網點時會看到一條素色帶；整個背景改純色就不會有不一致的接縫 */
+    html {
+        background-color: var(--paper) !important;
+        background-image: none !important;
+        min-height: 100%;
+    }
+    body { background: transparent !important; height: 100%; }
+    .app-container {
+        position: fixed;
+        inset: 0;
+        height: auto;
+        max-width: none;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+}
+
+/* 切換分頁的淡入動畫 */
+/* 切換分頁：依分頁順序由右或左滑入，帶一點回彈 */
+@keyframes enterFromRight { from { opacity: 0; transform: translateX(44px); } 60% { opacity: 1; } to { opacity: 1; transform: none; } }
+@keyframes enterFromLeft  { from { opacity: 0; transform: translateX(-44px); } 60% { opacity: 1; } to { opacity: 1; transform: none; } }
+main { overflow-x: hidden; }
+main > section[data-enter="right"]:not(.hidden) { animation: enterFromRight .32s cubic-bezier(.2,.95,.3,1.08) both; }
+main > section[data-enter="left"]:not(.hidden)  { animation: enterFromLeft  .32s cubic-bezier(.2,.95,.3,1.08) both; }
+@media (prefers-reduced-motion: reduce) { main > section[data-enter] { animation: none !important; } }
+
+
+
+/* 標題上方標語 */
+.slogan {
+    background: var(--red);
+    color: var(--yellow);
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-align: center;
+    padding: 6px 8px 5px;
+    border-bottom: 3px solid var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/* 封面上的漫畫名稱：深色漸層 + 白字 + 描邊陰影，任何封面都看得清楚 */
+.cover-title {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    padding: 26px 8px 6px;
+    background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.62) 50%, rgba(0,0,0,0) 100%);
+    pointer-events: none;
+}
+.cover-title { display: flex; align-items: flex-end; gap: 6px; }
+.cover-title > span { flex-shrink: 0; margin-bottom: 1px; }
+.cover-title h4 {
+    flex: 1;
+    min-width: 0;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1.25;
+    letter-spacing: 0.02em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-all;
+    text-shadow: 0 1px 2px #000, 0 0 3px #000, 1px 1px 0 #000, -1px 1px 0 #000;
+}
+.app-container .cover-box { border-bottom: none; }
+
+
+/* 分頁標題：純文字 */
+.page-title { font-size: 20px; font-weight: 900; color: var(--ink); line-height: 1.2; letter-spacing: 0.02em; }
+.page-sub { font-size: 12px; font-weight: 600; color: #6b6b6b; margin-top: 2px; }
+
+
+/* 隱私遮蔽按鈕 */
+.privacy-btn {
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    background: #ffffff;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    font-size: 13px;
+    color: var(--ink);
+    box-shadow: 2px 2px 0 var(--ink);
+}
+.privacy-btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+.privacy-btn.is-on { background: var(--yellow); color: var(--red); }
+
+
+
+/* 頁碼列 */
+#paginationContainer { gap: 4px; flex-wrap: nowrap; }
+.pg-btn {
+    min-width: 30px; height: 34px; padding: 0 4px; flex: 0 1 auto;
+    display: flex; align-items: center; justify-content: center;
+    background: #ffffff; color: var(--ink);
+    border: 2px solid var(--ink); border-radius: 10px;
+    font-size: 14px; font-weight: 900;
+    box-shadow: 2px 2px 0 var(--ink);
+}
+.pg-btn:active:not(:disabled) { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+.pg-btn.is-current { background: var(--yellow); color: var(--red); }
+.pg-btn.pg-gap { background: transparent; border-color: transparent; box-shadow: none; min-width: 20px; padding: 0; letter-spacing: 1px; }
+.pg-btn:disabled { opacity: .3; box-shadow: none; }
+.page-jump-item { justify-content: center; padding: 10px 0; }
+.page-jump-item i { display: none; }
+
+
+/* 多集連結編輯器 */
+.link-editor { display: flex; flex-direction: column; gap: 8px; }
+.link-row { display: flex; align-items: center; gap: 6px; }
+.link-row input { padding: 9px 10px !important; font-size: 12px !important; border-radius: 10px !important; }
+.link-row .lk-label { width: 84px; flex: none; }
+.link-row .lk-url { flex: 1; min-width: 0; }
+.link-del {
+    width: 34px; height: 34px; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--ink); border-radius: 10px; background: #fff; color: var(--red); font-size: 13px;
+}
+.link-del:active { transform: scale(.92); }
+.link-add-btn {
+    margin-top: 8px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    width: 100%; padding: 8px 0;
+    border: 2px dashed var(--ink); border-radius: 10px; background: transparent;
+    font-size: 12px; font-weight: 800; color: var(--ink);
+}
+.link-add-btn i { color: var(--red); }
+.link-add-btn:active { background: rgba(0,0,0,.05); }
+.link-pick { justify-content: center; gap: 6px; padding: 10px 4px; font-size: 13px; min-width: 0; }
+.link-pick .lp-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+
+
+.link-pick .lp-ic { font-size: 11px; color: var(--red); margin-left: 4px; }
+
+/* ===== 頂部導覽：Logo + 圖示按鈕，下方文字分頁 ===== */
+.app-container > header .nav-btn {
+    min-width: 44px;
+    padding: 3px 6px;
+    color: var(--ink);
+    font-weight: 800;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    transition: transform 0.1s, background 0.15s;
+}
+.app-container > header .nav-btn:active { transform: scale(0.92); }
+.app-container > header .nav-btn.is-active {
+    background: #ffffff;
+    color: var(--red);
+    border-color: var(--ink);
+    box-shadow: 2px 2px 0 var(--ink);
+}
+
+/* 按鈕群組加白底，避免被背景網點干擾 */
+.nav-group {
+    background: rgba(255,255,255,0.92);
+    border: 2.5px solid var(--ink);
+    border-radius: 16px;
+    padding: 2px 4px;
+    box-shadow: 3px 3px 0 var(--ink);
+}
+.app-container > header .nav-btn { min-width: 48px; border-radius: 12px; }
+.app-container > header .nav-btn i { color: var(--ink); }
+.app-container > header .nav-btn.is-active { background: var(--yellow); border-color: var(--ink); box-shadow: none; }
+.app-container > header .nav-btn.is-active i { color: var(--red); }
+
+#statusTabs {
+    border-top: 3px solid var(--ink);
+}
+.status-tab {
+    padding: 8px 0 7px;
+    font-size: 14px;
+    font-weight: 800;
+    color: #6b6b6b;
+    background: #fff;
+    position: relative;
+}
+.status-tab + .status-tab { border-left: 2px solid rgba(17,17,17,0.12); }
+.status-tab.is-active {
+    color: var(--red);
+    font-weight: 900;
+    box-shadow: inset 0 -5px 0 var(--red);
+}
+.status-tab:active { background: #fff3b0; }
+
+
+/* 自訂下拉按鈕與選項面板、確認視窗 */
+.cselect-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink);
+    min-height: 40px;
+    text-align: left;
+}
+.cselect-btn i { color: var(--red); font-size: 11px; }
+.cselect-btn:active { box-shadow: 3px 3px 0 var(--red); }
+#optionSheet > div, #confirmModal > div {
+    border: 3px solid var(--ink) !important;
+    box-shadow: 4px 4px 0 var(--ink) !important;
+}
+#optionSheet > div { border-bottom: none !important; border-radius: 20px 20px 0 0 !important; box-shadow: 0 -4px 0 var(--ink) !important; }
+.option-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    padding: 11px 12px;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+}
+.option-item i { visibility: hidden; color: var(--red); }
+.option-item.is-selected { background: var(--yellow); }
+.option-item.is-selected i { visibility: visible; }
+.option-item:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+#optionSheet:not(.hidden) > div { animation: sheetUp 0.18s ease-out; }
+@keyframes sheetUp { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* 彈窗背景去掉模糊，改成網點 */
+#comicModal, #editModal, #msgModal, #confirmModal, #optionSheet { backdrop-filter: none !important; background: rgba(17,17,17,0.55) !important; }
