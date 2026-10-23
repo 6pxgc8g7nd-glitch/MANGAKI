@@ -404,10 +404,18 @@ main > section[data-enter="left"]:not(.hidden)  { animation: enterFromLeft  .32s
 #assistBtn.hidden, #assistPanel.hidden, #assistBackdrop.hidden { display: none; }
 #assistBackdrop { position: fixed; inset: 0; z-index: 44; background: transparent; }
 #assistPanel {
-    position: fixed; left: 0; top: 0; z-index: 46; width: 214px; padding: 10px;
+    position: fixed; left: 0; top: 0; z-index: 46; width: 214px; padding: 12px;
     display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-    background: #fff; border: 3px solid var(--ink); border-radius: 16px; box-shadow: 4px 4px 0 var(--ink);
+    background: #fff; border: 3px solid var(--ink); border-radius: 24px; box-shadow: 4px 4px 0 var(--ink);
+    animation: assistPop .24s ease-out;
 }
+/* 對話框的尾巴：黑色三角形當外框，白色三角形蓋在上面，接縫處也是白的 */
+#assistPanel::before, #assistPanel::after { content: ''; position: absolute; width: 0; height: 0; border: solid transparent; }
+#assistPanel.tail-right::before { top: calc(var(--tail-y) - 13px); right: -22px; border-width: 13px 0 13px 19px; border-left-color: var(--ink); }
+#assistPanel.tail-right::after  { top: calc(var(--tail-y) - 9px);  right: -15px; border-width: 9px 0 9px 15px;  border-left-color: #fff; }
+#assistPanel.tail-left::before  { top: calc(var(--tail-y) - 13px); left: -22px; border-width: 13px 19px 13px 0; border-right-color: var(--ink); }
+#assistPanel.tail-left::after   { top: calc(var(--tail-y) - 9px);  left: -15px; border-width: 9px 15px 9px 0;  border-right-color: #fff; }
+@keyframes assistPop { 0% { transform: scale(.55); opacity: 0; } 65% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); } }
 .assist-item {
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
     padding: 12px 4px; background: #fafafa; border: 2px solid var(--ink); border-radius: 12px;

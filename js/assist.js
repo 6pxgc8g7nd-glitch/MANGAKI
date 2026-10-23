@@ -4,6 +4,7 @@ const ASSIST_POS_KEY = 'mangaki_assist_pos';
 const ASSIST_ON_KEY = 'mangaki_assist_on';
 const ASSIST_SIZE = 54;
 const ASSIST_GAP = 6;
+const ASSIST_TAIL = 22;   // 對話框尾巴的長度，面板與按鈕之間留這麼寬
 
 let assistBtn = null, assistPanel = null, assistBackdrop = null, assistIdleTimer = 0;
 let assistPos = { side: 'right', y: 0.68 };   // side：貼哪一邊；y：高度佔螢幕的比例
@@ -50,6 +51,11 @@ function assistWake() {
     }, 3000);
 }
 
+// 存位置：只在拖曳放開時存。不要在離開頁面時再存，啟動時若剛好讀到空值，會把預設位置寫回去蓋掉真正存的位置
+function assistSavePos() {
+    try { localStorage.setItem(ASSIST_POS_KEY, JSON.stringify(assistPos)); } catch (e) {}
+}
+
 const assistInReader = () => !document.getElementById('readerView').classList.contains('hidden');
 
 function assistItems() {
@@ -85,12 +91,19 @@ function assistOpenPanel() {
     });
     assistPanel.classList.remove('hidden');
     assistBackdrop.classList.remove('hidden');
-    // 面板放在按鈕朝畫面內側的那一邊，垂直置中在按鈕旁
+    // 像按鈕在說話：面板放在按鈕朝畫面內側的那一邊，尾巴指向按鈕的正中央
     const bb = assistBtn.getBoundingClientRect(), pw = assistPanel.offsetWidth, ph = assistPanel.offsetHeight;
     const box = document.querySelector('.app-container').getBoundingClientRect();
-    const x = assistPos.side === 'left' ? bb.right + 8 : bb.left - pw - 8;
+    const onRight = assistPos.side === 'right';   // 按鈕在右邊 → 面板在它左邊，尾巴長在面板右側
+    const x = assistClamp(onRight ? bb.left - pw - ASSIST_TAIL : bb.right + ASSIST_TAIL, box.left + 4, box.right - pw - 4);
     const y = assistClamp(bb.top + bb.height / 2 - ph / 2, assistBounds().top, window.innerHeight - ph - 8);
-    assistPanel.style.transform = `translate(${Math.round(assistClamp(x, box.left + 4, box.right - pw - 4))}px, ${Math.round(y)}px)`;
+    const tailY = assistClamp(bb.top + bb.height / 2 - y, 24, ph - 24);   // 尾巴在面板上的高度（避開圓角）
+    assistPanel.classList.toggle('tail-right', onRight);
+    assistPanel.classList.toggle('tail-left', !onRight);
+    assistPanel.style.setProperty('--tail-y', `${Math.round(tailY)}px`);
+    assistPanel.style.left = `${Math.round(x)}px`;
+    assistPanel.style.top = `${Math.round(y)}px`;
+    assistPanel.style.transformOrigin = `${onRight ? '100%' : '0%'} ${Math.round(tailY)}px`;   // 從尾巴尖端彈出來
     assistWake();
 }
 
@@ -129,8 +142,8 @@ function initAssist() {
     assistBtn.id = 'assistBtn';
     assistBtn.setAttribute('role', 'button');
     assistBtn.setAttribute('aria-label', '快速功能');
-    // 圖案：黃色圓形 + 粗黑邊、對話框、網點與集中線（漫畫風）；用內嵌 SVG，不需要連網載入圖示
-    assistBtn.innerHTML = '<svg viewBox="0 0 64 64" width="100%" height="100%" aria-hidden="true"><defs><clipPath id="abClip"><circle cx="32" cy="32" r="28.5"/></clipPath><pattern id="abDots" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="3" cy="3" r="1.35" fill="#a6051a"/></pattern></defs><circle cx="32" cy="32" r="30" fill="#ffd400" stroke="#111" stroke-width="4"/><g clip-path="url(#abClip)"><rect x="0" y="36" width="64" height="30" fill="url(#abDots)" opacity=".9"/><g stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity=".85"><path d="M52.3 34.9L62.7 36.3"/><path d="M49.7 42.4L58.7 47.7"/><path d="M44.3 48.4L50.7 56.8"/><path d="M37.1 51.8L39.8 62.0"/><path d="M29.1 52.3L27.7 62.7"/><path d="M21.6 49.7L16.3 58.7"/><path d="M15.6 44.3L7.2 50.7"/><path d="M12.2 37.1L2.0 39.8"/><path d="M11.7 29.1L1.3 27.7"/><path d="M14.3 21.6L5.3 16.3"/><path d="M19.7 15.6L13.3 7.2"/><path d="M26.9 12.2L24.2 2.0"/><path d="M34.9 11.7L36.3 1.3"/><path d="M42.4 14.3L47.7 5.3"/><path d="M48.4 19.7L56.8 13.3"/><path d="M51.8 26.9L62.0 24.2"/></g></g><path d="M17.5 24.5Q17.5 15.5 26.5 15.5H37.5Q46.5 15.5 46.5 24.5V28.5Q46.5 37.5 37.5 37.5H31.5L23.5 45.5L25 37.5H26.5Q17.5 37.5 17.5 28.5Z" fill="#fff" stroke="#111" stroke-width="3" stroke-linejoin="round"/><circle cx="26" cy="26.5" r="2.4" fill="#111"/><circle cx="32" cy="26.5" r="2.4" fill="#111"/><circle cx="38" cy="26.5" r="2.4" fill="#111"/><path d="M49.5 9.5l1.9 4.6 4.6 1.9-4.6 1.9-1.9 4.6-1.9-4.6-4.6-1.9 4.6-1.9z" fill="#a6051a" stroke="#111" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+    // 圖案：黃色爆炸框（尖刺、粗黑邊、圓角接合）+ 網點 + 對話框（漫畫風）；用內嵌 SVG，不需要連網載入圖示
+    assistBtn.innerHTML = '<svg viewBox="0 0 64 64" width="100%" height="100%" aria-hidden="true"><defs><clipPath id="abClip"><path d="M34.1 1.6 L38.6 10.4 L46.0 7.5 L46.6 16.1 L57.7 14.3 L53.4 23.5 L59.3 27.8 L53.9 33.5 L60.7 40.7 L51.6 43.2 L53.4 51.6 L44.3 49.8 L43.7 61.4 L35.5 54.7 L29.9 62.4 L25.6 53.1 L18.0 56.5 L16.7 48.6 L6.3 49.7 L11.9 40.0 L4.7 36.2 L9.1 30.4 L3.3 23.3 L12.9 21.1 L10.6 12.4 L19.2 13.4 L20.3 2.6 L28.7 10.7Z"/></clipPath><pattern id="abDots" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="3" cy="3" r="1.35" fill="#a6051a"/></pattern></defs><path d="M34.1 1.6 L38.6 10.4 L46.0 7.5 L46.6 16.1 L57.7 14.3 L53.4 23.5 L59.3 27.8 L53.9 33.5 L60.7 40.7 L51.6 43.2 L53.4 51.6 L44.3 49.8 L43.7 61.4 L35.5 54.7 L29.9 62.4 L25.6 53.1 L18.0 56.5 L16.7 48.6 L6.3 49.7 L11.9 40.0 L4.7 36.2 L9.1 30.4 L3.3 23.3 L12.9 21.1 L10.6 12.4 L19.2 13.4 L20.3 2.6 L28.7 10.7Z" fill="#ffd400"/><g clip-path="url(#abClip)"><rect x="0" y="38" width="64" height="30" fill="url(#abDots)" opacity=".9"/></g><path d="M34.1 1.6 L38.6 10.4 L46.0 7.5 L46.6 16.1 L57.7 14.3 L53.4 23.5 L59.3 27.8 L53.9 33.5 L60.7 40.7 L51.6 43.2 L53.4 51.6 L44.3 49.8 L43.7 61.4 L35.5 54.7 L29.9 62.4 L25.6 53.1 L18.0 56.5 L16.7 48.6 L6.3 49.7 L11.9 40.0 L4.7 36.2 L9.1 30.4 L3.3 23.3 L12.9 21.1 L10.6 12.4 L19.2 13.4 L20.3 2.6 L28.7 10.7Z" fill="none" stroke="#111" stroke-width="3.6" stroke-linejoin="round"/><g transform="translate(32 32.5) scale(.82) translate(-32 -31)"><path d="M17.5 24.5Q17.5 15.5 26.5 15.5H37.5Q46.5 15.5 46.5 24.5V28.5Q46.5 37.5 37.5 37.5H31.5L23.5 45.5L25 37.5H26.5Q17.5 37.5 17.5 28.5Z" fill="#fff" stroke="#111" stroke-width="3.2" stroke-linejoin="round"/><circle cx="26" cy="26.5" r="2.5" fill="#111"/><circle cx="32" cy="26.5" r="2.5" fill="#111"/><circle cx="38" cy="26.5" r="2.5" fill="#111"/></g></svg>';
     // 放進 .app-container：它是固定定位、自成一個疊放層，放在外面的話層級再低也會蓋住視窗和閱讀器
     document.querySelector('.app-container').append(assistBackdrop, assistPanel, assistBtn);
 
@@ -167,7 +180,7 @@ function initAssist() {
             const box = document.querySelector('.app-container').getBoundingClientRect();
             assistPos.side = (r.left + r.width / 2) < (box.left + box.width / 2) ? 'left' : 'right';
             assistPos.y = (r.top + r.height / 2) / window.innerHeight;
-            try { localStorage.setItem(ASSIST_POS_KEY, JSON.stringify(assistPos)); } catch (err) {}
+            assistSavePos();
             assistPlace();
             assistWake();
         } else if (!cancelled) {
