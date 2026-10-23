@@ -623,6 +623,19 @@
 
                 <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 space-y-3">
                     <div class="flex items-center space-x-1.5">
+                        <i class="fa-solid fa-file-zipper text-[#a6051a] text-sm"></i>
+                        <label class="block text-[11px] font-bold text-neutral-600">批次匯入圖片（zip）</label>
+                    </div>
+                    <label class="w-full bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40 flex items-center justify-center space-x-1.5 cursor-pointer">
+                        <i class="fa-solid fa-upload text-xs text-[#a6051a]"></i>
+                        <span id="rdBatchText">選擇 zip，一次匯入多部</span>
+                        <input type="file" id="rdBatchFile" accept=".zip,application/zip,application/x-zip-compressed" class="hidden" onchange="rdImportBatch(this)">
+                    </label>
+                    <p class="text-[10px] text-neutral-500">zip 結構：漫畫名稱 / 第幾話 / 圖片。資料夾名稱和清單裡的漫畫名稱相同就會自動配對，找不到的可以選擇建立新漫畫。已經有同名章節會略過。</p>
+                </div>
+
+                <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 space-y-3">
+                    <div class="flex items-center space-x-1.5">
                         <i class="fa-brands fa-github text-[#a6051a] text-sm"></i>
                         <label class="block text-[11px] font-bold text-neutral-600">GitHub 自動備份</label>
                     </div>
@@ -2616,23 +2629,125 @@ function importData(e) {
             throw new Error('不支援這個 zip 的壓縮方式');
         }
 
-        // 依資料夾分成多話；沒有資料夾（或全部在同一層）就是一話
-        function zipChapters(entries) {
-            const groups = new Map();
+        // 挑出 zip 裡的圖片（略過資料夾、macOS 垃圾檔、非圖片）
+        function zipImageEntries(entries) {
+            const out = [];
             entries.forEach(e => {
                 const parts = e.name.split('/').filter(Boolean);
                 const base = parts[parts.length - 1] || '';
                 if (e.name.endsWith('/') || parts.includes('__MACOSX') || base.startsWith('.')) return;
                 const ext = (base.split('.').pop() || '').toLowerCase();
                 if (!RD_IMG_TYPES[ext]) return;
-                const dir = parts.slice(0, -1).join('/');
-                if (!groups.has(dir)) groups.set(dir, []);
-                groups.get(dir).push({ e, ext, name: parts.join('/') });
+                out.push({ e, ext, dirs: parts.slice(0, -1), name: parts.join('/') });
             });
-            const nat = (a, b) => a.localeCompare(b, undefined, { numeric: true });
+            return out;
+        }
+
+        const zipNat = (a, b) => a.localeCompare(b, undefined, { numeric: true });
+
+        // 依資料夾分成多話；沒有資料夾（或全部在同一層）就是一話
+        function zipChapters(entries) {
+            const groups = new Map();
+            zipImageEntries(entries).forEach(it => {
+                const dir = it.dirs.join('/');
+                if (!groups.has(dir)) groups.set(dir, []);
+                groups.get(dir).push(it);
+            });
             return Array.from(groups.entries())
-                .sort((a, b) => nat(a[0], b[0]))
-                .map(([dir, items]) => ({ label: dir.split('/').pop() || '', items: items.sort((a, b) => nat(a.name, b.name)) }));
+                .sort((a, b) => zipNat(a[0], b[0]))
+                .map(([dir, items]) => ({ label: dir.split('/').pop() || '', items: items.sort((a, b) => zipNat(a.name, b.name)) }));
+        }
+
+        // 批次：漫畫名稱 / 話 / 圖片。最外面多包的資料夾（例如「漫畫庫」）會自動去掉
+        function zipBatchPlan(entries) {
+            const imgs = zipImageEntries(entries);
+            while (imgs.length && imgs.every(it => it.dirs.length >= 3) && imgs.every(it => it.dirs[0] === imgs[0].dirs[0])) {
+                imgs.forEach(it => it.dirs.shift());
+            }
+            const comicsMap = new Map();
+            imgs.forEach(it => {
+                if (!it.dirs.length) return;   // 沒在任何資料夾裡的圖片無法判斷是哪部，略過
+                const title = it.dirs[0];
+                const chDir = it.dirs.slice(1).join('/');
+                if (!comicsMap.has(title)) comicsMap.set(title, new Map());
+                const chs = comicsMap.get(title);
+                if (!chs.has(chDir)) chs.set(chDir, []);
+                chs.get(chDir).push(it);
+            });
+            return Array.from(comicsMap.entries()).sort((a, b) => zipNat(a[0], b[0])).map(([title, chs]) => ({
+                title,
+                chapters: Array.from(chs.entries()).sort((a, b) => zipNat(a[0], b[0])).map(([dir, items]) => ({
+                    label: dir.split('/').pop() || '',
+                    items: items.sort((a, b) => zipNat(a.name, b.name))
+                }))
+            }));
+        }
+
+        const normTitle = t => String(t).normalize('NFKC').toLowerCase().replace(/\s+/g, '');
+
+        async function rdImportBatch(input) {
+            const file = input.files && input.files[0];
+            input.value = '';
+            if (!file) return;
+            const text = document.getElementById('rdBatchText');
+            const idle = '選擇 zip，一次匯入多部';
+            const prevComicId = rdComicId;
+            try {
+                text.textContent = '讀取 zip…';
+                const plan = zipBatchPlan(await zipList(file));
+                if (!plan.length) { showMsg('找不到圖片', '這個 zip 裡沒有放在「漫畫名稱」資料夾裡的圖片。\n\n正確結構：漫畫名稱 / 第幾話 / 圖片。'); return; }
+                const byTitle = new Map(comics.map(c => [normTitle(c.title), c]));
+                plan.forEach(c => { c.comic = byTitle.get(normTitle(c.title)) || null; });
+                const matched = plan.filter(c => c.comic), missing = plan.filter(c => !c.comic);
+                const chapterCount = plan.reduce((n, c) => n + c.chapters.length, 0);
+                const pageCount = plan.reduce((n, c) => n + c.chapters.reduce((m, ch) => m + ch.items.length, 0), 0);
+                let summary = `找到 ${plan.length} 部漫畫、${chapterCount} 話、共 ${pageCount} 頁。\n已配對 ${matched.length} 部`;
+                if (missing.length) summary += `，找不到 ${missing.length} 部：${missing.slice(0, 5).map(c => c.title).join('、')}${missing.length > 5 ? '…' : ''}`;
+                if (!(await showConfirm('批次匯入', summary + '。\n\n要繼續嗎？', { okText: '繼續' }))) return;
+
+                let create = false;
+                if (missing.length) {
+                    create = await showConfirm('找不到的漫畫', `要把這 ${missing.length} 部建立成新漫畫嗎？\n\n選「略過」會只匯入已配對的。`, { okText: '建立新漫畫', cancelText: '略過' });
+                }
+                const targets = plan.filter(c => c.comic || create);
+                if (!targets.length) return;
+                if (create) {
+                    missing.forEach((c, i) => {
+                        c.comic = { id: String(Date.now() + i), title: c.title, genre: '未分類', status: '連載中', links: [], url: '', coverUrl: '', progress: 0, updateDay: null };
+                        comics.unshift(c.comic);
+                    });
+                    saveComics();
+                    renderComics();
+                }
+                if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+
+                let done = 0, skipped = 0, pagesDone = 0;
+                for (let ci = 0; ci < targets.length; ci++) {
+                    const c = targets[ci];
+                    rdComicId = c.comic.id;
+                    const existing = (await rdGetChapters(rdComicId)).map(ch => ch.label);
+                    const labels = new Set(existing);
+                    for (let k = 0; k < c.chapters.length; k++) {
+                        const ch = c.chapters[k];
+                        const label = ch.label || (c.chapters.length === 1 ? '第 1 話' : `第 ${existing.length + k + 1} 話`);
+                        if (labels.has(label)) { skipped++; continue; }
+                        labels.add(label);
+                        await rdSaveChapter(label, ch.items.length, async i => ({
+                            buf: await zipData(file, ch.items[i].e),
+                            type: RD_IMG_TYPES[ch.items[i].ext]
+                        }), k, (n, total) => { text.textContent = `匯入中 ${ci + 1}/${targets.length} 部（${n}/${total}）…`; });
+                        done++; pagesDone += ch.items.length;
+                    }
+                }
+                await rdRefreshFlags();
+                showMsg('匯入完成', `已匯入 ${done} 話、${pagesDone} 頁。` + (skipped ? `\n略過 ${skipped} 話（已有同名章節）。` : ''));
+            } catch (e) {
+                rdImportError(e);
+                await rdRefreshFlags();
+            } finally {
+                rdComicId = prevComicId;
+                text.textContent = idle;
+            }
         }
 
         async function rdImportZip(input) {
@@ -2971,7 +3086,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '149762af';
+        const APP_BUILD = 'dfb39785';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
