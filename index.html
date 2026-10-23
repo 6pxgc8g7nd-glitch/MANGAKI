@@ -206,9 +206,13 @@
         }
 
         /* 切換分頁的淡入動畫 */
-        @keyframes tabIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-        main > section:not(.hidden) { animation: tabIn 0.18s ease-out; }
-        @media (prefers-reduced-motion: reduce) { main > section:not(.hidden) { animation: none; } }
+        /* 切換分頁：依分頁順序由右或左滑入，帶一點回彈 */
+        @keyframes enterFromRight { from { opacity: 0; transform: translateX(44px); } 60% { opacity: 1; } to { opacity: 1; transform: none; } }
+        @keyframes enterFromLeft  { from { opacity: 0; transform: translateX(-44px); } 60% { opacity: 1; } to { opacity: 1; transform: none; } }
+        main { overflow-x: hidden; }
+        main > section[data-enter="right"]:not(.hidden) { animation: enterFromRight .32s cubic-bezier(.2,.95,.3,1.08) both; }
+        main > section[data-enter="left"]:not(.hidden)  { animation: enterFromLeft  .32s cubic-bezier(.2,.95,.3,1.08) both; }
+        @media (prefers-reduced-motion: reduce) { main > section[data-enter] { animation: none !important; } }
 
 
 
@@ -1277,12 +1281,24 @@
             requestAnimationFrame(() => { main.scrollTop = 0; });
         }
 
+        // 分頁順序（決定轉場的滑動方向）
+        const TAB_ORDER = ['home', 'categories', 'add', 'settings'];
+        let currentTab = 'home';
+
         function switchTab(tabName) {
-            document.querySelectorAll('.app-container > main > section').forEach(sec => sec.classList.add('hidden'));
+            document.querySelectorAll('.app-container > main > section').forEach(sec => {
+                sec.classList.add('hidden');
+                delete sec.dataset.enter;
+            });
             const targetSection = document.getElementById(`tab-${tabName}`);
             if (targetSection) {
+                // 換到別的分頁才播轉場；在同一頁重新整理時不播
+                if (tabName !== currentTab) {
+                    targetSection.dataset.enter = TAB_ORDER.indexOf(tabName) > TAB_ORDER.indexOf(currentTab) ? 'right' : 'left';
+                }
                 targetSection.classList.remove('hidden');
             }
+            currentTab = tabName;
 
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.toggle('is-active', btn.id === `nav-${tabName}`);
@@ -2229,7 +2245,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '946cccf3';
+        const APP_BUILD = 'b8277762';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
