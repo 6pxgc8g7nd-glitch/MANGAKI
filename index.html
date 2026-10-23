@@ -502,6 +502,7 @@
                 <div class="grid grid-cols-2 gap-2.5" id="genreGrid">
                     <!-- Dynamic categories -->
                 </div>
+                <div id="catPagination" class="flex items-center justify-center gap-3 pt-3 pb-2"></div>
             </section>
 
             <!-- TAB 3: 新增 (Add) -->
@@ -950,6 +951,8 @@
         let activeStatusFilter = '全部';
         let currentPage = 1;
         const comicsPerPage = 10;
+        const genresPerPage = 16;   // 分類頁一頁顯示的標籤數
+        let catPage = 1;
         function escapeHtml(str) {
             return String(str ?? '')
                 .replace(/&/g, '&amp;')
@@ -1541,7 +1544,7 @@
         }
 
         // 頁數很多時：直接選要去的頁碼
-        function openPageJump(totalPages) {
+        function openPageJump(totalPages, cur = currentPage, go = changePage) {
             const sheet = document.getElementById('optionSheet');
             const list = document.getElementById('optionSheetList');
             document.getElementById('optionSheetTitle').innerText = `跳到第幾頁（共 ${totalPages} 頁）`;
@@ -1550,9 +1553,9 @@
             for (let p = 1; p <= totalPages; p++) {
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = 'option-item page-jump-item' + (p === currentPage ? ' is-selected' : '');
+                btn.className = 'option-item page-jump-item' + (p === cur ? ' is-selected' : '');
                 btn.textContent = String(p);
-                btn.onclick = () => { close(); changePage(p); };
+                btn.onclick = () => { close(); go(p); };
                 list.appendChild(btn);
             }
             const close = () => { sheet.classList.add('hidden'); sheet.onclick = null; document.getElementById('optionSheetCancel').onclick = null; };
@@ -1581,7 +1584,11 @@
             comics.forEach(c => {
                 parseGenres(c.genre).forEach(g => allGenresSet.add(g));
             });
-            const genres = ['全部', READER_KEY, ...allGenresSet];
+            const allGenres = ['全部', READER_KEY, ...allGenresSet];
+            const totalCatPages = Math.max(1, Math.ceil(allGenres.length / genresPerPage));
+            if (catPage > totalCatPages) catPage = totalCatPages;
+            if (catPage < 1) catPage = 1;
+            const genres = allGenres.slice((catPage - 1) * genresPerPage, catPage * genresPerPage);
         
             genreGrid.innerHTML = genres.map(g => {
                 const count = g === '全部' ? comics.length : g === READER_KEY ? comics.filter(c => rdChapterCount.has(c.id)).length : comics.filter(c => parseGenres(c.genre).includes(g)).length;
@@ -1595,6 +1602,27 @@
                     </div>
                 `;
             }).join('');
+            renderCatPagination(totalCatPages);
+        }
+
+        function renderCatPagination(total) {
+            const box = document.getElementById('catPagination');
+            if (!box) return;
+            if (total <= 1) { box.innerHTML = ''; return; }
+            const nav = (icon, target, disabled, aria) =>
+                `<button class="pg-btn pg-nav" aria-label="${aria}" ${disabled ? 'disabled' : `onclick="changeCatPage(${target})"`}><i class="fa-solid ${icon}"></i></button>`;
+            const slots = pageSlots(catPage, total).map(p =>
+                p === '…'
+                    ? `<button class="pg-btn pg-gap" aria-label="跳到指定頁" onclick="openPageJump(${total}, catPage, changeCatPage)">…</button>`
+                    : `<button class="pg-btn${p === catPage ? ' is-current' : ''}" onclick="changeCatPage(${p})">${p}</button>`
+            ).join('');
+            box.innerHTML = nav('fa-chevron-left', catPage - 1, catPage === 1, '上一頁') + slots + nav('fa-chevron-right', catPage + 1, catPage === total, '下一頁');
+        }
+
+        function changeCatPage(page) {
+            catPage = page;
+            renderCategories();
+            scrollMainTop();
         }
 
         function handleAddNewComic(e) {
@@ -3223,7 +3251,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '0d490b67';
+        const APP_BUILD = '111abd1f';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
