@@ -234,7 +234,11 @@
             border-bottom: 2.5px solid var(--ink);
             pointer-events: none;
         }
+        .cover-title { display: flex; align-items: flex-end; gap: 6px; }
+        .cover-title > span { flex-shrink: 0; margin-bottom: 1px; }
         .cover-title h4 {
+            flex: 1;
+            min-width: 0;
             color: #ffffff;
             font-size: 13px;
             font-weight: 900;
@@ -1063,19 +1067,16 @@
                 const updatedText = updateDay === null ? '' :
                     `<div class="text-[10px] text-neutral-600 flex items-center space-x-1"><i class="fa-regular fa-clock" style="font-size:9px"></i><span>每週${WEEKDAY_NAMES[updateDay]}更新</span>${isOngoingComic && daysSinceUpdate(updateDay) === 0 ? '<strong class="text-[#a6051a]">・今日更新</strong>' : ''}</div>`;
 
-                const progressText = comic.progress > 0 ? `<span class="text-[10px] text-neutral-600 ml-auto">第 ${parseInt(comic.progress, 10)} 話</span>` : '';
+                const progressText = comic.progress > 0 ? `<span class="text-[11px] font-bold text-neutral-700">第 ${parseInt(comic.progress, 10)} 話</span>` : '';
 
                 return `
                     <div data-id="${escapeHtml(comic.id)}" onclick="openComicModal(this.dataset.id)" class="group bg-[#ffffff] hover:bg-[#f0f0f0]  rounded-xl shadow transition cursor-pointer overflow-hidden flex flex-col active:scale-[0.98]">
                         <div class="relative">
                             ${coverDisplay}
-                            <div class="cover-title"><h4>${escapeHtml(comic.title)}</h4></div>
+                            <div class="cover-title"><h4>${escapeHtml(comic.title)}</h4>${statusBadge}</div>
                         </div>
                         <div class="p-2.5 flex flex-col justify-between flex-1 space-y-1.5">
-                            <div class="flex items-center space-x-1 flex-wrap gap-1">
-                                ${statusBadge}
-                                ${progressText}
-                            </div>
+                            ${progressText ? `<div class="flex items-center">${progressText}</div>` : ''}
                             ${updatedText}
                         </div>
                     </div>
