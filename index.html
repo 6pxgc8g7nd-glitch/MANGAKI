@@ -624,14 +624,20 @@
                 <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 space-y-3">
                     <div class="flex items-center space-x-1.5">
                         <i class="fa-solid fa-file-zipper text-[#a6051a] text-sm"></i>
-                        <label class="block text-[11px] font-bold text-neutral-600">批次匯入圖片（zip）</label>
+                        <label class="block text-[11px] font-bold text-neutral-600">圖片備份（zip）</label>
                     </div>
-                    <label class="w-full bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40 flex items-center justify-center space-x-1.5 cursor-pointer">
-                        <i class="fa-solid fa-upload text-xs text-[#a6051a]"></i>
-                        <span id="rdBatchText">選擇 zip，一次匯入多部</span>
-                        <input type="file" id="rdBatchFile" accept=".zip,application/zip,application/x-zip-compressed" class="hidden" onchange="rdImportBatch(this)">
-                    </label>
-                    <p class="text-[10px] text-neutral-500">zip 結構：漫畫名稱 / 第幾話 / 圖片。資料夾名稱和清單裡的漫畫名稱相同就會自動配對，找不到的可以選擇建立新漫畫。已經有同名章節會略過。</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40 flex items-center justify-center space-x-1.5 cursor-pointer">
+                            <i class="fa-solid fa-upload text-xs text-[#a6051a]"></i>
+                            <span id="rdBatchText">匯入 zip</span>
+                            <input type="file" id="rdBatchFile" accept=".zip,application/zip,application/x-zip-compressed" class="hidden" onchange="rdImportBatch(this)">
+                        </label>
+                        <button type="button" onclick="rdExportAll()" class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40 flex items-center justify-center space-x-1.5">
+                            <i class="fa-solid fa-download text-xs text-[#a6051a]"></i>
+                            <span id="rdExportText">匯出全部圖片為 zip</span>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-neutral-500">zip 結構：漫畫名稱 / 第幾話 / 圖片，匯出的檔案可直接再匯入。資料夾名稱和清單裡的漫畫名稱相同就會自動配對，找不到的可以選擇建立新漫畫；已有同名章節會略過。</p>
                 </div>
 
                 <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 space-y-3">
@@ -804,16 +810,7 @@
                         <span id="rdImportText">選擇圖片並匯入</span>
                         <input type="file" id="rdFiles" accept="image/*" multiple class="hidden" onchange="rdImport(this)">
                     </label>
-                    <label class="w-full bg-white active:scale-95 text-neutral-900 py-2.5 rounded-xl font-bold transition text-xs flex items-center justify-center space-x-2 shadow border border-[#a6051a]/40 cursor-pointer">
-                        <i class="fa-solid fa-file-zipper text-xs"></i>
-                        <span id="rdZipText">選擇 zip 匯入（資料夾壓縮檔）</span>
-                        <input type="file" id="rdZipFile" accept=".zip,application/zip,application/x-zip-compressed" class="hidden" onchange="rdImportZip(this)">
-                    </label>
-                    <button type="button" onclick="rdExportZip()" class="w-full bg-white active:scale-95 text-neutral-900 py-2.5 rounded-xl font-bold transition text-xs flex items-center justify-center space-x-2 shadow border border-[#a6051a]/40">
-                        <i class="fa-solid fa-file-export text-xs"></i>
-                        <span id="rdExportText">匯出整部漫畫為 zip</span>
-                    </button>
-                    <p class="text-[10px] text-neutral-500">zip 裡每個資料夾會變成一話；只有圖片、沒有資料夾就是一話。圖片只存在這支手機的瀏覽器裡，不會上傳，也不包含在 GitHub 備份中。</p>
+                    <p class="text-[10px] text-neutral-500">圖片只存在這支手機的瀏覽器裡，不會上傳。整批匯入、匯出請到「設定」頁。</p>
                 </div>
             </div>
         </div>
@@ -2662,19 +2659,6 @@ function importData(e) {
 
         const zipNat = (a, b) => a.localeCompare(b, undefined, { numeric: true });
 
-        // 依資料夾分成多話；沒有資料夾（或全部在同一層）就是一話
-        function zipChapters(entries) {
-            const groups = new Map();
-            zipImageEntries(entries).forEach(it => {
-                const dir = it.dirs.join('/');
-                if (!groups.has(dir)) groups.set(dir, []);
-                groups.get(dir).push(it);
-            });
-            return Array.from(groups.entries())
-                .sort((a, b) => zipNat(a[0], b[0]))
-                .map(([dir, items]) => ({ label: dir.split('/').pop() || '', items: items.sort((a, b) => zipNat(a.name, b.name)) }));
-        }
-
         // 批次：漫畫名稱 / 話 / 圖片。最外面多包的資料夾（例如「漫畫庫」）會自動去掉
         function zipBatchPlan(entries) {
             const imgs = zipImageEntries(entries);
@@ -2707,7 +2691,7 @@ function importData(e) {
             input.value = '';
             if (!file) return;
             const text = document.getElementById('rdBatchText');
-            const idle = '選擇 zip，一次匯入多部';
+            const idle = '匯入 zip';
             const prevComicId = rdComicId;
             try {
                 text.textContent = '讀取 zip…';
@@ -2768,7 +2752,7 @@ function importData(e) {
         }
 
 
-        // ---------- 匯出整部漫畫為 zip（結構：漫畫名稱 / 話 / 頁碼.副檔名，可直接再用批次匯入還原） ----------
+        // ---------- 匯出全部漫畫圖片為一個 zip（結構：漫畫名稱 / 話 / 頁碼.副檔名，可直接用「匯入 zip」還原） ----------
         const CRC_TABLE = (() => {
             const t = new Uint32Array(256);
             for (let n = 0; n < 256; n++) {
@@ -2788,47 +2772,57 @@ function importData(e) {
         const safeName = t => String(t).replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_').replace(/^\.+/, '_').trim() || '未命名';
         const EXT_OF_TYPE = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif', 'image/avif': 'avif', 'image/bmp': 'bmp' };
 
-        async function rdExportZip() {
-            const comic = comics.find(c => c.id === rdComicId);
+        async function rdExportAll() {
             const text = document.getElementById('rdExportText');
-            const idle = '匯出整部漫畫為 zip';
-            if (!comic) return;
+            const idle = '匯出全部圖片為 zip';
             try {
-                const chapters = await rdGetChapters(rdComicId);
-                if (!chapters.length) { showMsg('沒有圖片', '這部漫畫還沒有匯入任何一話。'); return; }
-                const total = chapters.reduce((n, c) => n + c.count, 0);
+                // 只匯出清單裡還存在、而且有圖片的漫畫
+                const jobs = [];
+                for (const comic of comics) {
+                    if (!rdChapterCount.has(comic.id)) continue;
+                    const chapters = await rdGetChapters(comic.id);
+                    if (chapters.length) jobs.push({ comic, chapters });
+                }
+                if (!jobs.length) { showMsg('沒有圖片', '還沒有任何漫畫匯入過圖片。'); return; }
+                const total = jobs.reduce((n, j) => n + j.chapters.reduce((m, c) => m + c.count, 0), 0);
                 if (total > 65000) throw new Error('頁數太多（超過 65000 頁），無法放進同一個 zip。');
                 const enc = new TextEncoder();
                 const dosNow = new Date();
                 const dosTime = (dosNow.getHours() << 11) | (dosNow.getMinutes() << 5) | (dosNow.getSeconds() >> 1);
                 const dosDate = ((dosNow.getFullYear() - 1980) << 9) | ((dosNow.getMonth() + 1) << 5) | dosNow.getDate();
-                const top = safeName(comic.title);
                 const parts = [], central = [];
-                let offset = 0, done = 0, bytes = 0;
-                const used = new Set();
-                for (const ch of chapters) {
-                    let folder = safeName(ch.label), n = 2;
-                    while (used.has(folder)) folder = `${safeName(ch.label)} (${n++})`;
-                    used.add(folder);
-                    for (let i = 0; i < ch.count; i++) {
-                        text.textContent = `打包中（${++done}/${total}）…`;
-                        const rec = await rdRun('pages', 'readonly', tx => tx.objectStore('pages').get(rdPageKey(ch.id, i)));
-                        if (!rec) continue;
-                        const buf = rec.buf || await rec.blob.arrayBuffer();
-                        const data = new Uint8Array(buf);
-                        const ext = EXT_OF_TYPE[rec.type] || 'jpg';
-                        const name = enc.encode(`${top}/${folder}/${String(i + 1).padStart(4, '0')}.${ext}`);
-                        const crc = crc32(data);
-                        const head = new DataView(new ArrayBuffer(30));
-                        head.setUint32(0, 0x04034b50, true); head.setUint16(4, 20, true); head.setUint16(6, 0x0800, true);
-                        head.setUint16(8, 0, true); head.setUint16(10, dosTime, true); head.setUint16(12, dosDate, true);
-                        head.setUint32(14, crc, true); head.setUint32(18, data.length, true); head.setUint32(22, data.length, true);
-                        head.setUint16(26, name.length, true); head.setUint16(28, 0, true);
-                        parts.push(head.buffer, name, data);
-                        central.push({ name, crc, size: data.length, offset });
-                        offset += 30 + name.length + data.length;
-                        bytes += data.length;
-                        if (bytes > 3.8e9) throw new Error('內容超過 3.8GB，無法放進同一個 zip。請分話匯出（先刪掉部分章節）。');
+                let offset = 0, done = 0, bytes = 0, chapterTotal = 0;
+                const usedTop = new Set();
+                for (const { comic, chapters } of jobs) {
+                    let top = safeName(comic.title), t = 2;
+                    while (usedTop.has(top)) top = `${safeName(comic.title)} (${t++})`;
+                    usedTop.add(top);
+                    const usedFolder = new Set();
+                    for (const ch of chapters) {
+                        let folder = safeName(ch.label), n = 2;
+                        while (usedFolder.has(folder)) folder = `${safeName(ch.label)} (${n++})`;
+                        usedFolder.add(folder);
+                        chapterTotal++;
+                        for (let i = 0; i < ch.count; i++) {
+                            text.textContent = `打包中（${++done}/${total}）…`;
+                            const rec = await rdRun('pages', 'readonly', tx => tx.objectStore('pages').get(rdPageKey(ch.id, i)));
+                            if (!rec) continue;
+                            const buf = rec.buf || await rec.blob.arrayBuffer();
+                            const data = new Uint8Array(buf);
+                            const ext = EXT_OF_TYPE[rec.type] || 'jpg';
+                            const name = enc.encode(`${top}/${folder}/${String(i + 1).padStart(4, '0')}.${ext}`);
+                            const crc = crc32(data);
+                            const head = new DataView(new ArrayBuffer(30));
+                            head.setUint32(0, 0x04034b50, true); head.setUint16(4, 20, true); head.setUint16(6, 0x0800, true);
+                            head.setUint16(8, 0, true); head.setUint16(10, dosTime, true); head.setUint16(12, dosDate, true);
+                            head.setUint32(14, crc, true); head.setUint32(18, data.length, true); head.setUint32(22, data.length, true);
+                            head.setUint16(26, name.length, true); head.setUint16(28, 0, true);
+                            parts.push(head.buffer, name, data);
+                            central.push({ name, crc, size: data.length, offset });
+                            offset += 30 + name.length + data.length;
+                            bytes += data.length;
+                            if (bytes > 3.8e9) throw new Error('內容超過 3.8GB，無法放進同一個 zip。請刪掉部分章節後再匯出。');
+                        }
                     }
                 }
                 const cdStart = offset;
@@ -2848,13 +2842,13 @@ function importData(e) {
                 end.setUint32(12, cdSize, true); end.setUint32(16, cdStart, true);
                 parts.push(end.buffer);
                 const blob = new Blob(parts, { type: 'application/zip' });
-                const file = new File([blob], `${top}.zip`, { type: 'application/zip' });
+                const file = new File([blob], 'MANGAKI_圖片.zip', { type: 'application/zip' });
                 text.textContent = idle;
                 // 分享／下載要由「剛按下的按鈕」觸發，iOS 才允許，所以再問一次
-                const ok = await showConfirm('打包完成', `${chapters.length} 話、${central.length} 頁，共 ${(bytes / 1048576).toFixed(1)} MB。\n\n按「儲存」選擇要存到哪裡。`, { okText: '儲存' });
+                const ok = await showConfirm('打包完成', `${jobs.length} 部漫畫、${chapterTotal} 話、${central.length} 頁，共 ${(bytes / 1048576).toFixed(1)} MB。\n\n按「儲存」選擇要存到哪裡。`, { okText: '儲存' });
                 if (!ok) return;
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try { await navigator.share({ files: [file], title: top }); return; }
+                    try { await navigator.share({ files: [file], title: 'MANGAKI 圖片' }); return; }
                     catch (e) { if (e && e.name === 'AbortError') return; }
                 }
                 const url = URL.createObjectURL(blob);
@@ -2863,43 +2857,7 @@ function importData(e) {
                 document.body.appendChild(a); a.click(); a.remove();
                 setTimeout(() => URL.revokeObjectURL(url), 60000);
             } catch (e) {
-                showMsg('匯出失敗', e && e.name === 'QuotaExceededError' ? '記憶體或空間不足，請分次匯出。' : (e.message || '無法打包'));
-            } finally {
-                text.textContent = idle;
-            }
-        }
-
-        async function rdImportZip(input) {
-            const file = input.files && input.files[0];
-            input.value = '';
-            if (!file) return;
-            const text = document.getElementById('rdZipText');
-            const idle = '選擇 zip 匯入（資料夾壓縮檔）';
-            try {
-                text.textContent = '讀取 zip…';
-                const chapters = zipChapters(await zipList(file));
-                const pages = chapters.reduce((n, c) => n + c.items.length, 0);
-                if (!pages) { showMsg('找不到圖片', '這個 zip 裡沒有 JPG、PNG、WebP 等圖片。'); return; }
-                if (chapters.length > 1 || pages > 300) {
-                    const ok = await showConfirm('匯入 zip', `找到 ${chapters.length} 話、共 ${pages} 頁。\n\n每個資料夾會成為一話。要匯入嗎？`, { okText: '匯入' });
-                    if (!ok) return;
-                }
-                if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
-                const typed = document.getElementById('rdLabel').value.trim();
-                const base = rdChapterList.length;
-                for (let c = 0; c < chapters.length; c++) {
-                    const ch = chapters[c];
-                    const label = chapters.length === 1
-                        ? (typed || ch.label || `第 ${base + 1} 話`)
-                        : (ch.label || `第 ${base + c + 1} 話`);
-                    await rdSaveChapter(label, ch.items.length, async i => ({
-                        buf: await zipData(file, ch.items[i].e),
-                        type: RD_IMG_TYPES[ch.items[i].ext]
-                    }), c, (n, total) => { text.textContent = `匯入中 第 ${c + 1}/${chapters.length} 話（${n}/${total}）…`; });
-                }
-                await rdRenderList();
-            } catch (e) {
-                rdImportError(e);
+                showMsg('匯出失敗', e && e.name === 'QuotaExceededError' ? '記憶體或空間不足，請減少圖片後再匯出。' : (e.message || '無法打包'));
             } finally {
                 text.textContent = idle;
             }
@@ -3206,7 +3164,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '8a9038c5';
+        const APP_BUILD = 'd22c20bc';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
