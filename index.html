@@ -199,6 +199,10 @@
                                 <i class="fa-solid fa-download text-xs text-[#a6051a]"></i>
                                 <span>匯出備份</span>
                             </button>
+                            <button onclick="copyBackupText()" class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40 flex items-center justify-center space-x-1.5 col-span-2">
+                                <i class="fa-solid fa-copy text-xs text-[#a6051a]"></i>
+                                <span>複製備份文字（下載失敗時使用）</span>
+                            </button>
                             <label class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40 flex items-center justify-center space-x-1.5 cursor-pointer">
                                 <i class="fa-solid fa-upload text-xs text-[#a6051a]"></i>
                                 <span>還原備份</span>
@@ -360,10 +364,24 @@
     </div>
 
     <script>
-        let comics = JSON.parse(localStorage.getItem('toptoon_comics')) || [];
-        if (!localStorage.getItem('toptoon_comics')) {
-            localStorage.setItem('toptoon_comics', JSON.stringify(comics));
+        // 讀取資料；內容損毀或不是陣列時，先把原始內容另存一份再回到空清單，避免整頁白屏
+        function loadComics() {
+            let raw = null;
+            try {
+                raw = localStorage.getItem('toptoon_comics');
+                if (raw === null) return [];
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) return parsed.filter(c => c && typeof c === 'object' && typeof c.id === 'string');
+                throw new Error('toptoon_comics 不是陣列');
+            } catch (error) {
+                console.error('TOPTOON 讀取資料失敗：', error);
+                try {
+                    if (raw !== null) localStorage.setItem('toptoon_comics_corrupt_backup', raw);
+                } catch (e) {}
+                return [];
+            }
         }
+        let comics = loadComics();
 
         let activeComicId = null;
         let activeGenreFilter = '全部';
@@ -406,7 +424,12 @@
         }
 
         function saveComics() {
-            localStorage.setItem('toptoon_comics', JSON.stringify(comics));
+            try {
+                localStorage.setItem('toptoon_comics', JSON.stringify(comics));
+            } catch (error) {
+                console.error('TOPTOON 儲存失敗：', error);
+                showMsg('儲存失敗', '無法寫入瀏覽器儲存空間，請先匯出備份。');
+            }
         }
 
         function showMsg(title, text) {
@@ -737,6 +760,42 @@ function getBackupFileName() {
 }
 
 
+function downloadBackup(blob) {
+    const downloadUrl = URL.createObjectURL(blob);
+    const downloadLink = document.createElement('a');
+    downloadLink.href = downloadUrl;
+    downloadLink.download = getBackupFileName();
+    downloadLink.style.display = 'none';
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+}
+
+// 複製備份 JSON 到剪貼簿（下載/分享都不能用時的備援）
+function copyBackupText() {
+    if (!Array.isArray(comics) || comics.length === 0) {
+        showMsg('沒有資料', '目前沒有漫畫資料可以匯出。');
+        return;
+    }
+    const text = JSON.stringify({
+        app: 'TOPTOON 漫畫紀錄網',
+        version: 1,
+        exportTime: new Date().toISOString(),
+        count: comics.length,
+        comics: comics
+    }, null, 2);
+
+    const fail = () => showMsg('複製失敗', '瀏覽器不允許寫入剪貼簿，請改用「匯出備份」。');
+    if (!navigator.clipboard || !navigator.clipboard.writeText) {
+        fail();
+        return;
+    }
+    navigator.clipboard.writeText(text)
+        .then(() => showMsg('已複製', '備份內容已複製，請貼到備忘錄並存成 .json 檔。'))
+        .catch(fail);
+}
+
 // 匯出資料
 function exportData() {
 
@@ -779,31 +838,26 @@ function exportData() {
             }
         );
 
-        const downloadUrl =
-            URL.createObjectURL(blob);
+        const count = comics.length;
+        const file = new File([blob], getBackupFileName(), { type: 'application/json' });
 
-        const downloadLink =
-            document.createElement('a');
+        // iOS 主畫面 App 不支援 <a download>，優先用系統分享表單（可存到「檔案」）
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            navigator.share({ files: [file], title: 'TOPTOON 備份' })
+                .then(() => showMsg('匯出成功', `已成功備份 ${count} 部漫畫資料。`))
+                .catch(err => {
+                    if (err && err.name === 'AbortError') return; // 使用者取消
+                    console.error('TOPTOON 分享失敗，改用下載：', err);
+                    downloadBackup(blob);
+                    showMsg('匯出完成', '若沒有收到檔案，請改用「複製備份文字」。');
+                });
+            return;
+        }
 
-        downloadLink.href = downloadUrl;
-        downloadLink.download =
-            getBackupFileName();
-
-        downloadLink.style.display = 'none';
-
-        document.body.appendChild(downloadLink);
-
-        downloadLink.click();
-
-        document.body.removeChild(downloadLink);
-
-        setTimeout(() => {
-            URL.revokeObjectURL(downloadUrl);
-        }, 1000);
-
+        downloadBackup(blob);
         showMsg(
-            '匯出成功',
-            `已成功備份 ${comics.length} 部漫畫資料。`
+            '匯出完成',
+            `已備份 ${count} 部漫畫資料。若沒有收到檔案，請改用「複製備份文字」。`
         );
 
     } catch (error) {

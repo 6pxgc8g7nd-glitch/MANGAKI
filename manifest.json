@@ -1,0 +1,17 @@
+{
+  "name": "TOPTOON 漫畫紀錄網",
+  "short_name": "TOPTOON",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#a6051a",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
