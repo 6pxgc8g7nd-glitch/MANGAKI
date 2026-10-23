@@ -513,6 +513,28 @@
 
                 <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 space-y-3">
                     <div class="flex items-center space-x-1.5">
+                        <i class="fa-solid fa-rotate text-[#a6051a] text-sm"></i>
+                        <label class="block text-[11px] font-bold text-neutral-600">App 更新</label>
+                    </div>
+                    <label class="flex items-center space-x-2 text-xs font-bold text-neutral-900 cursor-pointer">
+                        <input type="checkbox" id="autoUpdateToggle" checked onchange="setAutoUpdate(this.checked)" class="accent-[#a6051a] w-4 h-4">
+                        <span>有新版本時自動更新</span>
+                    </label>
+                    <p id="updateVersion" class="text-[10px] text-neutral-600"></p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="manualCheckUpdate()" class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40 flex items-center justify-center space-x-1.5">
+                            <i class="fa-solid fa-cloud-arrow-down text-xs text-[#a6051a]"></i>
+                            <span>檢查更新</span>
+                        </button>
+                        <button onclick="forceRefreshApp()" class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40 flex items-center justify-center space-x-1.5">
+                            <i class="fa-solid fa-broom text-xs text-[#a6051a]"></i>
+                            <span>清除快取重載</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 space-y-3">
+                    <div class="flex items-center space-x-1.5">
                         <i class="fa-brands fa-github text-[#a6051a] text-sm"></i>
                         <label class="block text-[11px] font-bold text-neutral-600">自動備份到 GitHub</label>
                     </div>
@@ -897,7 +919,7 @@
 
             if(tabName === 'home') renderComics();
             if(tabName === 'categories') renderCategories();
-            if(tabName === 'settings') ghRenderSettings();
+            if(tabName === 'settings') { ghRenderSettings(); renderUpdateInfo(); }
         }
         function goHome() {
             currentPage = 1;
@@ -1846,43 +1868,105 @@ function importData(e) {
             }
         });
 
-        // 自動更新：註冊 service worker，偵測到新版本就重新載入（資料在 localStorage，不受影響）
+        // ================================
+        // App 更新（自動 / 手動檢查 / 清除快取）
+        // ================================
+        const AUTO_UPDATE_KEY = 'mangaki_auto_update';
+        let loadedHash = null;
+        let updateReloading = false;
+
+        function autoUpdateEnabled() {
+            try { return localStorage.getItem(AUTO_UPDATE_KEY) !== '0'; } catch (e) { return true; }
+        }
+
+        function setAutoUpdate(on) {
+            try { localStorage.setItem(AUTO_UPDATE_KEY, on ? '1' : '0'); } catch (e) {}
+        }
+
+        function isTyping() {
+            const el = document.activeElement;
+            return el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA');
+        }
+
+        // 以 index.html 的內容雜湊當作版本代碼
+        async function pageHash() {
+            const res = await fetch(location.pathname, { cache: 'no-store' });
+            if (!res.ok) throw new Error('fetch ' + res.status);
+            const text = await res.text();
+            let h = 5381;
+            for (let i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) | 0;
+            return h;
+        }
+
+        function versionLabel(h) {
+            return h === null ? '讀取中…' : (h >>> 0).toString(16).padStart(8, '0');
+        }
+
+        function renderUpdateInfo() {
+            const v = document.getElementById('updateVersion');
+            if (v) v.innerText = `目前版本代碼：${versionLabel(loadedHash)}`;
+            const t = document.getElementById('autoUpdateToggle');
+            if (t) t.checked = autoUpdateEnabled();
+        }
+
+        // 自動檢查：回到 App 或每 30 分鐘；有新版就重新載入（關閉自動更新、或正在輸入時不動作）
+        async function checkPageAuto() {
+            try {
+                if (loadedHash === null || updateReloading || isTyping() || !autoUpdateEnabled()) return;
+                if ((await pageHash()) !== loadedHash) { updateReloading = true; location.reload(); }
+            } catch (e) {}
+        }
+
+        async function manualCheckUpdate() {
+            try {
+                const latest = await pageHash();
+                if (loadedHash === null) loadedHash = latest;
+                if (latest === loadedHash) {
+                    showMsg('已是最新版本', `目前版本代碼：${versionLabel(loadedHash)}`);
+                    return;
+                }
+                const go = await showConfirm('有新版本', `發現新版本（${versionLabel(latest)}）。\n\n要現在更新嗎？漫畫資料不會被刪除。`, { okText: '立即更新' });
+                if (go) { updateReloading = true; location.reload(); }
+            } catch (e) {
+                console.error('TOPTOON 檢查更新失敗：', e);
+                showMsg('檢查失敗', '無法連線取得最新版本，請確認網路後再試。');
+            }
+        }
+
+        // 清除快取並重新載入（漫畫資料與設定都在 localStorage，不會被清除）
+        async function forceRefreshApp() {
+            const go = await showConfirm('清除快取並重新載入', '會清除 App 的程式快取並重新下載最新版。\n\n漫畫資料與設定不會被刪除。', { okText: '重新載入' });
+            if (!go) return;
+            try {
+                if ('serviceWorker' in navigator) {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(regs.map(r => r.unregister()));
+                }
+                if (window.caches) {
+                    const keys = await caches.keys();
+                    await Promise.all(keys.map(k => caches.delete(k)));
+                }
+            } catch (e) { console.error('TOPTOON 清除快取失敗：', e); }
+            updateReloading = true;
+            location.replace(location.pathname + '?r=' + Date.now());
+        }
+
+        pageHash().then(h => { loadedHash = h; renderUpdateInfo(); }).catch(() => {});
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') checkPageAuto();
+        });
+        setInterval(checkPageAuto, 30 * 60 * 1000);
+
+        // 註冊 service worker：sw.js 本身有變動時也自動重新載入
         if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
             const hadController = !!navigator.serviceWorker.controller;
-            let reloading = false;
-
-            const isTyping = () => {
-                const el = document.activeElement;
-                return el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA');
-            };
 
             navigator.serviceWorker.addEventListener('controllerchange', () => {
-                // 第一次安裝不用重新載入；正在輸入時等下次開啟再套用
-                if (!hadController || reloading || isTyping()) return;
-                reloading = true;
+                // 第一次安裝不用重新載入；正在輸入或關閉自動更新時不動作
+                if (!hadController || updateReloading || isTyping() || !autoUpdateEnabled()) return;
+                updateReloading = true;
                 location.reload();
             });
-
-            // 頁面內容有更新（但 sw.js 沒變）時，也要能自動套用：比對 index.html 的內容雜湊
-            const pageHash = async () => {
-                const res = await fetch(location.pathname, { cache: 'no-store' });
-                const text = await res.text();
-                let h = 5381;
-                for (let i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) | 0;
-                return h;
-            };
-            let loadedHash = null;
-            pageHash().then(h => { loadedHash = h; }).catch(() => {});
-            const checkPage = async () => {
-                try {
-                    if (loadedHash === null || reloading || isTyping()) return;
-                    if ((await pageHash()) !== loadedHash) { reloading = true; location.reload(); }
-                } catch (e) {}
-            };
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible') checkPage();
-            });
-            setInterval(checkPage, 30 * 60 * 1000);
 
             navigator.serviceWorker.register('sw.js').then(reg => {
                 const check = () => reg.update().catch(() => {});
