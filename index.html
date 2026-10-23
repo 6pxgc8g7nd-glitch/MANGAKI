@@ -908,19 +908,46 @@
     </div>
 
     <script>
+        // 舊名稱（toptoon_*）的儲存資料搬到新名稱（mangaki_*）；新的已存在就不覆蓋，確認寫入後才刪舊的
+        (function migrateStorageKeys() {
+            const pairs = [
+                ['toptoon_comics', 'mangaki_comics'],
+                ['mangaki_comics_corrupt_backup', 'mangaki_comics_corrupt_backup'],
+                ['toptoon_gh_cfg', 'mangaki_gh_cfg'],
+                ['toptoon_gh_status', 'mangaki_gh_status']
+            ];
+            try {
+                pairs.forEach(([oldKey, newKey]) => {
+                    const v = localStorage.getItem(oldKey);
+                    if (v === null) return;
+                    if (localStorage.getItem(newKey) === null) localStorage.setItem(newKey, v);
+                    if (localStorage.getItem(newKey) === v || localStorage.getItem(newKey) !== null) localStorage.removeItem(oldKey);
+                });
+                // GitHub 備份檔名也跟著改
+                const raw = localStorage.getItem('mangaki_gh_cfg');
+                if (raw) {
+                    const cfg = JSON.parse(raw);
+                    if (cfg && cfg.path === 'toptoon_backup.json') {
+                        cfg.path = 'mangaki_backup.json';
+                        localStorage.setItem('mangaki_gh_cfg', JSON.stringify(cfg));
+                    }
+                }
+            } catch (e) { console.error('MANGAKI 搬移舊資料失敗：', e); }
+        })();
+
         // 讀取資料；內容損毀或不是陣列時，先把原始內容另存一份再回到空清單，避免整頁白屏
         function loadComics() {
             let raw = null;
             try {
-                raw = localStorage.getItem('toptoon_comics');
+                raw = localStorage.getItem('mangaki_comics');
                 if (raw === null) return [];
                 const parsed = JSON.parse(raw);
                 if (Array.isArray(parsed)) return parsed.filter(c => c && typeof c === 'object' && typeof c.id === 'string');
-                throw new Error('toptoon_comics 不是陣列');
+                throw new Error('mangaki_comics 不是陣列');
             } catch (error) {
-                console.error('TOPTOON 讀取資料失敗：', error);
+                console.error('MANGAKI 讀取資料失敗：', error);
                 try {
-                    if (raw !== null) localStorage.setItem('toptoon_comics_corrupt_backup', raw);
+                    if (raw !== null) localStorage.setItem('mangaki_comics_corrupt_backup', raw);
                 } catch (e) {}
                 return [];
             }
@@ -1234,11 +1261,11 @@
 
         function saveComics() {
             try {
-                localStorage.setItem('toptoon_comics', JSON.stringify(comics));
+                localStorage.setItem('mangaki_comics', JSON.stringify(comics));
                 ghScheduleAuto();
                 cleanupOrphanImagesSoon();
             } catch (error) {
-                console.error('TOPTOON 儲存失敗：', error);
+                console.error('MANGAKI 儲存失敗：', error);
                 showMsg('儲存失敗', '無法寫入瀏覽器儲存空間，請先匯出備份。');
             }
         }
@@ -1720,7 +1747,7 @@
 
 // 產生備份檔案名稱
 function getBackupFileName() {
-    return 'toptoon_backup.json';
+    return 'mangaki_backup.json';
 }
 
 
@@ -1743,7 +1770,7 @@ function copyBackupText() {
         return;
     }
     const text = JSON.stringify({
-        app: 'TOPTOON 漫畫紀錄網',
+        app: 'MANGAKI 漫記',
         version: 1,
         exportTime: new Date().toISOString(),
         count: comics.length,
@@ -1782,7 +1809,7 @@ function exportData() {
     try {
 
         const backupData = {
-            app: 'TOPTOON 漫畫紀錄網',
+            app: 'MANGAKI 漫記',
             version: 1,
             exportTime: new Date().toISOString(),
             count: comics.length,
@@ -1807,11 +1834,11 @@ function exportData() {
 
         // iOS 主畫面 App 不支援 <a download>，優先用系統分享表單（可存到「檔案」）
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            navigator.share({ files: [file], title: 'TOPTOON 備份' })
+            navigator.share({ files: [file], title: 'MANGAKI 備份' })
                 .then(() => showMsg('匯出成功', `已成功備份 ${count} 部漫畫資料。`))
                 .catch(err => {
                     if (err && err.name === 'AbortError') return; // 使用者取消
-                    console.error('TOPTOON 分享失敗，改用下載：', err);
+                    console.error('MANGAKI 分享失敗，改用下載：', err);
                     downloadBackup(blob);
                     showMsg('匯出完成', '若沒有收到檔案，請改用「複製備份文字」。');
                 });
@@ -1827,7 +1854,7 @@ function exportData() {
     } catch (error) {
 
         console.error(
-            'TOPTOON 匯出錯誤：',
+            'MANGAKI 匯出錯誤：',
             error
         );
 
@@ -1975,7 +2002,7 @@ function importData(e) {
 
                 showMsg(
                     '格式錯誤',
-                    '這不是有效的 TOPTOON 漫畫備份檔。'
+                    '這不是有效的 MANGAKI 漫畫備份檔。'
                 );
 
                 e.target.value = '';
@@ -2069,7 +2096,7 @@ function importData(e) {
         } catch (error) {
 
             console.error(
-                'TOPTOON 匯入錯誤：',
+                'MANGAKI 匯入錯誤：',
                 error
             );
 
@@ -2106,8 +2133,8 @@ function importData(e) {
         // ================================
         // GitHub 自動備份（權杖只存在本機 localStorage）
         // ================================
-        const GH_KEY = 'toptoon_gh_cfg';
-        const GH_STATUS_KEY = 'toptoon_gh_status';
+        const GH_KEY = 'mangaki_gh_cfg';
+        const GH_STATUS_KEY = 'mangaki_gh_status';
         const GH_DELAY_MS = 8000;
         let ghTimer = null;
         let ghBusy = false;
@@ -2232,7 +2259,7 @@ function importData(e) {
                 token,
                 repo: repo.full_name,
                 branch: repo.default_branch || 'main',
-                path: 'toptoon_backup.json',
+                path: 'mangaki_backup.json',
                 auto
             };
             if (ghCfgError(cfg)) { showMsg('設定錯誤', ghCfgError(cfg)); return; }
@@ -2275,7 +2302,7 @@ function importData(e) {
 
             try {
                 const content = JSON.stringify({
-                    app: 'TOPTOON 漫畫紀錄網',
+                    app: 'MANGAKI 漫記',
                     version: 1,
                     count: comics.length,
                     comics: comics
@@ -2300,7 +2327,7 @@ function importData(e) {
                     method: 'PUT',
                     headers: ghHeaders(cfg, { 'Content-Type': 'application/json' }),
                     body: JSON.stringify({
-                        message: `TOPTOON backup (${comics.length})`,
+                        message: `MANGAKI backup (${comics.length})`,
                         content: ghToBase64(content),
                         branch: cfg.branch,
                         sha: sha
@@ -2311,7 +2338,7 @@ function importData(e) {
                 ghSetStatus(true, `已備份 ${comics.length} 部漫畫`);
                 if (manual) showMsg('備份成功', `已備份 ${comics.length} 部漫畫到 GitHub。`);
             } catch (error) {
-                console.error('TOPTOON GitHub 備份失敗：', error);
+                console.error('MANGAKI GitHub 備份失敗：', error);
                 const text = error instanceof TypeError ? '無法連到 GitHub（可能沒有網路）' : error.message;
                 ghSetStatus(false, text);
                 if (manual) showMsg('備份失敗', text);
@@ -2326,17 +2353,24 @@ function importData(e) {
             const err = ghCfgError(cfg);
             if (err) { showMsg('尚未設定', err + '，請先儲存設定。'); return; }
             try {
-                const res = await fetch(`${ghFileUrl(cfg)}?ref=${encodeURIComponent(cfg.branch)}`, {
-                    headers: ghHeaders(cfg, { 'Accept': 'application/vnd.github.raw+json' }),
-                    cache: 'no-store'
-                });
+                // 先找目前的檔名；改名前建立的備份檔叫 toptoon_backup.json，找不到時再試它
+                const paths = [cfg.path];
+                if (cfg.path === 'mangaki_backup.json') paths.push('toptoon_backup.json');
+                let res = null;
+                for (const path of paths) {
+                    res = await fetch(`${ghFileUrl(Object.assign({}, cfg, { path }))}?ref=${encodeURIComponent(cfg.branch)}`, {
+                        headers: ghHeaders(cfg, { 'Accept': 'application/vnd.github.raw+json' }),
+                        cache: 'no-store'
+                    });
+                    if (res.ok || res.status !== 404) break;
+                }
                 if (!res.ok) { showMsg('還原失敗', res.status === 404 ? 'GitHub 上還沒有備份檔。' : ghErrorText(res.status)); return; }
                 const text = await res.text();
                 // 沿用本機還原流程（含格式驗證與確認視窗）
                 const file = new File([text], 'github_backup.json', { type: 'application/json' });
                 importData({ target: { files: [file], value: '' } });
             } catch (e) {
-                console.error('TOPTOON GitHub 還原失敗：', e);
+                console.error('MANGAKI GitHub 還原失敗：', e);
                 showMsg('還原失敗', '無法連到 GitHub，請確認網路後再試。');
             }
         }
@@ -2356,7 +2390,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '41d997b1';
+        const APP_BUILD = '1cb7f51b';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
@@ -2398,7 +2432,7 @@ function importData(e) {
                     const keys = await caches.keys();
                     await Promise.all(keys.map(k => caches.delete(k)));
                 }
-            } catch (e) { console.error('TOPTOON 清除快取失敗：', e); }
+            } catch (e) { console.error('MANGAKI 清除快取失敗：', e); }
         }
 
         // 自動檢查：開啟時、回到 App、每 30 分鐘。偵測到舊版就重新載入；
@@ -2434,7 +2468,7 @@ function importData(e) {
                 await clearAppCaches();
                 location.replace(location.pathname + '?r=' + Date.now());
             } catch (e) {
-                console.error('TOPTOON 檢查更新失敗：', e);
+                console.error('MANGAKI 檢查更新失敗：', e);
                 showMsg('檢查失敗', '無法連線取得最新版本，請確認網路後再試。');
             }
         }
@@ -2472,7 +2506,7 @@ function importData(e) {
                     if (document.visibilityState === 'visible') check();
                 });
                 setInterval(check, 30 * 60 * 1000);
-            }).catch(err => console.error('TOPTOON service worker 註冊失敗：', err));
+            }).catch(err => console.error('MANGAKI service worker 註冊失敗：', err));
         }
 
         // ================================
@@ -2730,7 +2764,7 @@ function importData(e) {
                     const stored = await listStoredEpisodes();
                     for (const ep of stored) if (!used.has(ep)) await deleteEpisodePages(ep);
                     updateImgUsage();
-                } catch (e) { console.error('TOPTOON 清理圖片失敗：', e); }
+                } catch (e) { console.error('MANGAKI 清理圖片失敗：', e); }
             }, 400);
         }
 
@@ -2786,7 +2820,7 @@ function importData(e) {
                     if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
                     updateImgUsage();
                 } catch (e) {
-                    console.error('TOPTOON 儲存圖片失敗：', e);
+                    console.error('MANGAKI 儲存圖片失敗：', e);
                     setRowPages(row, had);
                     showMsg('儲存圖片失敗', '圖片無法處理或手機儲存空間不足，請減少張數後再試。');
                 } finally {
@@ -2944,13 +2978,13 @@ function importData(e) {
                         return;
                     } catch (err) {
                         if (err && err.name === 'AbortError') return;
-                        console.error('TOPTOON 分享圖片失敗，改用下載：', err);
+                        console.error('MANGAKI 分享圖片失敗，改用下載：', err);
                     }
                 }
                 downloadBackup(file);
                 showMsg('匯出完成', `已匯出 ${res.episodes} 集、${res.pages} 張圖片（約 ${mb} MB）。若沒有收到檔案，請改用 Safari 開啟或稍後再試。`);
             } catch (e) {
-                console.error('TOPTOON 匯出圖片失敗：', e);
+                console.error('MANGAKI 匯出圖片失敗：', e);
                 setImgIoStatus('');
                 showMsg('匯出失敗', '整理圖片時發生錯誤，可能是圖片太多或手機記憶體不足。');
             } finally {
@@ -3078,7 +3112,7 @@ function importData(e) {
                     showMsg('匯入完成', `已匯入 ${r.episodes} 集、${r.pages} 張圖片。` + (r.skipped ? `另有 ${r.skipped} 集因為找不到對應的漫畫而略過。` : ''));
                 }
             } catch (err) {
-                console.error('TOPTOON 匯入圖片失敗：', err);
+                console.error('MANGAKI 匯入圖片失敗：', err);
                 setImgIoStatus('');
                 showMsg('匯入失敗', (err && err.message) ? err.message : '無法讀取這個檔案。');
             } finally {

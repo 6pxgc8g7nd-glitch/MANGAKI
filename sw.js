@@ -1,4 +1,4 @@
-// TOPTOON service worker：網路優先（自動取得最新版），離線時用快取
+// MANGAKI service worker：網路優先（自動取得最新版），離線時用快取
 const CACHE = 'mangaki-v2';
 const PRECACHE = ['./', './index.html', './manifest.json', './icon.png'];
 
