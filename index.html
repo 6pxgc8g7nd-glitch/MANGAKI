@@ -994,6 +994,19 @@
                 ${vtext('恋', 38, 60, 54, '#fff', INK)}${sparkle(245, 70, 20)}${sfx('ザー', 215, 385, 36, -4, INK)}`
         ];
 
+        // 遮蔽模式的假名稱：由漫畫編號固定組合出來（前綴 + 主體 + 後綴，共 2560 種）
+        const DECOY_PREFIX = ['月下的', '午後的', '最強', '異世界的', '魔法', '星空下的', '深夜', '夏日', '無名的', '秘密', '雨天的', '天才', '迷途的', '黎明', '少年與', '純白的'];
+        const DECOY_NOUN = ['咖啡館', '偵探社', '料理人', '劍士', '學園', '便利商店', '圖書館', '電車', '少女', '貓咪', '魔王', '廚房', '花店', '鐘塔', '旅人', '樂團', '天文台', '書店', '拉麵店', '溫泉街'];
+        const DECOY_SUFFIX = ['', '物語', '日記', '傳說', '的日常', '手札', '計畫', '之旅'];
+
+        function decoyTitle(id) {
+            let h = 7;
+            for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) | 0;
+            const a = Math.abs(h);
+            const p = DECOY_PREFIX.length, n = DECOY_NOUN.length;
+            return DECOY_PREFIX[a % p] + DECOY_NOUN[Math.floor(a / p) % n] + DECOY_SUFFIX[Math.floor(a / (p * n)) % DECOY_SUFFIX.length];
+        }
+
         function decoyCover(id) {
             let h = 5381;
             const str = String(id);
@@ -1268,7 +1281,7 @@
                     <div data-id="${escapeHtml(comic.id)}" class="group bg-[#ffffff] hover:bg-[#f0f0f0]  rounded-xl shadow transition cursor-pointer overflow-hidden flex flex-col active:scale-[0.98]">
                         <div class="relative">
                             ${coverDisplay}
-                            <div class="cover-title"><h4>${escapeHtml(comic.title)}</h4></div>
+                            <div class="cover-title"><h4>${escapeHtml(privacyMode ? decoyTitle(comic.id) : comic.title)}</h4></div>
                         </div>
                     </div>
                 `;
@@ -2088,7 +2101,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = 'a26e7977';
+        const APP_BUILD = '0e695779';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
