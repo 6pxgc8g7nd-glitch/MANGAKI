@@ -2372,13 +2372,13 @@ function importData(e) {
         const RD_CFG_KEY = 'mangaki_reader_cfg';
         const RD_POS_KEY = 'mangaki_reader_pos';
         let rdDbPromise = null;
-        const rdHasChapters = new Set();   // 有匯入過圖片的漫畫 id（讓點卡片可以同步判斷）
+        const rdChapterCount = new Map();   // 漫畫 id → 已匯入的話數（讓點卡片可以同步判斷）
 
         async function rdRefreshFlags() {
             try {
                 const all = await rdRun('chapters', 'readonly', tx => tx.objectStore('chapters').getAll());
-                rdHasChapters.clear();
-                (all || []).forEach(ch => rdHasChapters.add(ch.comicId));
+                rdChapterCount.clear();
+                (all || []).forEach(ch => rdChapterCount.set(ch.comicId, (rdChapterCount.get(ch.comicId) || 0) + 1));
             } catch (e) {}
         }
         let rdComicId = null;
@@ -2438,11 +2438,20 @@ function importData(e) {
             document.getElementById('readerListModal').classList.add('hidden');
         }
 
+        async function rdOpenFirst(comicId) {
+            try {
+                rdComicId = comicId;
+                rdChapterList = await rdGetChapters(comicId);
+                if (!rdChapterList.length) { rdChapterCount.delete(comicId); openComicLink(comicId); return; }
+                await rdOpen(0);
+            } catch (e) { showMsg('無法開啟', e.message || '讀取本機圖片失敗'); }
+        }
+
         async function rdRenderList() {
             const box = document.getElementById('rdChapters');
             try {
                 rdChapterList = await rdGetChapters(rdComicId);
-                if (rdChapterList.length) rdHasChapters.add(rdComicId); else rdHasChapters.delete(rdComicId);
+                if (rdChapterList.length) rdChapterCount.set(rdComicId, rdChapterList.length); else rdChapterCount.delete(rdComicId);
             } catch (e) {
                 box.textContent = e.message;
                 return;
@@ -2521,7 +2530,7 @@ function importData(e) {
 
         // 刪除整部漫畫時，順便清掉它的圖片
         async function rdDeleteComic(comicId) {
-            rdHasChapters.delete(comicId);
+            rdChapterCount.delete(comicId);
             try {
                 const chapters = await rdGetChapters(comicId);
                 if (!chapters.length) return;
@@ -2719,7 +2728,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = 'ef18f335';
+        const APP_BUILD = '395c49c5';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
@@ -2909,7 +2918,15 @@ function importData(e) {
         function openComicLink(id, skipReader) {
             const comic = comics.find(c => c.id === id);
             if (!comic) return;
-            if (!skipReader && !privacyMode && rdHasChapters.has(id)) {
+            const chapters = skipReader || privacyMode ? 0 : (rdChapterCount.get(id) || 0);
+            if (chapters === 1) {
+                // 只有一話：直接開閱讀器，接著上次讀到的位置
+                activeComicId = id;
+                rdOpenFirst(id);
+                return;
+            }
+            if (chapters > 1) {
+                // 有多話：先選要看哪一話
                 activeComicId = id;
                 openReaderList();
                 return;
