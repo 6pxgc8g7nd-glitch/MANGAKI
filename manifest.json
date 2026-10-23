@@ -1,6 +1,6 @@
 {
   "name": "漫記 MANGAKI 漫畫紀錄",
-  "short_name": "漫記",
+  "short_name": "MANGAKI",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
