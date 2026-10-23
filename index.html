@@ -666,6 +666,11 @@
                     </a>
                 </div>
 
+                <button id="modalReadBtn" onclick="openReaderList()" class="w-full bg-neutral-900 hover:bg-neutral-700 active:scale-95 text-white py-2.5 rounded-lg font-bold transition text-xs flex items-center justify-center space-x-2 shadow">
+                    <i class="fa-solid fa-book-open-reader text-xs"></i>
+                    <span>內建閱讀（我的圖片）</span>
+                </button>
+
                 <div class="grid grid-cols-2 gap-2 pt-2">
                     <button onclick="openEditModal()" class="bg-gray-700 hover:bg-gray-600 active:scale-95 text-white py-2.5 rounded-lg font-bold transition text-xs flex items-center justify-center space-x-1 border border-[#a6051a]/40">
                         <i class="fa-solid fa-pen text-xs"></i>
@@ -763,6 +768,46 @@
         
 
         <!-- Notification / Message Box Modal -->
+        <!-- 內建閱讀：章節清單 -->
+        <div id="readerListModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 hidden flex items-center justify-center p-3">
+            <div class="bg-[#ffffff] border border-[#e5e5e5] rounded-xl w-full max-w-sm p-4 shadow-2xl relative space-y-3 max-h-[85vh] overflow-y-auto">
+                <button onclick="closeReaderList()" class="absolute top-3 right-3 text-[#a6051a] hover:text-[#8a0416] p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+                <h3 id="rdListTitle" class="text-sm font-black text-neutral-900 pr-7">內建閱讀</h3>
+                <div id="rdChapters" class="space-y-1.5"></div>
+                <div class="border-t border-[#e5e5e5] pt-3 space-y-2">
+                    <label class="block text-[11px] font-bold text-neutral-600">新增一話（從相簿或檔案選多張圖，依檔名排序）</label>
+                    <input type="text" id="rdLabel" placeholder="名稱，例如：第 1 話" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
+                    <label class="w-full bg-[#a6051a] hover:bg-[#8a0416] active:scale-95 text-white py-2.5 rounded-xl font-bold transition text-xs flex items-center justify-center space-x-2 shadow cursor-pointer">
+                        <i class="fa-solid fa-images text-xs"></i>
+                        <span id="rdImportText">選擇圖片並匯入</span>
+                        <input type="file" id="rdFiles" accept="image/*" multiple class="hidden" onchange="rdImport(this)">
+                    </label>
+                    <p class="text-[10px] text-neutral-500">圖片只存在這支手機的瀏覽器裡，不會上傳，也不包含在 GitHub 備份中。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 內建閱讀：閱讀畫面 -->
+        <div id="readerView" class="fixed inset-0 z-[45] hidden bg-black text-white" style="touch-action: pan-y;">
+            <div id="rdScroll" class="absolute inset-0 overflow-y-auto hidden" style="-webkit-overflow-scrolling: touch;"></div>
+            <div id="rdPaged" class="absolute inset-0 hidden flex items-center justify-center select-none">
+                <img id="rdPageImg" alt="" class="max-w-full max-h-full object-contain" draggable="false">
+            </div>
+            <div id="rdBar" class="absolute top-0 inset-x-0 flex items-center gap-2 px-3 py-2 bg-black/80 text-xs" style="padding-top: max(0.5rem, env(safe-area-inset-top));">
+                <button onclick="rdClose()" class="p-2"><i class="fa-solid fa-chevron-left"></i></button>
+                <span id="rdBarTitle" class="flex-1 truncate font-bold"></span>
+                <button id="rdModeBtn" onclick="rdToggleMode()" class="px-2 py-1 border border-white/40 rounded-lg"></button>
+                <button id="rdDirBtn" onclick="rdToggleDir()" class="px-2 py-1 border border-white/40 rounded-lg"></button>
+            </div>
+            <div id="rdFoot" class="absolute bottom-0 inset-x-0 flex items-center justify-between px-4 py-2 bg-black/80 text-xs" style="padding-bottom: max(0.5rem, env(safe-area-inset-bottom));">
+                <button onclick="rdStep(-1, true)" class="px-3 py-1.5">上一話</button>
+                <span id="rdPageNo"></span>
+                <button onclick="rdStep(1, true)" class="px-3 py-1.5">下一話</button>
+            </div>
+        </div>
+
         <div id="msgModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
             <div class="bg-[#ffffff] border border-[#e5e5e5] rounded-xl w-full max-w-[280px] p-4 shadow-2xl text-center space-y-3">
                 <div id="msgIcon" class="w-10 h-10 rounded-full bg-[#a6051a]/10 text-[#a6051a] flex items-center justify-center mx-auto text-base">
@@ -1573,6 +1618,7 @@
             }
         
             document.getElementById('modalTitle').innerText = comic.title;
+            document.getElementById('modalReadBtn').classList.toggle('hidden', privacyMode);
             document.getElementById('modalGenre').innerText = `分類：${comic.genre} | 狀態：${comic.status || '連載中'}` + (getUpdateDay(comic) !== null ? ` | 更新：每週${WEEKDAY_NAMES[getUpdateDay(comic)]}` : '');
         
             const urlBox = document.getElementById('modalUrlBox');
@@ -1646,6 +1692,7 @@
         
             if (!(await showConfirm('刪除漫畫', `確定要刪除「${comic.title}」嗎？\n\n刪除後無法復原。`, { danger: true, okText: '刪除' }))) return;
         
+            rdDeleteComic(activeComicId);
             comics = comics.filter(c => c.id !== activeComicId);
             saveComics();
             closeComicModal();
@@ -2309,13 +2356,333 @@ function importData(e) {
             }
         });
 
+
+        // ================================
+        // 內建閱讀：圖片存在瀏覽器的 IndexedDB（只在這支手機）
+        // ================================
+        const RD_CFG_KEY = 'mangaki_reader_cfg';
+        const RD_POS_KEY = 'mangaki_reader_pos';
+        let rdDbPromise = null;
+        let rdComicId = null;
+        let rdChapterList = [];
+        let rd = null; // { chapter, urls, idx }
+        let rdCfg = { mode: 'scroll', rtl: true };
+        try { Object.assign(rdCfg, JSON.parse(localStorage.getItem(RD_CFG_KEY)) || {}); } catch (e) {}
+
+        function rdDb() {
+            if (!rdDbPromise) {
+                rdDbPromise = new Promise((resolve, reject) => {
+                    if (!window.indexedDB) { reject(new Error('這個瀏覽器不支援本機圖片儲存')); return; }
+                    const req = indexedDB.open('mangaki_reader', 1);
+                    req.onupgradeneeded = () => {
+                        const db = req.result;
+                        db.createObjectStore('chapters', { keyPath: 'id' }).createIndex('comicId', 'comicId');
+                        db.createObjectStore('pages', { keyPath: 'k' });
+                    };
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => { rdDbPromise = null; reject(req.error || new Error('無法開啟本機儲存')); };
+                });
+            }
+            return rdDbPromise;
+        }
+
+        function rdRun(stores, mode, fn) {
+            return rdDb().then(db => new Promise((resolve, reject) => {
+                const tx = db.transaction(stores, mode);
+                const out = fn(tx);
+                tx.oncomplete = () => resolve(out && 'result' in out ? out.result : out);
+                tx.onerror = tx.onabort = () => reject(tx.error || new Error('本機儲存失敗'));
+            }));
+        }
+
+        const rdPageKey = (chapterId, i) => `${chapterId}#${String(i).padStart(4, '0')}`;
+        const rdLoadPos = () => { try { return JSON.parse(localStorage.getItem(RD_POS_KEY)) || {}; } catch (e) { return {}; } };
+        function rdSavePos(chapterId, idx) {
+            try { const m = rdLoadPos(); m[chapterId] = idx; localStorage.setItem(RD_POS_KEY, JSON.stringify(m)); } catch (e) {}
+        }
+
+        async function rdGetChapters(comicId) {
+            const list = await rdRun('chapters', 'readonly', tx => tx.objectStore('chapters').index('comicId').getAll(comicId));
+            return (list || []).sort((a, b) => a.addedAt - b.addedAt);
+        }
+
+        async function openReaderList() {
+            rdComicId = activeComicId;
+            const comic = comics.find(c => c.id === rdComicId);
+            if (!comic) return;
+            document.getElementById('rdListTitle').textContent = comic.title;
+            document.getElementById('readerListModal').classList.remove('hidden');
+            await rdRenderList();
+        }
+
+        function closeReaderList() {
+            document.getElementById('readerListModal').classList.add('hidden');
+        }
+
+        async function rdRenderList() {
+            const box = document.getElementById('rdChapters');
+            try {
+                rdChapterList = await rdGetChapters(rdComicId);
+            } catch (e) {
+                box.textContent = e.message;
+                return;
+            }
+            document.getElementById('rdLabel').value = '';
+            document.getElementById('rdLabel').placeholder = `名稱，例如：第 ${rdChapterList.length + 1} 話`;
+            box.textContent = '';
+            if (!rdChapterList.length) {
+                const p = document.createElement('p');
+                p.className = 'text-[11px] text-neutral-500';
+                p.textContent = '還沒有匯入任何一話。';
+                box.appendChild(p);
+                return;
+            }
+            const pos = rdLoadPos();
+            rdChapterList.forEach((ch, i) => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center gap-2';
+                const open = document.createElement('button');
+                open.className = 'flex-1 text-left bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3 py-2 text-xs font-bold text-neutral-900 active:scale-[0.98]';
+                const done = pos[ch.id] !== undefined ? `　讀到 ${pos[ch.id] + 1}/${ch.count}` : `　${ch.count} 頁`;
+                open.textContent = ch.label + done;
+                open.onclick = () => rdOpen(i);
+                const del = document.createElement('button');
+                del.className = 'p-2 text-[#a6051a]';
+                del.innerHTML = '<i class="fa-solid fa-trash-can text-xs"></i>';
+                del.onclick = () => rdDeleteChapter(ch);
+                row.append(open, del);
+                box.appendChild(row);
+            });
+        }
+
+        async function rdImport(input) {
+            const files = Array.from(input.files || []).filter(f => (f.type || '').startsWith('image/') || /\.(jpe?g|png|webp|gif|avif)$/i.test(f.name));
+            input.value = '';
+            if (!files.length) return;
+            files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+            const label = document.getElementById('rdLabel').value.trim() || `第 ${rdChapterList.length + 1} 話`;
+            const id = `${rdComicId}-${Date.now()}`;
+            const text = document.getElementById('rdImportText');
+            text.textContent = `匯入中（${files.length} 張）…`;
+            try {
+                if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+                await rdRun(['chapters', 'pages'], 'readwrite', tx => {
+                    const pages = tx.objectStore('pages');
+                    files.forEach((f, i) => pages.put({ k: rdPageKey(id, i), blob: f }));
+                    tx.objectStore('chapters').put({ id, comicId: rdComicId, label, count: files.length, addedAt: Date.now() });
+                });
+                await rdRenderList();
+            } catch (e) {
+                const full = e && e.name === 'QuotaExceededError';
+                showMsg('匯入失敗', full ? '手機儲存空間不足，請減少圖片或刪除舊的章節。' : (e.message || '無法寫入本機儲存'));
+            } finally {
+                text.textContent = '選擇圖片並匯入';
+            }
+        }
+
+        async function rdDeleteChapter(ch) {
+            if (!(await showConfirm('刪除這一話', `確定要刪除「${ch.label}」的圖片嗎？\n\n刪除後無法復原。`, { danger: true, okText: '刪除' }))) return;
+            try {
+                await rdRun(['chapters', 'pages'], 'readwrite', tx => {
+                    tx.objectStore('chapters').delete(ch.id);
+                    tx.objectStore('pages').delete(IDBKeyRange.bound(`${ch.id}#`, `${ch.id}#￿`));
+                });
+            } catch (e) { showMsg('刪除失敗', e.message); }
+            await rdRenderList();
+        }
+
+        // 刪除整部漫畫時，順便清掉它的圖片
+        async function rdDeleteComic(comicId) {
+            try {
+                const chapters = await rdGetChapters(comicId);
+                if (!chapters.length) return;
+                await rdRun(['chapters', 'pages'], 'readwrite', tx => {
+                    chapters.forEach(ch => {
+                        tx.objectStore('chapters').delete(ch.id);
+                        tx.objectStore('pages').delete(IDBKeyRange.bound(`${ch.id}#`, `${ch.id}#￿`));
+                    });
+                });
+            } catch (e) {}
+        }
+
+        // ---------- 閱讀畫面 ----------
+        async function rdOpen(chIdx, startAt) {
+            const chapter = rdChapterList[chIdx];
+            if (!chapter) return;
+            let pages;
+            try {
+                pages = await rdRun('pages', 'readonly', tx => tx.objectStore('pages').getAll(IDBKeyRange.bound(`${chapter.id}#`, `${chapter.id}#￿`)));
+            } catch (e) { showMsg('無法開啟', e.message); return; }
+            if (!pages || !pages.length) { showMsg('無法開啟', '找不到這一話的圖片。'); return; }
+            rdRelease();
+            const saved = rdLoadPos()[chapter.id];
+            const idx = Math.min(pages.length - 1, Math.max(0, startAt !== undefined ? startAt : (saved || 0)));
+            rd = { chIdx, chapter, urls: pages.map(p => URL.createObjectURL(p.blob)), idx };
+            document.getElementById('rdBarTitle').textContent = chapter.label;
+            document.getElementById('readerView').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            await rdRender();
+        }
+
+        function rdRelease() {
+            if (rd) rd.urls.forEach(u => URL.revokeObjectURL(u));
+            rd = null;
+            document.getElementById('rdScroll').textContent = '';
+            document.getElementById('rdPageImg').removeAttribute('src');
+        }
+
+        function rdClose() {
+            if (rd) rdSavePos(rd.chapter.id, rd.idx);
+            rdRelease();
+            document.getElementById('readerView').classList.add('hidden');
+            document.body.style.overflow = '';
+            rdRenderList();
+        }
+
+        function rdUpdateButtons() {
+            document.getElementById('rdModeBtn').textContent = rdCfg.mode === 'scroll' ? '上下捲動' : '左右翻頁';
+            const dir = document.getElementById('rdDirBtn');
+            dir.textContent = rdCfg.rtl ? '由右至左' : '由左至右';
+            dir.classList.toggle('hidden', rdCfg.mode === 'scroll');
+        }
+
+        function rdSaveCfg() { try { localStorage.setItem(RD_CFG_KEY, JSON.stringify(rdCfg)); } catch (e) {} }
+        function rdToggleMode() { rdCfg.mode = rdCfg.mode === 'scroll' ? 'paged' : 'scroll'; rdSaveCfg(); rdRender(); }
+        function rdToggleDir() { rdCfg.rtl = !rdCfg.rtl; rdSaveCfg(); rdUpdateButtons(); }
+
+        function rdShowPageNo() {
+            if (!rd) return;
+            document.getElementById('rdPageNo').textContent = `${rd.idx + 1} / ${rd.urls.length}`;
+        }
+
+        async function rdRender() {
+            if (!rd) return;
+            rdUpdateButtons();
+            rdShowPageNo();
+            const scroll = document.getElementById('rdScroll');
+            const paged = document.getElementById('rdPaged');
+            if (rdCfg.mode === 'scroll') {
+                paged.classList.add('hidden');
+                scroll.classList.remove('hidden');
+                scroll.textContent = '';
+                const imgs = rd.urls.map(u => {
+                    const img = document.createElement('img');
+                    img.src = u;
+                    img.className = 'block w-full';
+                    img.style.minHeight = '40vh';
+                    img.onload = () => { img.style.minHeight = ''; };
+                    scroll.appendChild(img);
+                    return img;
+                });
+                const next = document.createElement('button');
+                next.className = 'block w-full py-8 text-sm font-bold text-white/80';
+                next.textContent = '下一話 ▶';
+                next.onclick = () => rdStep(1, true);
+                scroll.appendChild(next);
+                // 先等前面的圖載入完再跳到上次讀到的位置，避免版面高度變動把位置擠掉
+                const at = rd.idx;
+                await Promise.all(imgs.slice(0, at + 1).map(i => i.decode().catch(() => {})));
+                if (rd && imgs[at]) imgs[at].scrollIntoView();
+            } else {
+                scroll.classList.add('hidden');
+                scroll.textContent = '';
+                paged.classList.remove('hidden');
+                rdShowPaged();
+            }
+        }
+
+        function rdShowPaged() {
+            document.getElementById('rdPageImg').src = rd.urls[rd.idx];
+            rdShowPageNo();
+            rdSavePos(rd.chapter.id, rd.idx);
+            const near = rd.urls[rd.idx + 1];
+            if (near) { const pre = new Image(); pre.src = near; }
+        }
+
+        // 翻頁模式：dir = +1 下一頁、-1 上一頁；到頭尾就換章節
+        function rdTurn(dir) {
+            if (!rd) return;
+            const n = rd.idx + dir;
+            if (n < 0 || n >= rd.urls.length) { rdStep(dir, false); return; }
+            rd.idx = n;
+            rdShowPaged();
+        }
+
+        // 換章節；回到上一話時停在它的最後一頁
+        function rdStep(dir, fromButton) {
+            if (!rd) return;
+            const target = rd.chIdx + dir;
+            if (target < 0 || target >= rdChapterList.length) {
+                if (fromButton || dir > 0) showMsg(dir > 0 ? '已是最後一話' : '已是第一話', dir > 0 ? '這部漫畫沒有更後面的章節了。' : '這是最前面的章節。');
+                return;
+            }
+            rdSavePos(rd.chapter.id, rd.idx);
+            rdOpen(target, dir < 0 && !fromButton ? rdChapterList[target].count - 1 : 0);
+        }
+
+        // 捲動模式：依畫面中線所在的圖記錄目前頁數
+        document.getElementById('rdScroll').addEventListener('scroll', () => {
+            if (!rd || rdCfg.mode !== 'scroll') return;
+            const scroll = document.getElementById('rdScroll');
+            const mid = scroll.getBoundingClientRect().top + scroll.clientHeight / 2;
+            const imgs = scroll.querySelectorAll('img');
+            for (let i = 0; i < imgs.length; i++) {
+                const r = imgs[i].getBoundingClientRect();
+                if (r.top <= mid && r.bottom > mid) {
+                    if (rd.idx !== i) { rd.idx = i; rdShowPageNo(); rdSavePos(rd.chapter.id, i); }
+                    break;
+                }
+            }
+        }, { passive: true });
+
+        // 點擊：中間顯示/隱藏工具列；翻頁模式左右點擊或滑動翻頁
+        (function () {
+            const view = document.getElementById('readerView');
+            let sx = 0, sy = 0, moved = false;
+            const toggleBars = () => {
+                ['rdBar', 'rdFoot'].forEach(id => document.getElementById(id).classList.toggle('hidden'));
+            };
+            const forward = left => (rdCfg.rtl ? left : !left) ? 1 : -1;
+            view.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; moved = false; }, { passive: true });
+            view.addEventListener('touchmove', e => {
+                if (Math.abs(e.touches[0].clientX - sx) > 10 || Math.abs(e.touches[0].clientY - sy) > 10) moved = true;
+            }, { passive: true });
+            view.addEventListener('touchend', e => {
+                if (e.target.closest('button')) return;
+                const t = e.changedTouches[0];
+                const dx = t.clientX - sx, dy = t.clientY - sy;
+                if (rdCfg.mode === 'paged' && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+                    rdTurn(forward(dx > 0));   // 向右滑 = 往左邊的方向
+                    return;
+                }
+                if (moved) return;
+                const third = window.innerWidth / 3;
+                if (rdCfg.mode === 'paged' && t.clientX < third) rdTurn(forward(true));
+                else if (rdCfg.mode === 'paged' && t.clientX > third * 2) rdTurn(forward(false));
+                else toggleBars();
+            });
+            view.addEventListener('click', e => {
+                if (e.target.closest('button') || 'ontouchstart' in window) return;
+                const third = window.innerWidth / 3;
+                if (rdCfg.mode === 'paged' && e.clientX < third) rdTurn(forward(true));
+                else if (rdCfg.mode === 'paged' && e.clientX > third * 2) rdTurn(forward(false));
+                else toggleBars();
+            });
+            document.addEventListener('keydown', e => {
+                if (!rd) return;
+                if (e.key === 'Escape') rdClose();
+                else if (rdCfg.mode === 'paged' && e.key === 'ArrowLeft') rdTurn(forward(true));
+                else if (rdCfg.mode === 'paged' && e.key === 'ArrowRight') rdTurn(forward(false));
+            });
+        })();
+
         // ================================
         // App 更新（自動 / 手動檢查 / 清除快取）
         // ================================
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '96b09ec2';
+        const APP_BUILD = '5a893aa3';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
