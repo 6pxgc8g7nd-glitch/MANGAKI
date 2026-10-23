@@ -94,7 +94,8 @@
             border: 2.5px solid var(--ink) !important;
             box-shadow: 4px 4px 0 var(--ink) !important;
         }
-        .app-container [class*="aspect-square"] {
+        .cover-box { aspect-ratio: 3 / 4; }
+        .app-container .cover-box {
             border-bottom: 2.5px solid var(--ink);
         }
         [data-id].group:active, .genre-card:active { transform: translate(2px, 2px) !important; box-shadow: 2px 2px 0 var(--ink) !important; }
@@ -798,6 +799,13 @@
             return genreStr.split(/[,，]/).map(g => g.trim()).filter(g => g.length > 0);
         }
 
+        // 封面框依圖片比例調整（限制在 3:4 ～ 1:1 之間），圖片完整顯示、不裁切
+        function fitCover(imgEl) {
+            if (!imgEl.naturalWidth || !imgEl.naturalHeight || !imgEl.parentElement) return;
+            const ratio = Math.min(1, Math.max(0.75, imgEl.naturalWidth / imgEl.naturalHeight));
+            imgEl.parentElement.style.aspectRatio = String(ratio);
+        }
+
         function handleImgError(imgEl) {
             // http 圖片在 https 頁面會被瀏覽器擋下，先試一次 https
             if (imgEl.src.startsWith('http://') && !imgEl.dataset.retried) {
@@ -1026,10 +1034,10 @@
             container.innerHTML = paginatedComics.map(comic => {
                 const coverSrc = safeUrl(comic.coverUrl);
                 const coverDisplay = coverSrc ?
-                    `<div class="w-full aspect-square bg-[#fafafa] rounded-t-xl overflow-hidden relative ">
-                        <img src="${escapeHtml(coverSrc)}" referrerpolicy="no-referrer" loading="lazy" class="w-full h-full object-contain group-hover:scale-105 transition duration-300" onerror="handleImgError(this)">
+                    `<div class="w-full cover-box bg-[#fafafa] rounded-t-xl overflow-hidden relative ">
+                        <img src="${escapeHtml(coverSrc)}" referrerpolicy="no-referrer" loading="lazy" onload="fitCover(this)" class="w-full h-full object-contain group-hover:scale-105 transition duration-300" onerror="handleImgError(this)">
                      </div>` :
-                    `<div class="w-full aspect-square bg-[#fafafa] rounded-t-xl flex items-center justify-center text-3xl relative">
+                    `<div class="w-full cover-box bg-[#fafafa] rounded-t-xl flex items-center justify-center text-3xl relative">
                         📖
                      </div>`;
 
