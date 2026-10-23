@@ -378,6 +378,46 @@
         .rd-chip:active { transform: scale(.94); }
         @media (prefers-reduced-motion: reduce) { #rpImg.flip-next, #rpImg.flip-prev { animation: none; } }
 
+
+        /* 閱讀器：底部進度條（拖曳快速跳頁） */
+        #readerFoot {
+            position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+            background: linear-gradient(to top, rgba(0,0,0,.94), rgba(0,0,0,.72));
+            color: #fff; font-size: 12px; font-weight: 800;
+            transition: transform .25s ease, opacity .25s ease;
+        }
+        #reader.bar-hidden #readerFoot { transform: translateY(100%); opacity: 0; pointer-events: none; }
+        #rfCur { color: var(--yellow); min-width: 28px; text-align: right; font-variant-numeric: tabular-nums; }
+        #rfTotal { min-width: 28px; font-variant-numeric: tabular-nums; }
+        #readerSlider {
+            -webkit-appearance: none; appearance: none;
+            flex: 1; min-width: 0; height: 32px; margin: 0; background: transparent; touch-action: none;
+            --pct: 0%;
+        }
+        #readerSlider::-webkit-slider-runnable-track {
+            height: 8px; border-radius: 4px; border: 2px solid #fff;
+            background: linear-gradient(to right, var(--yellow) var(--pct), rgba(255,255,255,.18) var(--pct));
+        }
+        #readerSlider::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 28px; height: 28px; margin-top: -11px; border-radius: 50%;
+            background: var(--yellow); border: 3px solid #111; box-shadow: 0 0 0 2px #fff;
+        }
+        #readerSlider::-moz-range-track { height: 8px; border-radius: 4px; border: 2px solid #fff; background: rgba(255,255,255,.18); }
+        #readerSlider::-moz-range-progress { height: 8px; border-radius: 4px; background: var(--yellow); }
+        #readerSlider::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--yellow); border: 3px solid #111; box-shadow: 0 0 0 2px #fff; }
+        #readerSlider:disabled { opacity: .4; }
+        #rfBubble {
+            position: absolute; left: 50%; bottom: calc(86px + env(safe-area-inset-bottom)); z-index: 3;
+            transform: translateX(-50%); display: none;
+            padding: 8px 18px; border: 3px solid #111; border-radius: 14px;
+            background: var(--yellow); color: #111; font-size: 22px; font-weight: 900;
+            box-shadow: 3px 3px 0 #111; pointer-events: none; font-variant-numeric: tabular-nums;
+        }
+        #rfBubble.show { display: block; }
+
         /* ===== 頂部導覽：Logo + 圖示按鈕，下方文字分頁 ===== */
         .app-container > header .nav-btn {
             min-width: 44px;
@@ -904,6 +944,12 @@
         <div id="readerScroll">
             <div id="readerPages"></div>
             <div id="readerEnd"></div>
+        </div>
+        <div id="rfBubble" aria-hidden="true"></div>
+        <div id="readerFoot">
+            <span id="rfCur">1</span>
+            <input type="range" id="readerSlider" min="1" max="1" step="1" value="1" aria-label="拖曳快速跳頁">
+            <span id="rfTotal">1</span>
         </div>
     </div>
 
@@ -2390,7 +2436,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = 'eb099707';
+        const APP_BUILD = '7dfef73c';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
@@ -3143,7 +3189,7 @@ function importData(e) {
             comicId: null, index: 0, pages: [], link: null,
             mode: 'paged', dir: 'ltr', cur: 0,
             urls: new Map(), loadObs: null, unloadObs: null, raf: 0, hideTimer: null, saveTimer: null,
-            pUrls: new Map(), pageIdx: 0
+            pUrls: new Map(), pageIdx: 0, scrubbing: false, scrubRaf: 0
         };
 
         const lsGet = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
@@ -3225,6 +3271,7 @@ function importData(e) {
             i = Math.max(0, Math.min(n, i));            // n = 結尾頁
             reader.pageIdx = i;
             reader.cur = Math.min(i, n - 1);
+            syncSlider(Math.min(i + 1, n), n);
             const img = document.getElementById('rpImg');
             const end = document.getElementById('rpEnd');
             if (i >= n) {
@@ -3248,8 +3295,10 @@ function importData(e) {
             [...reader.pUrls.keys()].forEach(k => {
                 if (k < i - 2 || k > i + 3) { URL.revokeObjectURL(reader.pUrls.get(k)); reader.pUrls.delete(k); }
             });
-            for (let k = i + 1; k <= i + 2 && k < n; k++) { const pre = new Image(); pre.src = pageUrl(k); }
-            lsSet('mangaki_rpage_' + reader.link.id, String(i >= n ? 0 : i));
+            if (!reader.scrubbing) {
+                for (let k = i + 1; k <= i + 2 && k < n; k++) { const pre = new Image(); pre.src = pageUrl(k); }
+                lsSet('mangaki_rpage_' + reader.link.id, String(i >= n ? 0 : i));
+            }
         }
 
         function flipPage(step) {
@@ -3301,6 +3350,7 @@ function importData(e) {
                 reader.unloadObs.observe(img);
             });
             document.getElementById('readerPage').textContent = `1 / ${reader.pages.length}`;
+            syncSlider(1, reader.pages.length);
             scroller.scrollTop = 0;
             requestAnimationFrame(() => {
                 const imgs = box.querySelectorAll('.rd-img');
@@ -3331,6 +3381,7 @@ function importData(e) {
             }
             reader.cur = lo;
             document.getElementById('readerPage').textContent = `${lo + 1} / ${imgs.length}`;
+            syncSlider(lo + 1, imgs.length);
         }
 
         function saveReaderPos() {
@@ -3376,7 +3427,61 @@ function importData(e) {
             applyReaderMode(cur, 0);
         }
 
+        // 底部進度條：同步目前頁數；拖曳中不被捲動/翻頁事件覆蓋
+        function syncSlider(idx, total) {
+            if (reader.scrubbing) return;
+            const slider = document.getElementById('readerSlider');
+            slider.max = String(Math.max(1, total));
+            slider.value = String(idx);
+            slider.disabled = total <= 1;
+            slider.style.setProperty('--pct', total > 1 ? ((idx - 1) / (total - 1) * 100) + '%' : '0%');
+            document.getElementById('rfCur').textContent = String(idx);
+            document.getElementById('rfTotal').textContent = String(total);
+        }
+
+        // 跳到指定頁（0 起算）：翻頁模式直接換頁，捲動模式捲到那一張
+        function goToPage(idx) {
+            const n = reader.pages.length;
+            idx = Math.max(0, Math.min(n - 1, idx));
+            if (reader.mode === 'paged') {
+                showPage(idx, null);
+            } else {
+                const imgs = document.querySelectorAll('#readerPages .rd-img');
+                if (imgs[idx]) document.getElementById('readerScroll').scrollTop = imgs[idx].offsetTop;
+            }
+        }
+
+        function initSlider() {
+            const slider = document.getElementById('readerSlider');
+            const bubble = document.getElementById('rfBubble');
+            const root = document.getElementById('reader');
+            const showBubble = v => { bubble.textContent = `${v} / ${slider.max}`; bubble.classList.add('show'); };
+            const finish = () => {
+                if (!reader.scrubbing) return;
+                reader.scrubbing = false;
+                bubble.classList.remove('show');
+                goToPage(Number(slider.value) - 1);
+                syncSlider(Number(slider.value), reader.pages.length);
+                clearTimeout(reader.hideTimer);
+                reader.hideTimer = setTimeout(() => root.classList.add('bar-hidden'), 2500);
+            };
+            slider.addEventListener('pointerdown', () => { reader.scrubbing = true; clearTimeout(reader.hideTimer); showBubble(slider.value); });
+            slider.addEventListener('input', () => {
+                const v = Number(slider.value);
+                reader.scrubbing = true;
+                slider.style.setProperty('--pct', Number(slider.max) > 1 ? ((v - 1) / (Number(slider.max) - 1) * 100) + '%' : '0%');
+                document.getElementById('rfCur').textContent = String(v);
+                showBubble(v);
+                // 拖曳中即時換頁（用 rAF 限速，避免一直重畫）
+                if (!reader.scrubRaf) reader.scrubRaf = requestAnimationFrame(() => { reader.scrubRaf = 0; goToPage(Number(slider.value) - 1); });
+            });
+            slider.addEventListener('change', finish);
+            slider.addEventListener('pointerup', finish);
+            slider.addEventListener('pointercancel', finish);
+        }
+
         function initReader() {
+            initSlider();
             const scroller = document.getElementById('readerScroll');
             const root = document.getElementById('reader');
             scroller.addEventListener('scroll', () => {
