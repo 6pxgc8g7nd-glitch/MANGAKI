@@ -111,7 +111,8 @@
             border: 2px solid var(--ink) !important;
             font-weight: 700;
         }
-        .app-container select { -webkit-appearance: none; appearance: none; min-height: 40px; background: #ffffff !important; border: 2px solid var(--ink) !important; box-shadow: none !important; font-weight: 700; background-image: none; }
+        .app-container select { display: none !important; }
+        .app-container select-old { -webkit-appearance: none; appearance: none; min-height: 40px; background: #ffffff !important; border: 2px solid var(--ink) !important; box-shadow: none !important; font-weight: 700; background-image: none; }
         .app-container input:focus { box-shadow: 3px 3px 0 var(--red) !important; }
         .app-container label[class*="bg-[#fafafa]"] { background: #ffffff !important; box-shadow: none !important; }
 
@@ -272,8 +273,52 @@
         }
         .status-tab:active { background: #fff3b0; }
 
+
+        /* 自訂下拉按鈕與選項面板、確認視窗 */
+        .cselect-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            border: 2px solid var(--ink);
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--ink);
+            min-height: 40px;
+            text-align: left;
+        }
+        .cselect-btn i { color: var(--red); font-size: 11px; }
+        .cselect-btn:active { box-shadow: 3px 3px 0 var(--red); }
+        #optionSheet > div, #confirmModal > div {
+            border: 3px solid var(--ink) !important;
+            box-shadow: 4px 4px 0 var(--ink) !important;
+        }
+        #optionSheet > div { border-bottom: none !important; border-radius: 20px 20px 0 0 !important; box-shadow: 0 -4px 0 var(--ink) !important; }
+        .option-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            border: 2px solid var(--ink);
+            border-radius: 12px;
+            padding: 11px 12px;
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--ink);
+            box-shadow: 3px 3px 0 var(--ink);
+        }
+        .option-item i { visibility: hidden; color: var(--red); }
+        .option-item.is-selected { background: var(--yellow); }
+        .option-item.is-selected i { visibility: visible; }
+        .option-item:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+        #optionSheet:not(.hidden) > div { animation: sheetUp 0.18s ease-out; }
+        @keyframes sheetUp { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+
         /* 彈窗背景去掉模糊，改成網點 */
-        #comicModal, #editModal, #msgModal { backdrop-filter: none !important; background: rgba(17,17,17,0.55) !important; }
+        #comicModal, #editModal, #msgModal, #confirmModal, #optionSheet { backdrop-filter: none !important; background: rgba(17,17,17,0.55) !important; }
     </style>
 </head>
 <body class="bg-[#f5f5f5] flex justify-center items-center h-[100dvh]">
@@ -623,6 +668,30 @@
             </div>
         </div>
 
+        <!-- Custom Confirm Modal -->
+        <div id="confirmModal" class="fixed inset-0 bg-black/40 z-[60] hidden flex items-center justify-center p-3">
+            <div class="bg-[#ffffff] border border-[#e5e5e5] rounded-xl w-full max-w-[300px] p-4 shadow-2xl text-center space-y-3">
+                <div id="confirmIcon" class="w-10 h-10 rounded-full bg-[#a6051a]/10 text-[#a6051a] flex items-center justify-center mx-auto text-base">
+                    <i class="fa-solid fa-question"></i>
+                </div>
+                <h3 id="confirmTitle" class="font-bold text-sm">請確認</h3>
+                <p id="confirmText" class="text-xs text-neutral-600 whitespace-pre-line"></p>
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <button type="button" id="confirmCancel" class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2 rounded-lg transition text-xs border border-[#a6051a]/40">取消</button>
+                    <button type="button" id="confirmOk" class="bg-[#a6051a] hover:bg-[#8a0416] active:scale-95 text-white font-bold py-2 rounded-lg transition text-xs">確定</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Option Sheet (replaces native select popup) -->
+        <div id="optionSheet" class="fixed inset-0 bg-black/40 z-[60] hidden flex items-end justify-center">
+            <div class="bg-[#ffffff] border border-[#e5e5e5] rounded-t-xl w-full max-w-[480px] p-3.5 shadow-2xl space-y-2 max-h-[80vh] overflow-y-auto" style="padding-bottom: calc(0.875rem + env(safe-area-inset-bottom));">
+                <h3 id="optionSheetTitle" class="text-xs font-black tracking-wide text-neutral-900 px-1 pb-1"></h3>
+                <div id="optionSheetList" class="grid grid-cols-2 gap-2"></div>
+                <button type="button" id="optionSheetCancel" class="w-full bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40">取消</button>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -731,7 +800,82 @@
         function showMsg(title, text) {
             document.getElementById('msgTitle').innerText = title;
             document.getElementById('msgText').innerText = text;
+            // 失敗／錯誤類訊息用警告圖示，其餘用打勾
+            const isProblem = /失敗|錯誤|格式|不完整|不足|無法|沒有資料|沒有漫畫|尚未|驗證/.test(title);
+            const icon = document.getElementById('msgIcon');
+            icon.innerHTML = `<i class="fa-solid ${isProblem ? 'fa-triangle-exclamation' : 'fa-check'}"></i>`;
             document.getElementById('msgModal').classList.remove('hidden');
+        }
+
+        // 自訂確認視窗（取代系統 confirm），回傳 Promise<boolean>
+        function showConfirm(title, text, options = {}) {
+            return new Promise(resolve => {
+                const modal = document.getElementById('confirmModal');
+                const ok = document.getElementById('confirmOk');
+                const cancel = document.getElementById('confirmCancel');
+                document.getElementById('confirmTitle').innerText = title;
+                document.getElementById('confirmText').innerText = text;
+                document.getElementById('confirmIcon').innerHTML = `<i class="fa-solid ${options.danger ? 'fa-trash-can' : 'fa-question'}"></i>`;
+                ok.innerText = options.okText || '確定';
+                cancel.innerText = options.cancelText || '取消';
+                const done = result => {
+                    modal.classList.add('hidden');
+                    ok.onclick = cancel.onclick = modal.onclick = null;
+                    resolve(result);
+                };
+                ok.onclick = () => done(true);
+                cancel.onclick = () => done(false);
+                modal.onclick = e => { if (e.target === modal) done(false); };
+                modal.classList.remove('hidden');
+            });
+        }
+
+        // 自訂下拉選單（取代系統 select 彈窗）：原 <select> 隱藏但保留，值仍由它儲存
+        function syncCustomSelects() {
+            document.querySelectorAll('select[data-custom]').forEach(sel => {
+                const label = sel.parentElement.querySelector('.cselect-label');
+                if (label) label.innerText = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
+            });
+        }
+
+        function openOptionSheet(sel, title) {
+            const sheet = document.getElementById('optionSheet');
+            const list = document.getElementById('optionSheetList');
+            document.getElementById('optionSheetTitle').innerText = title;
+            list.innerHTML = '';
+            Array.from(sel.options).forEach(opt => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'option-item' + (opt.value === sel.value ? ' is-selected' : '');
+                btn.innerHTML = '<span></span><i class="fa-solid fa-check"></i>';
+                btn.firstChild.innerText = opt.text;
+                btn.onclick = () => {
+                    sel.value = opt.value;
+                    sel.dispatchEvent(new Event('change', { bubbles: true }));
+                    syncCustomSelects();
+                    close();
+                };
+                list.appendChild(btn);
+            });
+            const close = () => { sheet.classList.add('hidden'); sheet.onclick = null; document.getElementById('optionSheetCancel').onclick = null; };
+            document.getElementById('optionSheetCancel').onclick = close;
+            sheet.onclick = e => { if (e.target === sheet) close(); };
+            sheet.classList.remove('hidden');
+        }
+
+        function initCustomSelects() {
+            document.querySelectorAll('select:not([data-custom])').forEach(sel => {
+                sel.setAttribute('data-custom', '1');
+                sel.style.display = 'none';
+                const title = sel.parentElement.querySelector('label span')?.innerText || '請選擇';
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'cselect-btn';
+                btn.innerHTML = '<span class="cselect-label"></span><i class="fa-solid fa-chevron-down"></i>';
+                btn.onclick = () => openOptionSheet(sel, title);
+                sel.insertAdjacentElement('afterend', btn);
+            });
+            syncCustomSelects();
         }
 
         function closeMsgModal() {
@@ -982,6 +1126,7 @@
             comics.unshift(newComic);
             saveComics();
             document.getElementById('addComicForm').reset();
+            syncCustomSelects();
             showMsg('新增成功', '已成功將漫畫加入追蹤清單！');
             switchTab('home');
         }
@@ -1035,6 +1180,7 @@
             document.getElementById('editInputProgress').value = comic.progress > 0 ? comic.progress : '';
             const editDay = getUpdateDay(comic);
             document.getElementById('editInputUpdated').value = editDay === null ? '' : String(editDay);
+            syncCustomSelects();
 
             const statusRadios = document.querySelectorAll('input[name="editInputStatus"]');
             statusRadios.forEach(radio => {
@@ -1069,11 +1215,11 @@
             renderComics();
         }
 
-        function deleteCurrentComic() {
+        async function deleteCurrentComic() {
             const comic = comics.find(c => c.id === activeComicId);
             if (!comic) return;
         
-            if (!confirm(`確定要刪除「${comic.title}」嗎？\n\n刪除後無法復原。`)) return;
+            if (!(await showConfirm('刪除漫畫', `確定要刪除「${comic.title}」嗎？\n\n刪除後無法復原。`, { danger: true, okText: '刪除' }))) return;
         
             comics = comics.filter(c => c.id !== activeComicId);
             saveComics();
@@ -1297,7 +1443,7 @@ function importData(e) {
 
     const reader = new FileReader();
 
-    reader.onload = function(event) {
+    reader.onload = async function(event) {
 
         try {
 
@@ -1372,11 +1518,13 @@ function importData(e) {
 
 
             // 確認匯入
-            const shouldImport = confirm(
+            const shouldImport = await showConfirm(
+                '還原備份',
                 `確定要還原 ${importedComics.length} 部漫畫嗎？\n\n` +
                 `目前資料：${comics.length} 部\n` +
                 `備份資料：${importedComics.length} 部\n\n` +
-                `還原後會取代目前的漫畫資料。`
+                `還原後會取代目前的漫畫資料。`,
+                { okText: '還原' }
             );
 
             if (!shouldImport) {
@@ -1572,7 +1720,7 @@ function importData(e) {
             }
 
             if (repo.private === false) {
-                const go = confirm(`「${repo.full_name}」是「公開」儲存庫，你的漫畫清單任何人都看得到。\n\n建議改用私人儲存庫。仍要使用嗎？`);
+                const go = await showConfirm('公開儲存庫', `「${repo.full_name}」是「公開」儲存庫，你的漫畫清單任何人都看得到。\n\n建議改用私人儲存庫。仍要使用嗎？`, { danger: true, okText: '仍要使用' });
                 if (!go) return;
             }
 
@@ -1590,8 +1738,8 @@ function importData(e) {
             showMsg('設定已儲存', `將備份到 ${cfg.repo}。` + (auto ? '之後資料有變動會自動備份。' : '尚未開啟自動備份，可按「立即備份」手動備份。'));
         }
 
-        function ghClearSettings() {
-            if (!confirm('確定要清除權杖與 GitHub 備份設定嗎？\n\n（不會刪除 GitHub 上已有的備份）')) return;
+        async function ghClearSettings() {
+            if (!(await showConfirm('清除設定', '確定要清除權杖與 GitHub 備份設定嗎？\n\n（不會刪除 GitHub 上已有的備份）', { danger: true, okText: '清除' }))) return;
             clearTimeout(ghTimer);
             ghTimer = null;
             try { localStorage.removeItem(GH_KEY); localStorage.removeItem(GH_STATUS_KEY); } catch (e) {}
@@ -1747,6 +1895,7 @@ function importData(e) {
 
         // Initialize on load
         window.onload = function() {
+            initCustomSelects();
             renderComics();
         };
     </script>
