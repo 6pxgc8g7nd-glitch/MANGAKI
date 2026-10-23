@@ -231,7 +231,6 @@
             left: 0; right: 0; bottom: 0;
             padding: 26px 8px 6px;
             background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.62) 50%, rgba(0,0,0,0) 100%);
-            border-bottom: 2.5px solid var(--ink);
             pointer-events: none;
         }
         .cover-title { display: flex; align-items: flex-end; gap: 6px; }
@@ -404,7 +403,7 @@
                     <!-- Active Filter Banner -->
                     <div id="filterBannerContainer"></div>
 
-                    <div id="comicListContainer" class="grid grid-cols-2 gap-3">
+                    <div id="comicListContainer" class="grid grid-cols-2 gap-3 items-start">
                         <!-- Dynamic Comics injected here -->
                     </div>
                     <div id="paginationContainer" class="flex items-center justify-center gap-3 pt-3 pb-2"></div>
@@ -1047,37 +1046,23 @@
             const startIndex = (currentPage - 1) * comicsPerPage;
             const paginatedComics = filteredComics.slice(startIndex, startIndex + comicsPerPage);
 
-            container.className = "grid grid-cols-2 gap-3";
+            container.className = "grid grid-cols-2 gap-3 items-start";
 
             container.innerHTML = paginatedComics.map(comic => {
                 const coverSrc = safeUrl(comic.coverUrl);
                 const coverDisplay = coverSrc ?
-                    `<div class="w-full cover-box bg-[#fafafa] rounded-t-xl overflow-hidden relative ">
+                    `<div class="w-full cover-box bg-[#fafafa] rounded-xl overflow-hidden relative ">
                         <img src="${escapeHtml(coverSrc)}" referrerpolicy="no-referrer" loading="lazy" onload="fitCover(this)" class="w-full h-full object-contain group-hover:scale-105 transition duration-300" onerror="handleImgError(this)">
                      </div>` :
-                    `<div class="w-full cover-box bg-[#fafafa] rounded-t-xl flex items-center justify-center text-3xl relative">
+                    `<div class="w-full cover-box bg-[#fafafa] rounded-xl flex items-center justify-center text-3xl relative">
                         📖
                      </div>`;
-
-                const statusBadge = comic.status ? `<span class="inline-block text-[9px] ${comic.status === '連載中' ? 'bg-[#a6051a]/10 text-[#a6051a]' : 'bg-gray-200 text-gray-700'} px-1.5 py-0.5 rounded border border-[#a6051a]/40 w-fit">${escapeHtml(comic.status)}</span>` : '';
-
-                // 閱讀進度：舊資料沒有 progress（undefined），不會顯示
-                const updateDay = getUpdateDay(comic);
-                const isOngoingComic = (comic.status || '連載中') === '連載中';
-                const updatedText = updateDay === null ? '' :
-                    `<div class="text-[10px] text-neutral-600 flex items-center space-x-1"><i class="fa-regular fa-clock" style="font-size:9px"></i><span>每週${WEEKDAY_NAMES[updateDay]}更新</span>${isOngoingComic && daysSinceUpdate(updateDay) === 0 ? '<strong class="text-[#a6051a]">・今日更新</strong>' : ''}</div>`;
-
-                const progressText = comic.progress > 0 ? `<span class="text-[11px] font-bold text-neutral-700">第 ${parseInt(comic.progress, 10)} 話</span>` : '';
 
                 return `
                     <div data-id="${escapeHtml(comic.id)}" onclick="openComicModal(this.dataset.id)" class="group bg-[#ffffff] hover:bg-[#f0f0f0]  rounded-xl shadow transition cursor-pointer overflow-hidden flex flex-col active:scale-[0.98]">
                         <div class="relative">
                             ${coverDisplay}
-                            <div class="cover-title"><h4>${escapeHtml(comic.title)}</h4>${statusBadge}</div>
-                        </div>
-                        <div class="p-2.5 flex flex-col justify-between flex-1 space-y-1.5">
-                            ${progressText ? `<div class="flex items-center">${progressText}</div>` : ''}
-                            ${updatedText}
+                            <div class="cover-title"><h4>${escapeHtml(comic.title)}</h4></div>
                         </div>
                     </div>
                 `;
