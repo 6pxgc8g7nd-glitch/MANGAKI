@@ -1,5 +1,5 @@
 // 懸浮按鈕（輔助觸控）：可拖曳、自動吸附左右邊緣、閒置時變半透明；點一下展開快速功能。
-// 設定頁與閱讀器不顯示（閱讀器本身蓋在最上層）。
+// 全域顯示：每個頁面都有；進入閱讀器時改成閱讀器專用的功能。
 const ASSIST_POS_KEY = 'mangaki_assist_pos';
 const ASSIST_ON_KEY = 'mangaki_assist_on';
 const ASSIST_SIZE = 50;
@@ -50,7 +50,17 @@ function assistWake() {
     }, 3000);
 }
 
+const assistInReader = () => !document.getElementById('readerView').classList.contains('hidden');
+
 function assistItems() {
+    if (assistInReader()) {
+        return [
+            { icon: 'fa-backward-step', label: '上一話', run: () => rdStep(-1, true) },
+            { icon: 'fa-forward-step', label: '下一話', run: () => rdStep(1, true) },
+            { icon: 'fa-table-columns', label: rdCfg.mode === 'scroll' ? '改翻頁' : '改捲動', run: () => rdToggleMode() },
+            { icon: 'fa-arrow-left', label: '離開閱讀', run: () => rdClose() }
+        ];
+    }
     return [
         { icon: privacyMode ? 'fa-eye' : 'fa-eye-slash', label: privacyMode ? '取消遮蔽' : '一鍵遮蔽', run: () => togglePrivacy() },
         { icon: 'fa-arrow-up', label: '回到頂端', run: () => scrollMainTopFast() },
@@ -91,10 +101,15 @@ function assistClosePanel() {
     assistWake();
 }
 
-// 依目前分頁決定顯示與否（設定頁不顯示；也可在設定頁整個關掉）
+// 顯示與否只看開關（可在設定頁整個關掉）；閱讀器全螢幕蓋在最上層，所以進入閱讀器時把按鈕的層級抬到它上面
 function assistRefresh() {
     if (!assistBtn) return;
-    const show = assistEnabled() && currentTab !== 'settings';
+    const show = assistEnabled();
+    const reader = assistInReader();
+    assistBackdrop.style.zIndex = reader ? '55' : '';
+    assistBtn.style.zIndex = reader ? '56' : '';
+    assistPanel.style.zIndex = reader ? '57' : '';
+    assistClosePanel();   // 換了畫面（頁面／閱讀器）就先收起面板，避免面板內容過期
     assistBtn.classList.toggle('hidden', !show);
     if (!show) assistClosePanel();
     else { assistPlace(); assistWake(); }
