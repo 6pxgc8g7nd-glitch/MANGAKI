@@ -320,9 +320,10 @@
         }
         .link-add-btn i { color: var(--red); }
         .link-add-btn:active { background: rgba(0,0,0,.05); }
-        .link-pick { justify-content: space-between; text-align: left; }
-        .link-pick .tag { font-size: 10px; background: var(--red); color: #fff; border-radius: 6px; padding: 1px 6px; margin-left: 6px; }
-        .link-pick i { visibility: visible !important; color: var(--ink) !important; }
+        .link-pick { justify-content: center; gap: 6px; padding: 10px 4px; font-size: 13px; min-width: 0; }
+        .link-pick .lp-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+        .link-pick.is-latest { padding: 13px 8px; font-size: 15px; }
+        .link-pick .tag { flex: none; font-size: 10px; background: var(--red); color: #fff; border-radius: 6px; padding: 1px 6px; }
 
         /* ===== 頂部導覽：Logo + 圖示按鈕，下方文字分頁 ===== */
         .app-container > header .nav-btn {
@@ -2240,7 +2241,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '71bd9a6f';
+        const APP_BUILD = 'bfceb9b8';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
@@ -2405,26 +2406,26 @@ function importData(e) {
         function openLinkSheet(comic, links) {
             const sheet = document.getElementById('optionSheet');
             const list = document.getElementById('optionSheetList');
-            document.getElementById('optionSheetTitle').innerText = '選擇要開啟的集數';
-            list.className = 'grid grid-cols-1 gap-2';
+            document.getElementById('optionSheetTitle').innerText = `選擇要開啟的集數（共 ${links.length} 集）`;
+            list.className = 'grid grid-cols-3 gap-2';
             list.innerHTML = '';
             const close = () => { sheet.classList.add('hidden'); sheet.onclick = null; document.getElementById('optionSheetCancel').onclick = null; };
+            const last = links.length - 1;
             links.map((l, i) => ({ l, i })).reverse().forEach(({ l, i }) => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = 'option-item link-pick' + (i === links.length - 1 ? ' is-selected' : '');
+                const isLatest = i === last;
+                btn.className = 'option-item link-pick' + (isLatest ? ' is-selected col-span-3 is-latest' : '');
                 const name = document.createElement('span');
-                name.textContent = l.label || `連結 ${i + 1}`;
-                if (i === links.length - 1) {
+                name.className = 'lp-name';
+                name.textContent = l.label || String(i + 1);
+                btn.appendChild(name);
+                if (isLatest) {
                     const tag = document.createElement('span');
                     tag.className = 'tag';
                     tag.textContent = '最新';
-                    name.appendChild(tag);
+                    btn.appendChild(tag);
                 }
-                const icon = document.createElement('i');
-                icon.className = 'fa-solid fa-arrow-up-right-from-square';
-                btn.appendChild(name);
-                btn.appendChild(icon);
                 btn.onclick = () => { close(); window.open(l.url, '_blank', 'noopener,noreferrer'); };
                 list.appendChild(btn);
             });
