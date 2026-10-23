@@ -2384,7 +2384,7 @@ function importData(e) {
         }
         let rdComicId = null;
         let rdChapterList = [];
-        let rd = null; // { chapter, urls, idx }
+        let rd = null; // { chapter, n, urls: Map(頁 → 網址), idx }
         let rdCfg = { mode: 'scroll' };
         try { Object.assign(rdCfg, JSON.parse(localStorage.getItem(RD_CFG_KEY)) || {}); } catch (e) {}
 
@@ -2547,23 +2547,45 @@ function importData(e) {
         async function rdOpen(chIdx, startAt) {
             const chapter = rdChapterList[chIdx];
             if (!chapter) return;
-            let pages;
+            // 只確認第一頁存在；其餘頁面看到才一頁一頁讀，避免大章節一次塞滿記憶體
+            let first;
             try {
-                pages = await rdRun('pages', 'readonly', tx => tx.objectStore('pages').getAll(IDBKeyRange.bound(`${chapter.id}#`, `${chapter.id}#￿`)));
+                first = await rdRun('pages', 'readonly', tx => tx.objectStore('pages').get(rdPageKey(chapter.id, 0)));
             } catch (e) { showMsg('無法開啟', e.message); return; }
-            if (!pages || !pages.length) { showMsg('無法開啟', '找不到這一話的圖片。'); return; }
+            if (!first) { showMsg('無法開啟', '找不到這一話的圖片。'); return; }
             rdRelease();
             const saved = rdLoadPos()[chapter.id];
-            const idx = Math.min(pages.length - 1, Math.max(0, startAt !== undefined ? startAt : (saved || 0)));
-            rd = { chIdx, chapter, urls: pages.map(p => URL.createObjectURL(p.buf ? new Blob([p.buf], { type: p.type || 'image/jpeg' }) : p.blob)), idx, bad: 0 };
+            const n = chapter.count;
+            const idx = Math.min(n - 1, Math.max(0, startAt !== undefined ? startAt : (saved || 0)));
+            rd = { chIdx, chapter, n, urls: new Map(), idx, bad: 0 };
             document.getElementById('rdBarTitle').textContent = chapter.label;
             document.getElementById('readerView').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
             await rdRender();
         }
 
+        // 取得某一頁的圖片網址（讀一次就暫存，離開畫面時釋放）
+        async function rdPageUrl(i) {
+            const cur = rd;
+            if (!cur || i < 0 || i >= cur.n) return null;
+            if (cur.urls.has(i)) return cur.urls.get(i);
+            let rec;
+            try { rec = await rdRun('pages', 'readonly', tx => tx.objectStore('pages').get(rdPageKey(cur.chapter.id, i))); } catch (e) { return null; }
+            if (rd !== cur || !rec) return null;
+            if (cur.urls.has(i)) return cur.urls.get(i);
+            const url = URL.createObjectURL(rec.buf ? new Blob([rec.buf], { type: rec.type || 'image/jpeg' }) : rec.blob);
+            cur.urls.set(i, url);
+            return url;
+        }
+
+        function rdFreePage(i) {
+            if (!rd || !rd.urls.has(i)) return;
+            URL.revokeObjectURL(rd.urls.get(i));
+            rd.urls.delete(i);
+        }
+
         function rdRelease() {
-            if (rd) rd.urls.forEach(u => URL.revokeObjectURL(u));
+            if (rd) { rd.urls.forEach(u => URL.revokeObjectURL(u)); if (rd.observer) rd.observer.disconnect(); }
             rd = null;
             document.getElementById('rdScroll').textContent = '';
             document.getElementById('rdPageImg').removeAttribute('src');
@@ -2589,9 +2611,9 @@ function importData(e) {
 
         function rdShowPageNo() {
             if (!rd) return;
-            document.getElementById('rdPageNo').textContent = `${rd.idx + 1} / ${rd.urls.length}`;
+            document.getElementById('rdPageNo').textContent = `${rd.idx + 1} / ${rd.n}`;
             const slider = document.getElementById('rdSlider');
-            slider.max = String(rd.urls.length);
+            slider.max = String(rd.n);
             slider.value = String(rd.idx + 1);
         }
 
@@ -2599,9 +2621,9 @@ function importData(e) {
         let rdSeekAt = 0;
         function rdSeek(i) {
             if (!rd) return;
-            rd.idx = Math.min(rd.urls.length - 1, Math.max(0, i));
+            rd.idx = Math.min(rd.n - 1, Math.max(0, i));
             rdSeekAt = Date.now();
-            document.getElementById('rdPageNo').textContent = `${rd.idx + 1} / ${rd.urls.length}`;
+            document.getElementById('rdPageNo').textContent = `${rd.idx + 1} / ${rd.n}`;
             if (rdCfg.mode === 'scroll') {
                 const img = document.getElementById('rdScroll').querySelectorAll('img')[rd.idx];
                 if (img) img.scrollIntoView();
@@ -2621,28 +2643,62 @@ function importData(e) {
                 paged.classList.add('hidden');
                 scroll.classList.remove('hidden');
                 scroll.textContent = '';
-                const imgs = rd.urls.map(u => {
+                const cur = rd;
+                if (cur.observer) cur.observer.disconnect();
+                cur.urls.forEach(u => URL.revokeObjectURL(u));
+                cur.urls.clear();
+                const imgs = [];
+                for (let k = 0; k < cur.n; k++) {
                     const img = document.createElement('img');
-                    img.src = u;
                     img.className = 'block w-full';
+                    img.dataset.i = String(k);
                     img.style.minHeight = '40vh';
-                    img.onload = () => { img.style.minHeight = ''; };
-                    img.onerror = () => rdImageFailed();
+                    img.onload = () => { img.style.minHeight = ''; img.style.height = ''; img.style.aspectRatio = ''; };
+                    img.onerror = () => { if (img.getAttribute('src')) rdImageFailed(); };
                     scroll.appendChild(img);
-                    return img;
-                });
+                    imgs.push(img);
+                }
                 const next = document.createElement('button');
                 next.className = 'block w-full py-8 text-sm font-bold text-white/80';
                 next.textContent = '下一話 ▶';
                 next.onclick = () => rdStep(1, true);
                 scroll.appendChild(next);
-                // 先等前面的圖載入完再跳到上次讀到的位置，避免版面高度變動把位置擠掉
-                const at = rd.idx;
-                await Promise.all(imgs.slice(0, at + 1).map(i => i.decode().catch(() => {})));
-                if (rd && imgs[at]) imgs[at].scrollIntoView();
+
+                const at = cur.idx;
+                // 用目前這一頁的長寬比先把所有頁面的高度預留好，載入後位置才不會亂跳
+                const firstUrl = await rdPageUrl(at);
+                if (rd !== cur) return;
+                if (firstUrl) {
+                    const probe = new Image();
+                    await new Promise(r => { probe.onload = probe.onerror = r; probe.src = firstUrl; });
+                    if (rd !== cur) return;
+                    if (probe.naturalWidth && probe.naturalHeight) {
+                        imgs.forEach(im => { im.style.minHeight = ''; im.style.aspectRatio = `${probe.naturalWidth} / ${probe.naturalHeight}`; });
+                    }
+                }
+                imgs[at].scrollIntoView();
+
+                // 只載入畫面附近的頁，離開畫面的釋放掉（保留高度避免版面跳動）
+                cur.observer = new IntersectionObserver(entries => {
+                    entries.forEach(async en => {
+                        const im = en.target, k = Number(im.dataset.i);
+                        if (en.isIntersecting) {
+                            const url = await rdPageUrl(k);
+                            if (rd === cur && url && en.target.isConnected && !im.getAttribute('src')) im.src = url;
+                        } else if (im.getAttribute('src')) {
+                            im.style.height = im.clientHeight + 'px';
+                            im.removeAttribute('src');
+                            rdFreePage(k);
+                        }
+                    });
+                }, { root: scroll, rootMargin: '150% 0px' });
+                imgs.forEach(im => cur.observer.observe(im));
             } else {
                 scroll.classList.add('hidden');
                 scroll.textContent = '';
+                if (rd.observer) rd.observer.disconnect();
+                rd.urls.forEach(u => URL.revokeObjectURL(u));
+                rd.urls.clear();
                 paged.classList.remove('hidden');
                 rdShowPaged();
             }
@@ -2653,21 +2709,26 @@ function importData(e) {
             showMsg('圖片無法顯示', '這張圖片的格式瀏覽器打不開（例如 HEIC）。請先把圖片轉成 JPG 或 PNG 再匯入。');
         }
 
-        function rdShowPaged() {
+        async function rdShowPaged() {
+            const cur = rd;
+            const idx = cur.idx;
             const pageImg = document.getElementById('rdPageImg');
-            pageImg.onerror = () => rdImageFailed();
-            pageImg.src = rd.urls[rd.idx];
+            pageImg.onerror = () => { if (pageImg.getAttribute('src')) rdImageFailed(); };
             rdShowPageNo();
-            rdSavePos(rd.chapter.id, rd.idx);
-            const near = rd.urls[rd.idx + 1];
-            if (near) { const pre = new Image(); pre.src = near; }
+            rdSavePos(cur.chapter.id, idx);
+            const url = await rdPageUrl(idx);
+            if (rd !== cur || cur.idx !== idx || !url) return;
+            pageImg.src = url;
+            // 預載下一頁，並釋放離得遠的頁
+            rdPageUrl(idx + 1);
+            [...cur.urls.keys()].forEach(k => { if (k < idx - 1 || k > idx + 2) rdFreePage(k); });
         }
 
         // 翻頁模式：dir = +1 下一頁、-1 上一頁；到頭尾就換章節
         function rdTurn(dir) {
             if (!rd) return;
             const n = rd.idx + dir;
-            if (n < 0 || n >= rd.urls.length) { rdStep(dir, false); return; }
+            if (n < 0 || n >= rd.n) { rdStep(dir, false); return; }
             rd.idx = n;
             rdShowPaged();
         }
@@ -2756,7 +2817,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '1ad103f0';
+        const APP_BUILD = 'eb842392';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
