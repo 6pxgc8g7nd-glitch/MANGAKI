@@ -557,10 +557,6 @@
                             <span>封面網址</span>
                         </label>
                         <input type="url" id="inputCoverUrl" placeholder="" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
-                        <div class="flex items-center space-x-3 mt-1.5 text-[10px] text-neutral-500">
-                            <label class="underline cursor-pointer">從相簿選圖並存到 GitHub<input type="file" accept="image/*" class="hidden" onchange="pickCover(this, 'add')"></label>
-                            <span id="addCoverStatus"></span>
-                        </div>
                     </div>
 
                     <div>
@@ -646,7 +642,6 @@
                     <div class="flex items-center space-x-3 text-[10px] text-neutral-500">
                         <button onclick="ghBackupNow(true)" class="underline">立即備份</button>
                         <button onclick="ghRestore()" class="underline">從 GitHub 還原</button>
-                        <button onclick="ghMigrateCovers()" class="underline">封面轉存到 GitHub</button>
                         <button onclick="ghClearSettings()" class="underline">清除權杖</button>
                     </div>
                     <p class="text-[10px] text-neutral-500">請用只授權單一私人儲存庫的細粒度權杖。</p>
@@ -746,10 +741,6 @@
                             <span>封面網址</span>
                         </label>
                         <input type="url" id="editInputCoverUrl" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
-                        <div class="flex items-center space-x-3 mt-1.5 text-[10px] text-neutral-500">
-                            <label class="underline cursor-pointer">從相簿選圖並存到 GitHub<input type="file" accept="image/*" class="hidden" onchange="pickCover(this, 'edit')"></label>
-                            <span id="editCoverStatus"></span>
-                        </div>
                     </div>
                     <div>
                         <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
@@ -1425,11 +1416,10 @@
 
             const decoyMap = privacyMode ? assignDecoys(paginatedComics) : null;
             container.innerHTML = paginatedComics.map(comic => {
-                const coverSrc = privacyMode ? decoyCover(comic.id, decoyMap.get(comic.id)) : (safeCoverPath(comic.coverPath) ? BLANK_IMG : safeUrl(comic.coverUrl));
-                const ghAttr = (!privacyMode && safeCoverPath(comic.coverPath)) ? ` data-gh-cover="${escapeHtml(comic.coverPath)}"` : '';
+                const coverSrc = privacyMode ? decoyCover(comic.id, decoyMap.get(comic.id)) : safeUrl(comic.coverUrl);
                 const coverDisplay = coverSrc ?
                     `<div class="w-full cover-box bg-[#fafafa] rounded-xl overflow-hidden relative ">
-                        <img src="${escapeHtml(coverSrc)}"${ghAttr} referrerpolicy="no-referrer" loading="lazy" onload="fitCover(this)" class="w-full h-full object-contain group-hover:scale-105 transition duration-300" onerror="handleImgError(this)">
+                        <img src="${escapeHtml(coverSrc)}" referrerpolicy="no-referrer" loading="lazy" onload="fitCover(this)" class="w-full h-full object-contain group-hover:scale-105 transition duration-300" onerror="handleImgError(this)">
                      </div>` :
                     `<div class="w-full cover-box bg-[#fafafa] rounded-xl flex items-center justify-center text-3xl relative">
                         <i class="fa-solid fa-book-open" style="color:#b5b5b5"></i>
@@ -1446,7 +1436,6 @@
             }).join('');
 
             renderPagination(totalPages);
-            hydrateGhCovers(container);
         }
 
         // 先提供簡單的「上一頁／下一頁」分頁
@@ -1551,7 +1540,6 @@
                 links: addLinksValue,
                 url: latestUrl(addLinksValue),
                 coverUrl: safeUrl(document.getElementById('inputCoverUrl').value.trim()),
-                coverPath: pendingCover.add || undefined,
                 progress: parseProgress(document.getElementById('inputProgress').value),
                 updateDay: parseUpdateDay(document.getElementById('inputUpdated').value)
             };
@@ -1559,8 +1547,6 @@
             comics.unshift(newComic);
             saveComics();
             document.getElementById('addComicForm').reset();
-            pendingCover.add = null;
-            setCoverStatus('add', '');
             initLinkEditor(document.getElementById('addLinks'), []);
             syncCustomSelects();
             showMsg('新增成功', '已成功將漫畫加入追蹤清單！');
@@ -1576,16 +1562,10 @@
             const coverSrc = safeUrl(comic.coverUrl);
             const bookIcon = '<i class="fa-solid fa-book-open" style="color:#b5b5b5"></i>';
             modalEmojiContainer.innerHTML = bookIcon;
-            const ghPath = safeCoverPath(comic.coverPath);
-            if (coverSrc || ghPath) {
+            if (coverSrc) {
                 const img = document.createElement('img');
                 img.referrerPolicy = 'no-referrer';
-                if (ghPath) {
-                    img.src = BLANK_IMG;
-                    ghCoverBlobUrl(ghPath).then(u => { if (u) img.src = u; else if (coverSrc) img.src = coverSrc; });
-                } else {
-                    img.src = coverSrc;
-                }
+                img.src = coverSrc;
                 img.className = 'w-full h-full object-contain';
                 img.onerror = () => { modalEmojiContainer.innerHTML = bookIcon; };
                 modalEmojiContainer.innerText = '';
@@ -1620,8 +1600,6 @@
             document.getElementById('editInputGenre').value = comic.genre;
             initLinkEditor(document.getElementById('editLinks'), getLinks(comic));
             document.getElementById('editInputCoverUrl').value = comic.coverUrl || '';
-            pendingCover.edit = null;
-            setCoverStatus('edit', safeCoverPath(comic.coverPath) ? '目前使用 GitHub 上的封面' : '');
             document.getElementById('editInputProgress').value = comic.progress > 0 ? comic.progress : '';
             const editDay = getUpdateDay(comic);
             document.getElementById('editInputUpdated').value = editDay === null ? '' : String(editDay);
@@ -1652,12 +1630,6 @@
             comics[comicIndex].links = editedLinks;
             comics[comicIndex].url = latestUrl(editedLinks);
             comics[comicIndex].coverUrl = safeUrl(document.getElementById('editInputCoverUrl').value.trim());
-            if (pendingCover.edit) {
-                const old = comics[comicIndex].coverPath;
-                comics[comicIndex].coverPath = pendingCover.edit;
-                pendingCover.edit = null;
-                if (old) ghDeleteFile(old);
-            }
             comics[comicIndex].progress = parseProgress(document.getElementById('editInputProgress').value);
             comics[comicIndex].updateDay = parseUpdateDay(document.getElementById('editInputUpdated').value);
             delete comics[comicIndex].updatedAt;
@@ -1674,7 +1646,6 @@
         
             if (!(await showConfirm('刪除漫畫', `確定要刪除「${comic.title}」嗎？\n\n刪除後無法復原。`, { danger: true, okText: '刪除' }))) return;
         
-            if (comic.coverPath) ghDeleteFile(comic.coverPath);
             comics = comics.filter(c => c.id !== activeComicId);
             saveComics();
             closeComicModal();
@@ -1855,13 +1826,6 @@ function validateComic(comic) {
     }
 
     if (
-        comic.coverPath !== undefined &&
-        typeof comic.coverPath !== 'string'
-    ) {
-        return false;
-    }
-
-    if (
         comic.progress !== undefined &&
         typeof comic.progress !== 'number'
     ) {
@@ -2013,7 +1977,6 @@ function importData(e) {
                     links: getLinks(comic),
                     url: latestUrl(getLinks(comic)),
                     coverUrl: safeUrl(comic.coverUrl),
-                    coverPath: safeCoverPath(comic.coverPath) || undefined,
                     progress: parseProgress(comic.progress),
                     updateDay: getUpdateDay(comic)
                 }));
@@ -2346,169 +2309,13 @@ function importData(e) {
             }
         });
 
-
-        // ================================
-        // 封面圖片存到 GitHub（covers/ 資料夾，和備份檔同一個私人庫）
-        // ================================
-        const BLANK_IMG = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
-        const COVER_CACHE = 'mangaki-covers';
-        const coverBlobUrls = new Map();
-        const pendingCover = { add: null, edit: null };
-
-        function safeCoverPath(p) {
-            return typeof p === 'string' && /^covers\/[A-Za-z0-9_.-]+$/.test(p) ? p : '';
-        }
-
-        function setCoverStatus(pre, text) {
-            const el = document.getElementById(pre + 'CoverStatus');
-            if (el) el.textContent = text;
-        }
-
-        function ghPathUrl(cfg, path) {
-            return `${ghFileUrl(Object.assign({}, cfg, { path }))}?ref=${encodeURIComponent(cfg.branch)}`;
-        }
-
-        // 縮成最長邊 800px 的 JPEG，檔案小、上傳快
-        async function compressImage(blob) {
-            const bmp = await createImageBitmap(blob);
-            const scale = Math.min(1, 800 / Math.max(bmp.width, bmp.height));
-            const canvas = document.createElement('canvas');
-            canvas.width = Math.round(bmp.width * scale);
-            canvas.height = Math.round(bmp.height * scale);
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
-            if (bmp.close) bmp.close();
-            const out = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.85));
-            if (!out) throw new Error('圖片轉檔失敗');
-            return out;
-        }
-
-        function blobToBase64(blob) {
-            return new Promise((resolve, reject) => {
-                const fr = new FileReader();
-                fr.onload = () => resolve(String(fr.result).split(',')[1]);
-                fr.onerror = () => reject(new Error('讀取圖片失敗'));
-                fr.readAsDataURL(blob);
-            });
-        }
-
-        // 上傳一張圖到 GitHub，回傳存放路徑
-        async function ghUploadCover(blob) {
-            const cfg = ghLoad();
-            const err = ghCfgError(cfg);
-            if (err) throw new Error(err + '，請先到設定頁儲存 GitHub 權杖。');
-            const jpeg = await compressImage(blob);
-            const path = `covers/${Date.now()}${Math.floor(Math.random() * 1000)}.jpg`;
-            const res = await fetch(ghFileUrl(Object.assign({}, cfg, { path })), {
-                method: 'PUT',
-                headers: ghHeaders(cfg, { 'Content-Type': 'application/json' }),
-                body: JSON.stringify({ message: 'MANGAKI cover', content: await blobToBase64(jpeg), branch: cfg.branch })
-            });
-            if (!res.ok) throw new Error(ghErrorText(res.status));
-            return path;
-        }
-
-        // 盡力刪除（失敗就留著，不影響使用）
-        async function ghDeleteFile(path) {
-            try {
-                path = safeCoverPath(path);
-                const cfg = ghLoad();
-                if (!path || ghCfgError(cfg)) return;
-                const get = await fetch(ghPathUrl(cfg, path), { headers: ghHeaders(cfg), cache: 'no-store' });
-                if (!get.ok) return;
-                const { sha } = await get.json();
-                await fetch(ghFileUrl(Object.assign({}, cfg, { path })), {
-                    method: 'DELETE',
-                    headers: ghHeaders(cfg, { 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({ message: 'MANGAKI remove cover', sha, branch: cfg.branch })
-                });
-                coverBlobUrls.delete(path);
-            } catch (e) {}
-        }
-
-        // 私人庫的圖要帶權杖下載；下載後存在快取，之後（含離線）直接用
-        async function ghCoverBlobUrl(path) {
-            if (coverBlobUrls.has(path)) return coverBlobUrls.get(path);
-            const cfg = ghLoad();
-            if (ghCfgError(cfg)) return null;
-            const key = ghPathUrl(cfg, path);
-            let blob = null;
-            try {
-                const hit = await (await caches.open(COVER_CACHE)).match(key);
-                if (hit) blob = await hit.blob();
-            } catch (e) {}
-            if (!blob) {
-                try {
-                    const res = await fetch(key, { headers: ghHeaders(cfg, { 'Accept': 'application/vnd.github.raw+json' }) });
-                    if (!res.ok) return null;
-                    blob = await res.blob();
-                    try { (await caches.open(COVER_CACHE)).put(key, new Response(blob)); } catch (e) {}
-                } catch (e) { return null; }
-            }
-            const url = URL.createObjectURL(blob);
-            coverBlobUrls.set(path, url);
-            return url;
-        }
-
-        function hydrateGhCovers(root) {
-            root.querySelectorAll('img[data-gh-cover]').forEach(async img => {
-                const url = await ghCoverBlobUrl(img.dataset.ghCover);
-                if (url && img.isConnected) img.src = url;
-                else if (!url && img.isConnected) {
-                    const comic = comics.find(c => c.coverPath === img.dataset.ghCover);
-                    const fallback = comic && safeUrl(comic.coverUrl);
-                    if (fallback) img.src = fallback; else handleImgError(img);
-                }
-            });
-        }
-
-        async function pickCover(input, pre) {
-            const file = input.files && input.files[0];
-            input.value = '';
-            if (!file) return;
-            setCoverStatus(pre, '上傳中…');
-            try {
-                pendingCover[pre] = await ghUploadCover(file);
-                setCoverStatus(pre, '已上傳，按儲存後生效');
-            } catch (e) {
-                pendingCover[pre] = null;
-                setCoverStatus(pre, '');
-                showMsg('上傳失敗', e instanceof TypeError ? '無法連到 GitHub（可能沒有網路）' : e.message);
-            }
-        }
-
-        // 把現有「封面網址」的圖抓下來存進 GitHub；對方網站不允許跨站讀取的會失敗，會列出數量
-        async function ghMigrateCovers() {
-            const cfg = ghLoad();
-            const err = ghCfgError(cfg);
-            if (err) { showMsg('尚未設定', err + '，請先儲存設定。'); return; }
-            const todo = comics.filter(c => c.coverUrl && !c.coverPath);
-            if (!todo.length) { showMsg('不需要轉存', '所有封面都已經在 GitHub 上，或沒有封面網址。'); return; }
-            if (!(await showConfirm('封面轉存', `將嘗試把 ${todo.length} 張封面存到 GitHub。\n\n部分網站不允許讀取圖片，會失敗並保留原網址。`, { okText: '開始' }))) return;
-            let ok = 0, fail = 0;
-            for (let i = 0; i < todo.length; i++) {
-                ghSetStatus(true, `轉存封面 ${i + 1}/${todo.length}…`);
-                try {
-                    const res = await fetch(todo[i].coverUrl, { referrerPolicy: 'no-referrer' });
-                    if (!res.ok) throw new Error();
-                    todo[i].coverPath = await ghUploadCover(await res.blob());
-                    ok++;
-                } catch (e) { fail++; }
-            }
-            if (ok) { saveComics(); renderComics(); }
-            ghSetStatus(fail === 0, `封面轉存：成功 ${ok}、失敗 ${fail}`);
-            showMsg('轉存完成', `成功 ${ok} 張，失敗 ${fail} 張。失敗的可在編輯畫面從相簿選圖補上。`);
-        }
-
         // ================================
         // App 更新（自動 / 手動檢查 / 清除快取）
         // ================================
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = 'a8cc9d1b';
+        const APP_BUILD = 'c8eca41a';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
