@@ -1418,6 +1418,14 @@
                 h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13;
                 return h >>> 0;
             };
+            // 「連載中」分頁維持原本的排序：依最近一次更新由近到遠（今天更新的最前面），沒指定星期的排最後
+            if (activeStatusFilter === '連載中') {
+                const recency = c => {
+                    const day = getUpdateDay(c);
+                    return day === null ? 99 : daysSinceUpdate(day);
+                };
+                return list.sort((a, b) => recency(a) - recency(b));
+            }
             return list.sort((a, b) => rank(a) - rank(b));
         }
 
@@ -3253,7 +3261,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '56a2d948';
+        const APP_BUILD = 'b5f9f502';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
