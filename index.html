@@ -994,24 +994,39 @@
                 ${vtext('恋', 38, 60, 54, '#fff', INK)}${sparkle(245, 70, 20)}${sfx('ザー', 215, 385, 36, -4, INK)}`
         ];
 
-        // 遮蔽模式的假名稱：由漫畫編號固定組合出來（前綴 + 主體 + 後綴，共 2560 種）
-        const DECOY_PREFIX = ['月下的', '午後的', '最強', '異世界的', '魔法', '星空下的', '深夜', '夏日', '無名的', '秘密', '雨天的', '天才', '迷途的', '黎明', '少年與', '純白的'];
-        const DECOY_NOUN = ['咖啡館', '偵探社', '料理人', '劍士', '學園', '便利商店', '圖書館', '電車', '少女', '貓咪', '魔王', '廚房', '花店', '鐘塔', '旅人', '樂團', '天文台', '書店', '拉麵店', '溫泉街'];
-        const DECOY_SUFFIX = ['', '物語', '日記', '傳說', '的日常', '手札', '計畫', '之旅'];
+        // 封面款式編號（0～9）：封面圖案與假名稱共用，這樣名稱會對得上圖案
+        function decoyIndex(id) {
+            let h = 5381;
+            for (const c of String(id)) h = ((h << 5) + h + c.charCodeAt(0)) | 0;
+            return (h >>> 0) % DECOY_ART.length;
+        }
 
+        // 每款封面各有一組名稱素材（前綴 × 主體 × 後綴），順序要和 DECOY_ART 一致
+        const DECOY_NAMES = [
+            { p: ['燃燒吧', '最強', '不滅的', '衝刺的', '無敵', '拚命的'], n: ['少年', '拳頭', '熱血魂', '隊長'], s: ['', '傳', '物語'] },        // 0 熱血少年
+            { p: ['閃耀的', '心動的', '初戀的', '溫柔的', '夢幻的', '透明的'], n: ['眼瞳', '少女', '花季', '星光'], s: ['', '物語', '日記'] },   // 1 少女漫畫
+            { p: ['月下的', '血月之', '孤高的', '浪人', '幕末', '無名的'], n: ['劍客', '武士', '斬', '刀鍛冶'], s: ['', '傳', '帖'] },            // 2 時代劇
+            { p: ['影之', '暗夜', '疾風', '無聲的', '月夜', '隱密的'], n: ['忍者', '手裏劍', '忍者村', '暗殺者'], s: ['', '傳', '帖'] },        // 3 忍者
+            { p: ['鋼鐵', '超級', '最終', '閃電', '機動', '宇宙'], n: ['機器人', '戰士', '機甲', '巨神'], s: ['', '戰記', '傳說'] },            // 4 機甲
+            { p: ['春天的', '放課後的', '櫻花下的', '青春', '午後的', '轉學生的'], n: ['校園', '鐘塔', '學園', '教室'], s: ['', '日記', '物語'] }, // 5 校園
+            { p: ['紅色的', '妖怪', '百鬼', '鬼之', '夜行的', '惡鬼'], n: ['惡鬼', '鬼面', '妖怪', '羅剎'], s: ['', '傳說', '錄'] },            // 6 鬼
+            { p: ['深夜', '絕品', '老店的', '熱騰騰的', '匠人的', '幸福的'], n: ['拉麵', '食堂', '料理人', '麵館'], s: ['', '日記', '物語'] },   // 7 拉麵
+            { p: ['熱血', '最強', '無敵的', '夢想的', '衝刺的', '藍色'], n: ['足球', '射門', '球場', '前鋒'], s: ['', '少年', '物語'] },        // 8 足球
+            { p: ['雨中的', '梅雨', '傘下的', '告白的', '紅傘', '心動的'], n: ['戀情', '約定', '二人', '初戀'], s: ['', '物語', '日記'] }      // 9 雨中戀情
+        ];
+
+        // 遮蔽模式的假名稱：由漫畫編號固定產生，且主題與該漫畫的假封面一致
         function decoyTitle(id) {
+            const set = DECOY_NAMES[decoyIndex(id)];
             let h = 7;
             for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) | 0;
             const a = Math.abs(h);
-            const p = DECOY_PREFIX.length, n = DECOY_NOUN.length;
-            return DECOY_PREFIX[a % p] + DECOY_NOUN[Math.floor(a / p) % n] + DECOY_SUFFIX[Math.floor(a / (p * n)) % DECOY_SUFFIX.length];
+            const p = set.p.length, n = set.n.length;
+            return set.p[a % p] + set.n[Math.floor(a / p) % n] + set.s[Math.floor(a / (p * n)) % set.s.length];
         }
 
         function decoyCover(id) {
-            let h = 5381;
-            const str = String(id);
-            for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0;
-            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="300" height="400">${DECOY_ART[(h >>> 0) % DECOY_ART.length]()}${DECOY_FRAME}</svg>`;
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="300" height="400">${DECOY_ART[decoyIndex(id)]()}${DECOY_FRAME}</svg>`;
             return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
         }
 
@@ -2101,7 +2116,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '0e695779';
+        const APP_BUILD = '08b399e2';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
