@@ -22,6 +22,9 @@ self.addEventListener('fetch', event => {
     const req = event.request;
     if (req.method !== 'GET' || !req.url.startsWith('http')) return;
 
+    // version.json 一律走網路，才能正確判斷是否有新版
+    if (new URL(req.url).pathname.endsWith('/version.json')) return;
+
     // GitHub API（含權杖的請求）不經過快取
     if (new URL(req.url).hostname === 'api.github.com') return;
 
