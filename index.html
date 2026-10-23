@@ -280,6 +280,24 @@
         .privacy-btn.is-on { background: var(--yellow); color: var(--red); }
 
 
+
+        /* 頁碼列 */
+        #paginationContainer { gap: 4px; flex-wrap: nowrap; }
+        .pg-btn {
+            min-width: 30px; height: 34px; padding: 0 4px; flex: 0 1 auto;
+            display: flex; align-items: center; justify-content: center;
+            background: #ffffff; color: var(--ink);
+            border: 2px solid var(--ink); border-radius: 10px;
+            font-size: 14px; font-weight: 900;
+            box-shadow: 2px 2px 0 var(--ink);
+        }
+        .pg-btn:active:not(:disabled) { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+        .pg-btn.is-current { background: var(--yellow); color: var(--red); }
+        .pg-btn.pg-gap { background: transparent; border-color: transparent; box-shadow: none; min-width: 20px; padding: 0; letter-spacing: 1px; }
+        .pg-btn:disabled { opacity: .3; box-shadow: none; }
+        .page-jump-item { justify-content: center; padding: 10px 0; }
+        .page-jump-item i { display: none; }
+
         /* ===== 頂部導覽：Logo + 圖示按鈕，下方文字分頁 ===== */
         .app-container > header .nav-btn {
             min-width: 44px;
@@ -1137,6 +1155,7 @@
             const sheet = document.getElementById('optionSheet');
             const list = document.getElementById('optionSheetList');
             document.getElementById('optionSheetTitle').innerText = title;
+            list.className = 'grid grid-cols-2 gap-2';
             list.innerHTML = '';
             Array.from(sel.options).forEach(opt => {
                 const btn = document.createElement('button');
@@ -1339,6 +1358,14 @@
         }
 
         // 先提供簡單的「上一頁／下一頁」分頁
+        // 頁碼列：上一頁、頁碼（含省略號）、下一頁；省略號可點開「跳到第幾頁」
+        function pageSlots(cur, total) {
+            if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+            if (cur <= 3) return [1, 2, 3, 4, '…', total];
+            if (cur >= total - 2) return [1, '…', total - 3, total - 2, total - 1, total];
+            return [1, '…', cur - 1, cur, cur + 1, '…', total];
+        }
+
         function renderPagination(totalPages) {
             const container = document.getElementById('paginationContainer');
             if (!container) return;
@@ -1348,25 +1375,40 @@
                 return;
             }
 
-            container.innerHTML = `
-                <button
-                    onclick="changePage(${currentPage - 1})"
-                    ${currentPage === 1 ? 'disabled' : ''}
-                    class="px-4 py-2 rounded-lg text-xs font-bold border border-gray-200 bg-white ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-neutral-700 active:bg-gray-100'}">
-                    上一頁
-                </button>
+            const nav = (label, target, disabled, aria) =>
+                `<button class="pg-btn pg-nav" aria-label="${aria}" ${disabled ? 'disabled' : `onclick="changePage(${target})"`}><i class="fa-solid ${label}"></i></button>`;
 
-                <span class="text-xs text-gray-500 min-w-[70px] text-center">
-                    第 ${currentPage} / ${totalPages} 頁
-                </span>
+            const slots = pageSlots(currentPage, totalPages).map(p =>
+                p === '…'
+                    ? `<button class="pg-btn pg-gap" aria-label="跳到指定頁" onclick="openPageJump(${totalPages})">…</button>`
+                    : `<button class="pg-btn${p === currentPage ? ' is-current' : ''}" onclick="changePage(${p})">${p}</button>`
+            ).join('');
 
-                <button
-                    onclick="changePage(${currentPage + 1})"
-                    ${currentPage === totalPages ? 'disabled' : ''}
-                    class="px-4 py-2 rounded-lg text-xs font-bold border border-gray-200 bg-white ${currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-neutral-700 active:bg-gray-100'}">
-                    下一頁
-                </button>
-            `;
+            container.innerHTML =
+                nav('fa-chevron-left', currentPage - 1, currentPage === 1, '上一頁') +
+                slots +
+                nav('fa-chevron-right', currentPage + 1, currentPage === totalPages, '下一頁');
+        }
+
+        // 頁數很多時：直接選要去的頁碼
+        function openPageJump(totalPages) {
+            const sheet = document.getElementById('optionSheet');
+            const list = document.getElementById('optionSheetList');
+            document.getElementById('optionSheetTitle').innerText = `跳到第幾頁（共 ${totalPages} 頁）`;
+            list.className = 'grid grid-cols-5 gap-2';
+            list.innerHTML = '';
+            for (let p = 1; p <= totalPages; p++) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'option-item page-jump-item' + (p === currentPage ? ' is-selected' : '');
+                btn.textContent = String(p);
+                btn.onclick = () => { close(); changePage(p); };
+                list.appendChild(btn);
+            }
+            const close = () => { sheet.classList.add('hidden'); sheet.onclick = null; document.getElementById('optionSheetCancel').onclick = null; };
+            document.getElementById('optionSheetCancel').onclick = close;
+            sheet.onclick = e => { if (e.target === sheet) close(); };
+            sheet.classList.remove('hidden');
         }
 
         function changePage(page) {
@@ -2155,7 +2197,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '31312e4e';
+        const APP_BUILD = 'a1f0572c';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
