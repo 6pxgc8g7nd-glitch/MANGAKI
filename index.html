@@ -105,12 +105,13 @@
         .app-container .genre-card[class*="ring-"] { background: var(--yellow) !important; box-shadow: 4px 4px 0 var(--red) !important; }
 
         /* 輸入框 */
-        .app-container input[type="text"], .app-container input[type="url"], .app-container input[type="number"] {
+        .app-container input[type="text"], .app-container input[type="url"], .app-container input[type="number"], .app-container input[type="date"], .app-container input[type="password"] {
             background: #ffffff !important;
             box-shadow: none !important;
             border: 2px solid var(--ink) !important;
             font-weight: 700;
         }
+        .app-container input[type="date"] { -webkit-appearance: none; appearance: none; min-height: 40px; }
         .app-container input:focus { box-shadow: 3px 3px 0 var(--red) !important; }
         .app-container label[class*="bg-[#fafafa]"] { background: #ffffff !important; box-shadow: none !important; }
 
@@ -417,6 +418,13 @@
                         </label>
                         <input type="number" id="inputProgress" min="0" step="1" placeholder="例如：45" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
                     </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-calendar-day text-[#a6051a] text-[10px]"></i>
+                            <span>更新日期（最新一話更新的日子）</span>
+                        </label>
+                        <input type="date" id="inputUpdated" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
+                    </div>
 
                     <button type="submit" class="w-full bg-[#a6051a] hover:bg-[#8a0416] active:scale-95 text-white font-bold py-2.5 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-xs">
                         <i class="fa-solid fa-plus text-xs"></i>
@@ -586,6 +594,13 @@
                         </label>
                         <input type="number" id="editInputProgress" min="0" step="1" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
                     </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-calendar-day text-[#a6051a] text-[10px]"></i>
+                            <span>更新日期（最新一話更新的日子）</span>
+                        </label>
+                        <input type="date" id="editInputUpdated" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
+                    </div>
                     <div class="flex space-x-2 pt-1">
                         <button type="button" onclick="closeEditModal()" class="flex-1 bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2 rounded-xl transition text-xs border border-[#a6051a]/40">取消</button>
                         <button type="submit" class="flex-1 bg-[#a6051a] hover:bg-[#8a0416] active:scale-95 text-white font-bold py-2 rounded-xl shadow transition text-xs">儲存修改</button>
@@ -661,6 +676,34 @@
             return Math.min(n, 99999);
         }
 
+
+        // 更新日期（YYYY-MM-DD，本地時間）
+        function todayStr(offsetDays = 0) {
+            const d = new Date();
+            d.setDate(d.getDate() + offsetDays);
+            const pad = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        }
+
+        function parseDateInput(value) {
+            if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return '';
+            return isNaN(new Date(value + 'T00:00:00').getTime()) ? '' : value;
+        }
+
+        function formatUpdated(value) {
+            const v = parseDateInput(value);
+            if (!v) return '';
+            if (v === todayStr()) return '今天';
+            if (v === todayStr(-1)) return '昨天';
+            const [y, m, d] = v.split('-');
+            return y === String(new Date().getFullYear()) ? `${Number(m)}/${Number(d)}` : `${y}/${Number(m)}/${Number(d)}`;
+        }
+
+        function setUpdatedDefault() {
+            const el = document.getElementById('inputUpdated');
+            if (el && !el.value) el.value = todayStr();
+        }
+
         function parseGenres(genreStr) {
             if (!genreStr || genreStr.trim() === '') return ['未分類'];
             return genreStr.split(/[,，]/).map(g => g.trim()).filter(g => g.length > 0);
@@ -713,6 +756,7 @@
             if(tabName === 'home') renderComics();
             if(tabName === 'categories') renderCategories();
             if(tabName === 'settings') ghRenderSettings();
+            if(tabName === 'add') setUpdatedDefault();
         }
         function goHome() {
             currentPage = 1;
@@ -733,10 +777,18 @@
         }
 
         function getFilteredComics() {
-            return comics.filter(c =>
+            const list = comics.filter(c =>
                 (activeGenreFilter === '全部' || parseGenres(c.genre).includes(activeGenreFilter)) &&
                 (activeStatusFilter === '全部' || (c.status || '連載中') === activeStatusFilter)
             );
+            // 連載中排在前面，並依更新日期由新到舊；已完結維持新增順序（排序是穩定的）
+            const isOngoing = c => (c.status || '連載中') === '連載中';
+            return list.sort((a, b) => {
+                const oa = isOngoing(a), ob = isOngoing(b);
+                if (oa !== ob) return oa ? -1 : 1;
+                if (!oa) return 0;
+                return (parseDateInput(b.updatedAt) || '').localeCompare(parseDateInput(a.updatedAt) || '');
+            });
         }
 
         function setStatusFilter(status) {
@@ -816,6 +868,9 @@
                 const statusBadge = comic.status ? `<span class="inline-block text-[9px] ${comic.status === '連載中' ? 'bg-[#a6051a]/10 text-[#a6051a]' : 'bg-gray-200 text-gray-700'} px-1.5 py-0.5 rounded border border-[#a6051a]/40 w-fit">${escapeHtml(comic.status)}</span>` : '';
 
                 // 閱讀進度：舊資料沒有 progress（undefined），不會顯示
+                const updatedLabel = formatUpdated(comic.updatedAt);
+                const updatedText = updatedLabel ? `<div class="text-[10px] text-neutral-600 flex items-center space-x-1"><i class="fa-regular fa-clock" style="font-size:9px"></i><span>${updatedLabel}更新</span></div>` : '';
+
                 const progressText = comic.progress > 0 ? `<span class="text-[10px] text-neutral-600 ml-auto">第 ${parseInt(comic.progress, 10)} 話</span>` : '';
 
                 return `
@@ -827,6 +882,7 @@
                                 ${statusBadge}
                                 ${progressText}
                             </div>
+                            ${updatedText}
                         </div>
                     </div>
                 `;
@@ -915,12 +971,14 @@
                 status: statusInput ? statusInput.value : '連載中',
                 url: safeUrl(document.getElementById('inputUrl').value.trim()),
                 coverUrl: safeUrl(document.getElementById('inputCoverUrl').value.trim()),
-                progress: parseProgress(document.getElementById('inputProgress').value)
+                progress: parseProgress(document.getElementById('inputProgress').value),
+                updatedAt: parseDateInput(document.getElementById('inputUpdated').value) || todayStr()
             };
 
             comics.unshift(newComic);
             saveComics();
             document.getElementById('addComicForm').reset();
+            setUpdatedDefault();
             showMsg('新增成功', '已成功將漫畫加入追蹤清單！');
             switchTab('home');
         }
@@ -944,7 +1002,7 @@
             }
         
             document.getElementById('modalTitle').innerText = comic.title;
-            document.getElementById('modalGenre').innerText = `分類：${comic.genre} | 狀態：${comic.status || '連載中'}`;
+            document.getElementById('modalGenre').innerText = `分類：${comic.genre} | 狀態：${comic.status || '連載中'}` + (comic.updatedAt ? ` | 更新：${formatUpdated(comic.updatedAt)}` : '');
         
             const urlBox = document.getElementById('modalUrlBox');
             const urlLink = document.getElementById('modalUrlLink');
@@ -972,6 +1030,7 @@
             document.getElementById('editInputUrl').value = comic.url || '';
             document.getElementById('editInputCoverUrl').value = comic.coverUrl || '';
             document.getElementById('editInputProgress').value = comic.progress > 0 ? comic.progress : '';
+            document.getElementById('editInputUpdated').value = parseDateInput(comic.updatedAt);
 
             const statusRadios = document.querySelectorAll('input[name="editInputStatus"]');
             statusRadios.forEach(radio => {
@@ -997,6 +1056,7 @@
             comics[comicIndex].url = safeUrl(document.getElementById('editInputUrl').value.trim());
             comics[comicIndex].coverUrl = safeUrl(document.getElementById('editInputCoverUrl').value.trim());
             comics[comicIndex].progress = parseProgress(document.getElementById('editInputProgress').value);
+            comics[comicIndex].updatedAt = parseDateInput(document.getElementById('editInputUpdated').value);
 
             saveComics();
             closeEditModal();
@@ -1188,6 +1248,13 @@ function validateComic(comic) {
         return false;
     }
 
+    if (
+        comic.updatedAt !== undefined &&
+        typeof comic.updatedAt !== 'string'
+    ) {
+        return false;
+    }
+
     return true;
 }
 
@@ -1315,7 +1382,8 @@ function importData(e) {
                     status: comic.status || '連載中',
                     url: safeUrl(comic.url),
                     coverUrl: safeUrl(comic.coverUrl),
-                    progress: parseProgress(comic.progress)
+                    progress: parseProgress(comic.progress),
+                    updatedAt: parseDateInput(comic.updatedAt)
                 }));
 
 
