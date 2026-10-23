@@ -513,25 +513,21 @@
                 </div>
 
                 <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 space-y-3">
-                    <div class="flex items-center space-x-1.5">
-                        <i class="fa-solid fa-rotate text-[#a6051a] text-sm"></i>
-                        <label class="block text-[11px] font-bold text-neutral-600">App 更新</label>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-1.5">
+                            <i class="fa-solid fa-rotate text-[#a6051a] text-sm"></i>
+                            <label class="block text-[11px] font-bold text-neutral-600">App 更新</label>
+                        </div>
+                        <span id="updateVersion" class="text-[10px] text-neutral-500"></span>
                     </div>
-                    <label class="flex items-center space-x-2 text-xs font-bold text-neutral-900 cursor-pointer">
-                        <input type="checkbox" id="autoUpdateToggle" checked onchange="setAutoUpdate(this.checked)" class="accent-[#a6051a] w-4 h-4">
-                        <span>有新版本時自動更新</span>
-                    </label>
-                    <p id="updateVersion" class="text-[10px] text-neutral-600"></p>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="manualCheckUpdate()" class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40 flex items-center justify-center space-x-1.5">
-                            <i class="fa-solid fa-cloud-arrow-down text-xs text-[#a6051a]"></i>
-                            <span>檢查更新</span>
-                        </button>
-                        <button onclick="forceRefreshApp()" class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40 flex items-center justify-center space-x-1.5">
-                            <i class="fa-solid fa-broom text-xs text-[#a6051a]"></i>
-                            <span>清除快取重載</span>
-                        </button>
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center space-x-2 text-xs font-bold text-neutral-900 cursor-pointer">
+                            <input type="checkbox" id="autoUpdateToggle" checked onchange="setAutoUpdate(this.checked)" class="accent-[#a6051a] w-4 h-4">
+                            <span>自動更新</span>
+                        </label>
+                        <button onclick="manualCheckUpdate()" class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold px-4 py-2 rounded-xl transition text-xs border border-[#a6051a]/40">檢查更新</button>
                     </div>
+                    <button onclick="forceRefreshApp()" class="text-[10px] text-neutral-500 underline">畫面不對？清除快取並重新載入</button>
                 </div>
 
                 <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 space-y-3">
@@ -1912,7 +1908,7 @@ function importData(e) {
 
         function renderUpdateInfo() {
             const v = document.getElementById('updateVersion');
-            if (v) v.innerText = `目前版本代碼：${versionLabel(loadedHash)}`;
+            if (v) v.innerText = `版本 ${versionLabel(loadedHash)}`;
             const t = document.getElementById('autoUpdateToggle');
             if (t) t.checked = autoUpdateEnabled();
         }
