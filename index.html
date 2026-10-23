@@ -333,6 +333,7 @@
         }
         .album-pick i { color: var(--red); }
         .album-pick.has-pages { background: var(--yellow); }
+        .album-pick.missing { background: #fff0f0; border-color: var(--red); color: var(--red); }
         .album-pick.busy { opacity: .6; pointer-events: none; }
         .album-pick:active { transform: scale(.97); }
         .link-pick .lp-ic { font-size: 11px; color: var(--red); margin-left: 4px; }
@@ -1641,6 +1642,7 @@
             document.getElementById('editInputGenre').value = comic.genre;
             initLinkEditor(document.getElementById('editLinks'), getLinks(comic));
             initAlbumEditor(document.getElementById('editAlbums'), getAlbums(comic));
+            markMissingAlbums(document.getElementById('editAlbums'));
             document.getElementById('editInputCoverUrl').value = comic.coverUrl || '';
             document.getElementById('editInputProgress').value = comic.progress > 0 ? comic.progress : '';
             const editDay = getUpdateDay(comic);
@@ -2342,7 +2344,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = '2848d852';
+        const APP_BUILD = 'fe71466c';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
@@ -2513,6 +2515,7 @@ function importData(e) {
         function setRowPages(row, n) {
             row.dataset.pages = String(n);
             const btn = row.querySelector('.album-pick');
+            btn.classList.remove('missing');
             btn.classList.toggle('has-pages', n > 0);
             btn.querySelector('.ap-text').textContent = n > 0 ? `${n} 張・重新選擇` : '選擇圖片';
         }
@@ -2532,6 +2535,21 @@ function importData(e) {
                 if (!box.children.length) addAlbumRow(box);
             };
             box.appendChild(row);
+        }
+
+        // 還原備份後，圖片資料不在這支手機上：在編輯視窗標出來，提示重新選擇
+        async function markMissingAlbums(box) {
+            try {
+                const stored = new Set(await listStoredEpisodes());
+                box.querySelectorAll('.album-row').forEach(row => {
+                    if ((Number(row.dataset.pages) || 0) > 0 && !stored.has(row.dataset.id)) {
+                        const btn = row.querySelector('.album-pick');
+                        btn.classList.add('missing');
+                        btn.classList.remove('has-pages');
+                        btn.querySelector('.ap-text').textContent = '圖片遺失・請重選';
+                    }
+                });
+            } catch (e) { console.error(e); }
         }
 
         function initAlbumEditor(box, albums) {
@@ -2563,12 +2581,12 @@ function importData(e) {
         // 點卡片可開啟的項目：先列內頁圖片集（直接在 App 內閱讀），再列網址
         function getEntries(comic) {
             return [
-                ...getAlbums(comic).map((a, i) => ({ type: 'album', label: a.label, albumIndex: i })),
+                ...getAlbums(comic).map((a, i) => ({ type: 'album', label: a.label, albumIndex: i, id: a.id })),
                 ...getLinks(comic).map(l => ({ type: 'link', label: l.label, url: l.url }))
             ];
         }
 
-        function openLinkSheet(comic, entries) {
+        function openLinkSheet(comic, entries, storedSet) {
             const sheet = document.getElementById('optionSheet');
             const list = document.getElementById('optionSheetList');
             document.getElementById('optionSheetTitle').innerText = `選擇要開啟的項目（共 ${entries.length} 項）`;
@@ -2584,7 +2602,8 @@ function importData(e) {
                 name.textContent = en.label || String(i + 1);
                 btn.appendChild(name);
                 const ic = document.createElement('i');
-                ic.className = en.type === 'album' ? 'fa-regular fa-images lp-ic' : 'fa-solid fa-link lp-ic';
+                const missing = en.type === 'album' && storedSet && !storedSet.has(en.id);
+                ic.className = missing ? 'fa-solid fa-triangle-exclamation lp-ic' : (en.type === 'album' ? 'fa-regular fa-images lp-ic' : 'fa-solid fa-link lp-ic');
                 btn.appendChild(ic);
                 btn.onclick = () => { close(); openEntry(comic.id, en); };
                 list.appendChild(btn);
@@ -2602,10 +2621,10 @@ function importData(e) {
                 return;
             }
             const ok = await openReader(comic, entry.albumIndex);
-            if (!ok) showMsg('找不到圖片', '這一集的圖片不在這支手機上（備份檔不含圖片）。請長按卡片重新選擇圖片。');
+            if (!ok) showMsg('找不到圖片', '這一集的圖片不在這支手機上（備份檔不含圖片）。請長按卡片，在「內頁圖片」按這一集的「重新選擇」，再選一次圖片。');
         }
 
-        function openComicLink(id) {
+        async function openComicLink(id) {
             const comic = comics.find(c => c.id === id);
             if (!comic) return;
             const entries = getEntries(comic);
@@ -2614,7 +2633,9 @@ function importData(e) {
             } else if (entries.length === 1) {
                 openEntry(id, entries[0]);
             } else {
-                openLinkSheet(comic, entries);
+                let stored = null;
+                try { stored = new Set(await listStoredEpisodes()); } catch (e) {}
+                openLinkSheet(comic, entries, stored);
             }
         }
 
