@@ -349,6 +349,47 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 space-y-3">
+                    <div class="flex items-center space-x-1.5">
+                        <i class="fa-brands fa-github text-[#a6051a] text-sm"></i>
+                        <label class="block text-[11px] font-bold text-neutral-600">自動備份到 GitHub</label>
+                    </div>
+                    <p class="text-[10px] text-neutral-600 leading-relaxed">
+                        每次新增、修改或刪除漫畫後，約 8 秒會自動把清單存成 JSON 並 commit 到你指定的儲存庫。
+                        請使用<strong>細粒度權杖（Fine-grained token）</strong>，只授權「一個<strong>私人</strong>儲存庫」的 Contents 讀寫。
+                        權杖只存在這支手機的瀏覽器，不會包含在備份檔裡。
+                    </p>
+                    <div>
+                        <label class="block text-[11px] font-bold text-neutral-600 mb-1">權杖 Token</label>
+                        <input type="password" id="ghToken" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_..." class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-neutral-600 mb-1">儲存庫（擁有者/名稱）</label>
+                        <input type="text" id="ghRepo" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="例如：yourname/toptoon-backup" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[11px] font-bold text-neutral-600 mb-1">分支</label>
+                            <input type="text" id="ghBranch" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="main" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-neutral-600 mb-1">檔案路徑</label>
+                            <input type="text" id="ghPath" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="toptoon_backup.json" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
+                        </div>
+                    </div>
+                    <label class="flex items-center space-x-2 text-xs font-bold text-neutral-900 cursor-pointer">
+                        <input type="checkbox" id="ghAuto" class="accent-[#a6051a] w-4 h-4">
+                        <span>資料變動後自動備份</span>
+                    </label>
+                    <p id="ghStatus" class="text-[10px] text-neutral-600 min-h-[14px]"></p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="ghSaveSettings()" class="col-span-2 bg-[#a6051a] hover:bg-[#8a0416] active:scale-95 text-white font-bold py-2.5 rounded-xl shadow-lg transition text-xs">儲存設定</button>
+                        <button onclick="ghBackupNow(true)" class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40">立即備份</button>
+                        <button onclick="ghRestore()" class="bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2.5 rounded-xl transition text-xs border border-[#a6051a]/40">從 GitHub 還原</button>
+                        <button onclick="ghClearSettings()" class="col-span-2 bg-white hover:bg-neutral-100 active:scale-95 text-[#a6051a] font-bold py-2 rounded-xl transition text-xs border border-[#a6051a]/40">清除權杖與設定</button>
+                    </div>
+                </div>
             </section>
 
         </main>
@@ -570,6 +611,7 @@
         function saveComics() {
             try {
                 localStorage.setItem('toptoon_comics', JSON.stringify(comics));
+                ghScheduleAuto();
             } catch (error) {
                 console.error('TOPTOON 儲存失敗：', error);
                 showMsg('儲存失敗', '無法寫入瀏覽器儲存空間，請先匯出備份。');
@@ -605,6 +647,7 @@
 
             if(tabName === 'home') renderComics();
             if(tabName === 'categories') renderCategories();
+            if(tabName === 'settings') ghRenderSettings();
         }
         function goHome() {
             currentPage = 1;
@@ -1248,6 +1291,235 @@ function importData(e) {
 }
 
 
+
+
+        // ================================
+        // GitHub 自動備份（權杖只存在本機 localStorage）
+        // ================================
+        const GH_KEY = 'toptoon_gh_cfg';
+        const GH_STATUS_KEY = 'toptoon_gh_status';
+        const GH_DELAY_MS = 8000;
+        let ghTimer = null;
+        let ghBusy = false;
+        let ghPending = false;
+
+        function ghLoad() {
+            try { return JSON.parse(localStorage.getItem(GH_KEY)) || {}; } catch (e) { return {}; }
+        }
+
+        function ghStoreCfg(cfg) {
+            try { localStorage.setItem(GH_KEY, JSON.stringify(cfg)); return true; } catch (e) { return false; }
+        }
+
+        function ghSetStatus(ok, text) {
+            const status = { ok, text, time: Date.now() };
+            try { localStorage.setItem(GH_STATUS_KEY, JSON.stringify(status)); } catch (e) {}
+            ghShowStatus();
+        }
+
+        function ghShowStatus() {
+            const el = document.getElementById('ghStatus');
+            if (!el) return;
+            let status = null;
+            try { status = JSON.parse(localStorage.getItem(GH_STATUS_KEY)); } catch (e) {}
+            if (!status) { el.innerText = ''; return; }
+            const t = new Date(status.time).toLocaleString('zh-TW', { hour12: false });
+            el.innerText = `${status.ok ? '✅' : '⚠️'} ${t}　${status.text}`;
+        }
+
+        function ghCfgError(cfg) {
+            if (!cfg.token) return '請輸入權杖';
+            if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(cfg.repo || '')) return '儲存庫格式要是「擁有者/名稱」';
+            if (!/^[A-Za-z0-9_.\/-]+$/.test(cfg.branch || '') || cfg.branch.includes('..')) return '分支名稱格式不正確';
+            if (!/^[A-Za-z0-9_.\/-]+$/.test(cfg.path || '') || cfg.path.includes('..') || cfg.path.startsWith('/')) return '檔案路徑格式不正確';
+            return '';
+        }
+
+        function ghHeaders(cfg, extra) {
+            return Object.assign({
+                'Authorization': `Bearer ${cfg.token}`,
+                'Accept': 'application/vnd.github+json',
+                'X-GitHub-Api-Version': '2022-11-28'
+            }, extra || {});
+        }
+
+        function ghFileUrl(cfg) {
+            return `https://api.github.com/repos/${cfg.repo}/contents/${cfg.path.split('/').map(encodeURIComponent).join('/')}`;
+        }
+
+        function ghToBase64(str) {
+            const bytes = new TextEncoder().encode(str);
+            let bin = '';
+            bytes.forEach(b => { bin += String.fromCharCode(b); });
+            return btoa(bin);
+        }
+
+        function ghFromBase64(b64) {
+            const bin = atob(String(b64).replace(/\s/g, ''));
+            return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0)));
+        }
+
+        function ghErrorText(status) {
+            if (status === 401) return '權杖無效或已過期';
+            if (status === 403) return '權限不足或被限流（需要 Contents: Read and write）';
+            if (status === 404) return '找不到儲存庫、分支，或權杖沒有這個儲存庫的權限';
+            if (status === 409 || status === 422) return '分支不存在或檔案有衝突，請確認分支名稱';
+            return `GitHub 回應錯誤（${status}）`;
+        }
+
+        function ghRenderSettings() {
+            const cfg = ghLoad();
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+            set('ghToken', cfg.token || '');
+            set('ghRepo', cfg.repo || '');
+            set('ghBranch', cfg.branch || '');
+            set('ghPath', cfg.path || '');
+            const auto = document.getElementById('ghAuto');
+            if (auto) auto.checked = !!cfg.auto;
+            ghShowStatus();
+        }
+
+        function ghReadForm() {
+            return {
+                token: document.getElementById('ghToken').value.trim(),
+                repo: document.getElementById('ghRepo').value.trim(),
+                branch: document.getElementById('ghBranch').value.trim() || 'main',
+                path: document.getElementById('ghPath').value.trim() || 'toptoon_backup.json',
+                auto: document.getElementById('ghAuto').checked
+            };
+        }
+
+        async function ghSaveSettings() {
+            const cfg = ghReadForm();
+            const err = ghCfgError(cfg);
+            if (err) { showMsg('設定不完整', err); return; }
+
+            // 驗證權杖與儲存庫；順便確認是不是私人儲存庫
+            try {
+                const res = await fetch(`https://api.github.com/repos/${cfg.repo}`, { headers: ghHeaders(cfg), cache: 'no-store' });
+                if (!res.ok) { showMsg('驗證失敗', ghErrorText(res.status)); return; }
+                const meta = await res.json();
+                if (meta.private === false) {
+                    const go = confirm('這是「公開」儲存庫，你的漫畫清單任何人都看得到。\n\n建議改用私人儲存庫。仍要使用嗎？');
+                    if (!go) return;
+                }
+            } catch (e) {
+                showMsg('連線失敗', '無法連到 GitHub，請確認網路後再試。');
+                return;
+            }
+
+            if (!ghStoreCfg(cfg)) { showMsg('儲存失敗', '無法寫入瀏覽器儲存空間。'); return; }
+            ghSetStatus(true, '設定已儲存');
+            showMsg('設定已儲存', cfg.auto ? '之後資料有變動會自動備份。' : '尚未開啟自動備份，可按「立即備份」手動備份。');
+        }
+
+        function ghClearSettings() {
+            if (!confirm('確定要清除權杖與 GitHub 備份設定嗎？\n\n（不會刪除 GitHub 上已有的備份）')) return;
+            clearTimeout(ghTimer);
+            ghTimer = null;
+            try { localStorage.removeItem(GH_KEY); localStorage.removeItem(GH_STATUS_KEY); } catch (e) {}
+            ghRenderSettings();
+            showMsg('已清除', '權杖與設定已從這支手機移除。');
+        }
+
+        // 資料變動後排程自動備份（saveComics 會呼叫）
+        function ghScheduleAuto() {
+            const cfg = ghLoad();
+            if (!cfg.auto || ghCfgError(cfg)) return;
+            clearTimeout(ghTimer);
+            ghTimer = setTimeout(() => { ghTimer = null; ghBackupNow(false); }, GH_DELAY_MS);
+        }
+
+        async function ghBackupNow(manual) {
+            const cfg = ghLoad();
+            const err = ghCfgError(cfg);
+            if (err) { if (manual) showMsg('尚未設定', err + '，請先儲存設定。'); return; }
+            if (!Array.isArray(comics) || comics.length === 0) {
+                ghSetStatus(false, '目前沒有漫畫資料，已略過備份（避免覆蓋雲端備份）');
+                if (manual) showMsg('沒有資料', '目前沒有漫畫資料可以備份。');
+                return;
+            }
+            if (ghBusy) { ghPending = true; return; }
+            ghBusy = true;
+            clearTimeout(ghTimer);
+            ghTimer = null;
+
+            try {
+                const content = JSON.stringify({
+                    app: 'TOPTOON 漫畫紀錄網',
+                    version: 1,
+                    count: comics.length,
+                    comics: comics
+                }, null, 2);
+
+                // 取得現有檔案的 sha（更新檔案需要）
+                const getRes = await fetch(`${ghFileUrl(cfg)}?ref=${encodeURIComponent(cfg.branch)}`, { headers: ghHeaders(cfg), cache: 'no-store' });
+                let sha;
+                if (getRes.ok) {
+                    const existing = await getRes.json();
+                    sha = existing.sha;
+                    if (existing.content && ghFromBase64(existing.content) === content) {
+                        ghSetStatus(true, '內容沒有變動，不需要備份');
+                        if (manual) showMsg('已是最新', 'GitHub 上的備份和目前資料一致。');
+                        return;
+                    }
+                } else if (getRes.status !== 404) {
+                    throw new Error(ghErrorText(getRes.status));
+                }
+
+                const putRes = await fetch(ghFileUrl(cfg), {
+                    method: 'PUT',
+                    headers: ghHeaders(cfg, { 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({
+                        message: `TOPTOON backup (${comics.length})`,
+                        content: ghToBase64(content),
+                        branch: cfg.branch,
+                        sha: sha
+                    })
+                });
+                if (!putRes.ok) throw new Error(ghErrorText(putRes.status));
+
+                ghSetStatus(true, `已備份 ${comics.length} 部漫畫`);
+                if (manual) showMsg('備份成功', `已備份 ${comics.length} 部漫畫到 GitHub。`);
+            } catch (error) {
+                console.error('TOPTOON GitHub 備份失敗：', error);
+                const text = error instanceof TypeError ? '無法連到 GitHub（可能沒有網路）' : error.message;
+                ghSetStatus(false, text);
+                if (manual) showMsg('備份失敗', text);
+            } finally {
+                ghBusy = false;
+                if (ghPending) { ghPending = false; ghScheduleAuto(); }
+            }
+        }
+
+        async function ghRestore() {
+            const cfg = ghLoad();
+            const err = ghCfgError(cfg);
+            if (err) { showMsg('尚未設定', err + '，請先儲存設定。'); return; }
+            try {
+                const res = await fetch(`${ghFileUrl(cfg)}?ref=${encodeURIComponent(cfg.branch)}`, {
+                    headers: ghHeaders(cfg, { 'Accept': 'application/vnd.github.raw+json' }),
+                    cache: 'no-store'
+                });
+                if (!res.ok) { showMsg('還原失敗', res.status === 404 ? 'GitHub 上還沒有備份檔。' : ghErrorText(res.status)); return; }
+                const text = await res.text();
+                // 沿用本機還原流程（含格式驗證與確認視窗）
+                const file = new File([text], 'github_backup.json', { type: 'application/json' });
+                importData({ target: { files: [file], value: '' } });
+            } catch (e) {
+                console.error('TOPTOON GitHub 還原失敗：', e);
+                showMsg('還原失敗', '無法連到 GitHub，請確認網路後再試。');
+            }
+        }
+
+        // 離開畫面（切到背景）時，若有等待中的備份就立刻送出
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden' && ghTimer) {
+                clearTimeout(ghTimer);
+                ghTimer = null;
+                ghBackupNow(false);
+            }
+        });
 
         // 自動更新：註冊 service worker，偵測到新版本就重新載入（資料在 localStorage，不受影響）
         if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {

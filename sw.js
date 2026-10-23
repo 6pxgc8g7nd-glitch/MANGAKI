@@ -22,6 +22,9 @@ self.addEventListener('fetch', event => {
     const req = event.request;
     if (req.method !== 'GET' || !req.url.startsWith('http')) return;
 
+    // GitHub API（含權杖的請求）不經過快取
+    if (new URL(req.url).hostname === 'api.github.com') return;
+
     const sameOrigin = new URL(req.url).origin === self.location.origin;
 
     if (sameOrigin) {
