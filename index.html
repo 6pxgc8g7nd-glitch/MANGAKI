@@ -524,9 +524,9 @@
                     <div>
                         <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
                             <i class="fa-solid fa-tag text-[#a6051a] text-[10px]"></i>
-                            <span>分類（用逗號或空格分隔多個）*</span>
+                            <span>分類（選填，用逗號或空格分隔多個）</span>
                         </label>
-                        <input type="text" id="inputGenre" required placeholder="" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
+                        <input type="text" id="inputGenre" placeholder="" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
                     </div>
 
                     <div>
@@ -735,9 +735,9 @@
                     <div>
                         <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
                             <i class="fa-solid fa-tag text-[#a6051a] text-[10px]"></i>
-                            <span>分類（用逗號或空格分隔多個）*</span>
+                            <span>分類（選填，用逗號或空格分隔多個）</span>
                         </label>
-                        <input type="text" id="editInputGenre" required class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
+                        <input type="text" id="editInputGenre" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
                     </div>
                     <div>
                         <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
@@ -1688,7 +1688,7 @@
         
             document.getElementById('modalTitle').innerText = comic.title;
             document.getElementById('modalReadBtn').classList.toggle('hidden', privacyMode);
-            document.getElementById('modalGenre').innerText = `分類：${comic.genre} | 狀態：${comic.status || '連載中'}` + (getUpdateDay(comic) !== null ? ` | 更新：每週${WEEKDAY_NAMES[getUpdateDay(comic)]}` : '');
+            document.getElementById('modalGenre').innerText = `分類：${(comic.genre || '').trim() || '未分類'} | 狀態：${comic.status || '連載中'}` + (getUpdateDay(comic) !== null ? ` | 更新：每週${WEEKDAY_NAMES[getUpdateDay(comic)]}` : '');
         
             const urlBox = document.getElementById('modalUrlBox');
             const urlLink = document.getElementById('modalUrlLink');
@@ -3261,7 +3261,7 @@ function importData(e) {
         const AUTO_UPDATE_KEY = 'mangaki_auto_update';
         // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
         // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-        const APP_BUILD = 'b5f9f502';
+        const APP_BUILD = 'baeaef0f';
         const RELOAD_TRY_KEY = 'mangaki_reload_try';
         let updateReloading = false;
 
