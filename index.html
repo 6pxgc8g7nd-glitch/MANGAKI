@@ -362,29 +362,16 @@
                     </div>
                     <p class="text-[10px] text-neutral-600 leading-relaxed">
                         每次新增、修改或刪除漫畫後，約 8 秒會自動把清單存成 JSON 並 commit 到你指定的儲存庫。
-                        請使用<strong>細粒度權杖（Fine-grained token）</strong>，只授權「一個<strong>私人</strong>儲存庫」的 Contents 讀寫。
-                        權杖只存在這支手機的瀏覽器，不會包含在備份檔裡。
+                        只要貼上<strong>細粒度權杖（Fine-grained token）</strong>，App 會自動找到它授權的儲存庫，不用另外輸入名稱。
+                        權杖請只授權「一個<strong>私人</strong>儲存庫」的 Contents 讀寫。權杖只存在這支手機的瀏覽器，不會包含在備份檔裡。
                     </p>
                     <div>
                         <label class="block text-[11px] font-bold text-neutral-600 mb-1">權杖 Token</label>
                         <input type="password" id="ghToken" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_..." class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
                     </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-neutral-600 mb-1">儲存庫（擁有者/名稱）</label>
-                        <input type="text" id="ghRepo" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="例如：yourname/toptoon-backup" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-[11px] font-bold text-neutral-600 mb-1">分支</label>
-                            <input type="text" id="ghBranch" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="main" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-neutral-600 mb-1">檔案路徑</label>
-                            <input type="text" id="ghPath" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="toptoon_backup.json" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
-                        </div>
-                    </div>
+                    <p id="ghRepoInfo" class="text-[11px] font-bold text-neutral-900"></p>
                     <label class="flex items-center space-x-2 text-xs font-bold text-neutral-900 cursor-pointer">
-                        <input type="checkbox" id="ghAuto" class="accent-[#a6051a] w-4 h-4">
+                        <input type="checkbox" id="ghAuto" checked class="accent-[#a6051a] w-4 h-4">
                         <span>資料變動後自動備份</span>
                     </label>
                     <p id="ghStatus" class="text-[10px] text-neutral-600 min-h-[14px]"></p>
@@ -1374,48 +1361,62 @@ function importData(e) {
 
         function ghRenderSettings() {
             const cfg = ghLoad();
-            const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
-            set('ghToken', cfg.token || '');
-            set('ghRepo', cfg.repo || '');
-            set('ghBranch', cfg.branch || '');
-            set('ghPath', cfg.path || '');
+            const tokenEl = document.getElementById('ghToken');
+            if (tokenEl) tokenEl.value = cfg.token || '';
             const auto = document.getElementById('ghAuto');
-            if (auto) auto.checked = !!cfg.auto;
+            if (auto) auto.checked = cfg.auto !== false;
+            const info = document.getElementById('ghRepoInfo');
+            if (info) info.innerText = cfg.repo ? `📦 備份到：${cfg.repo}（${cfg.branch}）` : '';
             ghShowStatus();
         }
 
-        function ghReadForm() {
-            return {
-                token: document.getElementById('ghToken').value.trim(),
-                repo: document.getElementById('ghRepo').value.trim(),
-                branch: document.getElementById('ghBranch').value.trim() || 'main',
-                path: document.getElementById('ghPath').value.trim() || 'toptoon_backup.json',
-                auto: document.getElementById('ghAuto').checked
-            };
+        // 只用權杖找出它授權的儲存庫；必須剛好一個，避免寫到不對的庫
+        async function ghDiscoverRepo(token) {
+            const res = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', {
+                headers: ghHeaders({ token }),
+                cache: 'no-store'
+            });
+            if (!res.ok) throw new Error(ghErrorText(res.status));
+            const repos = (await res.json()).filter(r => r.permissions && r.permissions.push);
+            if (repos.length === 0) throw new Error('這個權杖沒有任何儲存庫的寫入權限，請確認已加上 Contents: Read and write，並選了一個儲存庫。');
+            if (repos.length > 1) {
+                const names = repos.slice(0, 5).map(r => r.full_name).join('、');
+                throw new Error(`這個權杖授權了 ${repos.length} 個儲存庫（${names}${repos.length > 5 ? '…' : ''}）。請重新建立只選「一個」儲存庫的權杖。`);
+            }
+            return repos[0];
         }
 
         async function ghSaveSettings() {
-            const cfg = ghReadForm();
-            const err = ghCfgError(cfg);
-            if (err) { showMsg('設定不完整', err); return; }
+            const token = document.getElementById('ghToken').value.trim();
+            const auto = document.getElementById('ghAuto').checked;
+            if (!token) { showMsg('設定不完整', '請輸入權杖'); return; }
 
-            // 驗證權杖與儲存庫；順便確認是不是私人儲存庫
+            let repo;
             try {
-                const res = await fetch(`https://api.github.com/repos/${cfg.repo}`, { headers: ghHeaders(cfg), cache: 'no-store' });
-                if (!res.ok) { showMsg('驗證失敗', ghErrorText(res.status)); return; }
-                const meta = await res.json();
-                if (meta.private === false) {
-                    const go = confirm('這是「公開」儲存庫，你的漫畫清單任何人都看得到。\n\n建議改用私人儲存庫。仍要使用嗎？');
-                    if (!go) return;
-                }
+                repo = await ghDiscoverRepo(token);
             } catch (e) {
-                showMsg('連線失敗', '無法連到 GitHub，請確認網路後再試。');
+                const text = e instanceof TypeError ? '無法連到 GitHub，請確認網路後再試。' : e.message;
+                showMsg('驗證失敗', text);
                 return;
             }
 
+            if (repo.private === false) {
+                const go = confirm(`「${repo.full_name}」是「公開」儲存庫，你的漫畫清單任何人都看得到。\n\n建議改用私人儲存庫。仍要使用嗎？`);
+                if (!go) return;
+            }
+
+            const cfg = {
+                token,
+                repo: repo.full_name,
+                branch: repo.default_branch || 'main',
+                path: 'toptoon_backup.json',
+                auto
+            };
+            if (ghCfgError(cfg)) { showMsg('設定錯誤', ghCfgError(cfg)); return; }
             if (!ghStoreCfg(cfg)) { showMsg('儲存失敗', '無法寫入瀏覽器儲存空間。'); return; }
+            ghRenderSettings();
             ghSetStatus(true, '設定已儲存');
-            showMsg('設定已儲存', cfg.auto ? '之後資料有變動會自動備份。' : '尚未開啟自動備份，可按「立即備份」手動備份。');
+            showMsg('設定已儲存', `將備份到 ${cfg.repo}。` + (auto ? '之後資料有變動會自動備份。' : '尚未開啟自動備份，可按「立即備份」手動備份。'));
         }
 
         function ghClearSettings() {
