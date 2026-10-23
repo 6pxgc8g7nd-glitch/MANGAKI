@@ -2,7 +2,7 @@
 // 全域顯示：每個頁面都有；進入閱讀器時改成閱讀器專用的功能。
 const ASSIST_POS_KEY = 'mangaki_assist_pos';
 const ASSIST_ON_KEY = 'mangaki_assist_on';
-const ASSIST_SIZE = 50;
+const ASSIST_SIZE = 54;
 const ASSIST_GAP = 6;
 
 let assistBtn = null, assistPanel = null, assistBackdrop = null, assistIdleTimer = 0;
@@ -129,7 +129,8 @@ function initAssist() {
     assistBtn.id = 'assistBtn';
     assistBtn.setAttribute('role', 'button');
     assistBtn.setAttribute('aria-label', '快速功能');
-    assistBtn.innerHTML = '<i class="fa-solid fa-circle-dot"></i>';
+    // 圖案：黃色圓形 + 粗黑邊、對話框、網點與集中線（漫畫風）；用內嵌 SVG，不需要連網載入圖示
+    assistBtn.innerHTML = '<svg viewBox="0 0 64 64" width="100%" height="100%" aria-hidden="true"><defs><clipPath id="abClip"><circle cx="32" cy="32" r="28.5"/></clipPath><pattern id="abDots" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="3" cy="3" r="1.35" fill="#a6051a"/></pattern></defs><circle cx="32" cy="32" r="30" fill="#ffd400" stroke="#111" stroke-width="4"/><g clip-path="url(#abClip)"><rect x="0" y="36" width="64" height="30" fill="url(#abDots)" opacity=".9"/><g stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity=".85"><path d="M52.3 34.9L62.7 36.3"/><path d="M49.7 42.4L58.7 47.7"/><path d="M44.3 48.4L50.7 56.8"/><path d="M37.1 51.8L39.8 62.0"/><path d="M29.1 52.3L27.7 62.7"/><path d="M21.6 49.7L16.3 58.7"/><path d="M15.6 44.3L7.2 50.7"/><path d="M12.2 37.1L2.0 39.8"/><path d="M11.7 29.1L1.3 27.7"/><path d="M14.3 21.6L5.3 16.3"/><path d="M19.7 15.6L13.3 7.2"/><path d="M26.9 12.2L24.2 2.0"/><path d="M34.9 11.7L36.3 1.3"/><path d="M42.4 14.3L47.7 5.3"/><path d="M48.4 19.7L56.8 13.3"/><path d="M51.8 26.9L62.0 24.2"/></g></g><path d="M17.5 24.5Q17.5 15.5 26.5 15.5H37.5Q46.5 15.5 46.5 24.5V28.5Q46.5 37.5 37.5 37.5H31.5L23.5 45.5L25 37.5H26.5Q17.5 37.5 17.5 28.5Z" fill="#fff" stroke="#111" stroke-width="3" stroke-linejoin="round"/><circle cx="26" cy="26.5" r="2.4" fill="#111"/><circle cx="32" cy="26.5" r="2.4" fill="#111"/><circle cx="38" cy="26.5" r="2.4" fill="#111"/><path d="M49.5 9.5l1.9 4.6 4.6 1.9-4.6 1.9-1.9 4.6-1.9-4.6-4.6-1.9 4.6-1.9z" fill="#a6051a" stroke="#111" stroke-width="1.6" stroke-linejoin="round"/></svg>';
     // 放進 .app-container：它是固定定位、自成一個疊放層，放在外面的話層級再低也會蓋住視窗和閱讀器
     document.querySelector('.app-container').append(assistBackdrop, assistPanel, assistBtn);
 
