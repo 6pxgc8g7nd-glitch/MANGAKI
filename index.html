@@ -113,6 +113,7 @@
                             <span>漫畫名稱 *</span>
                         </label>
                         <input type="text" id="inputTitle" required placeholder="" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
+                        <p id="addDupTitle" class="dup-warn hidden" role="alert"></p>
                     </div>
 
                     <div>
@@ -155,6 +156,7 @@
                             <span>封面網址</span>
                         </label>
                         <input type="url" id="inputCoverUrl" placeholder="" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
+                        <p id="addDupCover" class="dup-warn hidden" role="alert"></p>
                     </div>
 
                     <button type="submit" class="w-full bg-[#a6051a] hover:bg-[#8a0416] active:scale-95 text-white font-bold py-2.5 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-xs">
@@ -318,6 +320,7 @@
                             <span>漫畫名稱 *</span>
                         </label>
                         <input type="text" id="editInputTitle" required class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
+                        <p id="editDupTitle" class="dup-warn hidden" role="alert"></p>
                     </div>
                     <div>
                         <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
@@ -356,6 +359,7 @@
                             <span>封面網址</span>
                         </label>
                         <input type="url" id="editInputCoverUrl" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
+                        <p id="editDupCover" class="dup-warn hidden" role="alert"></p>
                     </div>
                     <div class="flex space-x-2 pt-1">
                         <button type="button" onclick="closeEditModal()" class="flex-1 bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2 rounded-xl transition text-xs border border-[#a6051a]/40">取消</button>

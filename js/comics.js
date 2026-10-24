@@ -259,6 +259,7 @@ function changeCatPage(page) {
 
 function handleAddNewComic(e) {
     e.preventDefault();
+    if (checkDuplicates('add')) return;   // 名稱或封面重複：不能儲存（紅字已顯示）
     const statusInput = document.querySelector('input[name="inputStatus"]:checked');
     const addLinksValue = readLinks(document.getElementById('addLinks'));
     const newComic = {
@@ -275,6 +276,7 @@ function handleAddNewComic(e) {
     comics.unshift(newComic);
     saveComics();
     document.getElementById('addComicForm').reset();
+    checkDuplicates('add');   // 清掉紅字
     initLinkEditor(document.getElementById('addLinks'), []);
     syncCustomSelects();
     showMsg('新增成功', '已成功將漫畫加入追蹤清單！');
@@ -338,6 +340,7 @@ function openEditModal() {
     });
 
     document.getElementById('editModal').classList.remove('hidden');
+    checkDuplicates('edit');
 }
 
 function closeEditModal() {
@@ -346,6 +349,7 @@ function closeEditModal() {
 
 function handleUpdateComic(e) {
     e.preventDefault();
+    if (checkDuplicates('edit')) return;
     const comicIndex = comics.findIndex(c => c.id === activeComicId);
     if (comicIndex === -1) return;
 
@@ -384,3 +388,65 @@ async function deleteCurrentComic() {
 // ================================
 // 資料備份功能
 // ================================
+
+// ===== 重複偵測：名稱、封面網址不能和別部漫畫重複 =====
+// 封面網址的比對：忽略 http／https、網域大小寫、結尾的斜線與 # 後面的部分
+function normCoverUrl(url) {
+    const u = safeUrl(String(url || '').trim());
+    if (!u) return '';
+    try {
+        const p = new URL(u);
+        return p.hostname.toLowerCase() + p.pathname.replace(/\/+$/, '') + p.search;
+    } catch (e) { return u.toLowerCase(); }
+}
+
+// 找出和這個名稱／封面重複的另一部漫畫。excludeId：編輯時排除自己
+function findDuplicates(title, coverUrl, excludeId) {
+    const nt = normTitle(title), nc = normCoverUrl(coverUrl);
+    const out = { name: null, cover: null };
+    for (const c of comics) {
+        if (c.id === excludeId) continue;
+        if (nt && !out.name && normTitle(c.title) === nt) out.name = c;
+        if (nc && !out.cover && normCoverUrl(c.coverUrl) === nc) out.cover = c;
+        if (out.name && out.cover) break;
+    }
+    return out;
+}
+
+// 檢查表單（'add' 或 'edit'），顯示紅字並鎖住儲存按鈕；有重複時回傳 true
+function checkDuplicates(kind) {
+    const edit = kind === 'edit';
+    const q = id => document.getElementById(id);
+    const titleEl = q(edit ? 'editInputTitle' : 'inputTitle'), coverEl = q(edit ? 'editInputCoverUrl' : 'inputCoverUrl');
+    const nameWarn = q(edit ? 'editDupTitle' : 'addDupTitle'), coverWarn = q(edit ? 'editDupCover' : 'addDupCover');
+    const submit = document.querySelector(edit ? '#editComicForm button[type="submit"]' : '#addComicForm button[type="submit"]');
+    if (!titleEl || !coverEl || !nameWarn || !coverWarn || !submit) return false;
+
+    const self = edit ? comics.find(c => c.id === activeComicId) : null;
+    const title = titleEl.value, cover = coverEl.value;
+    const dup = findDuplicates(title, cover, self && self.id);
+    // 編輯時，沒改過的欄位不檢查：以前就重複的舊資料不會讓你連別的欄位都改不了
+    if (self && normTitle(title) === normTitle(self.title)) dup.name = null;
+    if (self && normCoverUrl(cover) === normCoverUrl(self.coverUrl)) dup.cover = null;
+
+    // 遮蔽模式下不要把真實名稱顯示出來
+    const label = c => privacyMode ? '' : `「${c.title}」`;
+    const show = (el, input, other, text) => {
+        el.textContent = other ? text(other) : '';
+        el.classList.toggle('hidden', !other);
+        input.classList.toggle('input-dup', !!other);
+    };
+    show(nameWarn, titleEl, dup.name, c => `已有同名的漫畫${label(c)}，無法儲存`);
+    show(coverWarn, coverEl, dup.cover, c => `這張封面已被另一部漫畫${label(c)}使用，無法儲存`);
+    const blocked = !!(dup.name || dup.cover);
+    submit.disabled = blocked;
+    return blocked;
+}
+
+function initDuplicateCheck() {
+    [['inputTitle', 'add'], ['inputCoverUrl', 'add'], ['editInputTitle', 'edit'], ['editInputCoverUrl', 'edit']].forEach(([id, kind]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        ['input', 'change'].forEach(ev => el.addEventListener(ev, () => checkDuplicates(kind)));
+    });
+}

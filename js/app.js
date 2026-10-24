@@ -176,6 +176,7 @@ window.onload = function() {
     initLinkEditor(document.getElementById('addLinks'), []);
     initCardGestures();
     initSettingsLongPress();
+    initDuplicateCheck();
     renderComics();
     rdRefreshFlags();
 };

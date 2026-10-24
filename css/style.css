@@ -408,3 +408,9 @@ main > section[data-enter="left"]:not(.hidden)  { animation: enterFromLeft  .32s
 
 /* 設定按鈕可長按（顯示隱藏的設定）：不要跳出系統的選取／預覽選單 */
 #nav-settings { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+
+/* 重複偵測：紅字提示、紅框、鎖住儲存按鈕 */
+.dup-warn { color: #d00000; font-size: 11px; font-weight: 800; margin-top: 5px; line-height: 1.4; }
+.input-dup { border-color: #d00000 !important; box-shadow: inset 0 0 0 1px #d00000; }
+#addComicForm button[type="submit"]:disabled,
+#editComicForm button[type="submit"]:disabled { opacity: .4; cursor: not-allowed; filter: grayscale(.4); transform: none; }
