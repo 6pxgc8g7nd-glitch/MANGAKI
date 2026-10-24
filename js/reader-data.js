@@ -430,8 +430,36 @@ async function rdSaveFile(blob, name, title) {
     return true;
 }
 
-// 一個 zip 的大小上限：全部塞進記憶體 iPhone 會直接把網頁關掉，所以分成好幾個小檔
-const RD_EXPORT_PART_BYTES = 100 * 1024 * 1024;
+// 一個 zip 的大小上限（預設 1GB）。打包時整個檔案都在記憶體裡，尖峰約是檔案大小的兩倍，
+// iPhone 撐不住就會把網頁關掉。所以：打包期間會留一個記號，下次開啟時如果記號還在
+// （代表上次打包到一半當掉了），就自動把單檔上限減半，最小 100MB。
+const RD_PART_KEY = 'mangaki_export_part_mb';
+const RD_INFLIGHT_KEY = 'mangaki_export_inflight';
+const RD_PART_DEFAULT_MB = 1024;
+const RD_PART_MIN_MB = 100;
+
+function rdPartMB() {
+    try {
+        const raw = localStorage.getItem(RD_PART_KEY);
+        const v = raw === null || raw === '' ? NaN : Number(raw);   // 沒設定過就用預設，不要讓 Number(null)=0 混進來
+        if (v >= RD_PART_MIN_MB && v <= RD_PART_DEFAULT_MB) return v;
+    } catch (e) {}
+    return RD_PART_DEFAULT_MB;
+}
+
+function rdCheckCrashedExport() {
+    try {
+        if (localStorage.getItem(RD_INFLIGHT_KEY) !== '1') return;
+        localStorage.removeItem(RD_INFLIGHT_KEY);
+        const before = rdPartMB(), after = Math.max(RD_PART_MIN_MB, Math.floor(before / 2));
+        localStorage.setItem(RD_PART_KEY, String(after));
+        const fmt = mb => mb >= 1024 ? `${(mb / 1024).toFixed(mb % 1024 ? 1 : 0)}GB` : `${mb}MB`;
+        showMsg('上次圖片備份中斷了', before === after
+            ? `上次打包到一半網頁被關掉，可能是手機記憶體不夠。目前單個檔案已經是最小的 ${fmt(after)}，請關掉其他 App 後再試一次。`
+            : `上次打包到一半網頁被關掉，可能是手機記憶體不夠。已自動把每個備份檔縮小到 ${fmt(after)}（原本 ${fmt(before)}），請再按一次備份。`);
+    } catch (e) {}
+}
+const rdMarkPacking = on => { try { on ? localStorage.setItem(RD_INFLIGHT_KEY, '1') : localStorage.removeItem(RD_INFLIGHT_KEY); } catch (e) {} };
 
 // 標記這些章節「已備份」（章節存進去之後內容不會再變，所以用整話為單位就夠了）
 async function rdMarkBackedUp(ids) {
@@ -468,6 +496,7 @@ async function rdExportAll(mode = 'all') {
     const idle = onlyNew ? '備份新增的圖片' : '備份全部圖片（完整備份）';
     rdFallbackWarned = false;
     rdExporting = true;
+    const partBytes = rdPartMB() * 1024 * 1024;
     try {
         // 只匯出清單裡還存在、而且有圖片的漫畫；「新增」模式再濾掉備份過的章節
         const jobs = [];
@@ -517,7 +546,8 @@ async function rdExportAll(mode = 'all') {
             partNo++;
             let parts = [], central = [], offset = 0, bytes = 0;
             const finished = new Set();   // 這個檔案裡已經完整收進去的章節
-            while (!next.done && bytes < RD_EXPORT_PART_BYTES) {
+            rdMarkPacking(true);          // 打包期間記憶體最吃緊；如果這時網頁被關掉，記號會留著
+            while (!next.done && bytes < partBytes) {
                 const pg = next.value;
                 text.textContent = `打包中（${++done}/${total}）…`;
                 const rec = await rdRun('pages', 'readonly', tx => tx.objectStore('pages').get(rdPageKey(pg.id, pg.i)));
@@ -556,6 +586,7 @@ async function rdExportAll(mode = 'all') {
             parts.push(end.buffer);
             const blob = new Blob(parts, { type: 'application/zip' });
             parts = null;
+            rdMarkPacking(false);         // 打包完成，之後只是等你按儲存
             const single = partNo === 1 && next.done;
             const name = single ? `${baseName}.zip` : `${baseName}_${String(partNo).padStart(2, '0')}.zip`;
             text.textContent = idle;
@@ -577,6 +608,7 @@ async function rdExportAll(mode = 'all') {
     } catch (e) {
         showMsg('匯出失敗', e && e.name === 'QuotaExceededError' ? '記憶體或空間不足，請減少圖片後再匯出。' : (e.message || '無法打包'));
     } finally {
+        rdMarkPacking(false);
         rdExporting = false;
         text.textContent = idle;
         rdUpdateBackupInfo();

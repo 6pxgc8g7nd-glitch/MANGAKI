@@ -177,6 +177,7 @@ window.onload = function() {
     initCardGestures();
     initSettingsLongPress();
     initDuplicateCheck();
+    rdCheckCrashedExport();
     renderComics();
     rdRefreshFlags();
 };
