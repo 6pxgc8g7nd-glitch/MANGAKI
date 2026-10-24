@@ -123,7 +123,7 @@ function renderComics() {
         const coverSrc = privacyMode ? decoyCover(comic.id, decoyMap.get(comic.id)) : safeUrl(comic.coverUrl);
         const coverDisplay = coverSrc ?
             `<div class="w-full cover-box bg-[#fafafa] rounded-xl overflow-hidden relative ">
-                <img src="${escapeHtml(coverSrc)}" referrerpolicy="no-referrer" loading="lazy" onload="fitCover(this)" class="w-full h-full object-contain group-hover:scale-105 transition duration-300" onerror="handleImgError(this)">
+                <img src="${escapeHtml(coverSrc)}" referrerpolicy="no-referrer" loading="lazy" class="w-full h-full object-contain group-hover:scale-105 transition duration-300" onerror="handleImgError(this)">
              </div>` :
             `<div class="w-full cover-box bg-[#fafafa] rounded-xl flex items-center justify-center text-3xl relative">
                 <i class="fa-solid fa-book-open" style="color:#b5b5b5"></i>

@@ -1,12 +1,5 @@
 // 共用介面：訊息與確認視窗、自訂下拉選單、捲動
 
-// 封面框依圖片比例調整（限制在 3:4 ～ 1:1 之間），圖片完整顯示、不裁切
-function fitCover(imgEl) {
-    if (!imgEl.naturalWidth || !imgEl.naturalHeight || !imgEl.parentElement) return;
-    const ratio = Math.min(1, Math.max(0.75, imgEl.naturalWidth / imgEl.naturalHeight));
-    imgEl.parentElement.style.aspectRatio = String(ratio);
-}
-
 function handleImgError(imgEl) {
     // http 圖片在 https 頁面會被瀏覽器擋下，先試一次 https
     if (imgEl.src.startsWith('http://') && !imgEl.dataset.retried) {
