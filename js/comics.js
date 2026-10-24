@@ -28,7 +28,7 @@ function switchTab(tabName) {
     scrollMainTop();
     if(tabName === 'home') renderComics();
     if(tabName === 'categories') renderCategories();
-    if(tabName === 'settings') { ghRenderSettings(); renderUpdateInfo(); }
+    if(tabName === 'settings') { ghRenderSettings(); renderUpdateInfo(); if (typeof rdUpdateBackupInfo === 'function') rdUpdateBackupInfo(); }
 }
 function goHome() {
     currentPage = 1;

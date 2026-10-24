@@ -17,6 +17,7 @@ function rdFlagsChanged() {
 }
 
 async function rdRefreshFlags() {
+    rdUpdateBackupInfo();   // （放在最前面：不管讀取是否成功都更新設定頁的備份說明）
     try {
         const all = await rdRun('chapters', 'readonly', tx => tx.objectStore('chapters').getAll());
         rdChapterCount.clear();
@@ -158,7 +159,7 @@ async function rdRenderList() {
 }
 
 // 存一話：getPage(i) 回傳 { buf, type }；一頁一頁寫入，不會一次佔滿記憶體
-async function rdSaveChapter(label, count, getPage, order, onProgress) {
+async function rdSaveChapter(label, count, getPage, order, onProgress, backedUp) {
     const id = `${rdComicId}-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
     try {
         for (let i = 0; i < count; i++) {
@@ -166,7 +167,7 @@ async function rdSaveChapter(label, count, getPage, order, onProgress) {
             const { buf, type } = await getPage(i);
             await rdRun('pages', 'readwrite', tx => tx.objectStore('pages').put({ k: rdPageKey(id, i), buf, type }));
         }
-        await rdRun('chapters', 'readwrite', tx => tx.objectStore('chapters').put({ id, comicId: rdComicId, label, count, addedAt: Date.now() + (order || 0) }));
+        await rdRun('chapters', 'readwrite', tx => tx.objectStore('chapters').put({ id, comicId: rdComicId, label, count, addedAt: Date.now() + (order || 0), ...(backedUp ? { backedUp: Date.now() } : {}) }));
     } catch (e) {
         rdRun('pages', 'readwrite', tx => tx.objectStore('pages').delete(IDBKeyRange.bound(`${id}#`, `${id}#￿`))).catch(() => {});
         throw e;
@@ -368,7 +369,7 @@ async function rdImportBatch(input) {
                 await rdSaveChapter(label, ch.items.length, async i => ({
                     buf: await zipData(ch.items[i].file, ch.items[i].e),
                     type: RD_IMG_TYPES[ch.items[i].ext]
-                }), k, (n, total) => { text.textContent = `匯入中 ${ci + 1}/${targets.length} 部（${n}/${total}）…`; });
+                }), k, (n, total) => { text.textContent = `匯入中 ${ci + 1}/${targets.length} 部（${n}/${total}）…`; }, true);
                 done++; pagesDone += ch.items.length;
             }
         }
@@ -432,19 +433,56 @@ async function rdSaveFile(blob, name, title) {
 // 一個 zip 的大小上限：全部塞進記憶體 iPhone 會直接把網頁關掉，所以分成好幾個小檔
 const RD_EXPORT_PART_BYTES = 100 * 1024 * 1024;
 
-async function rdExportAll() {
-    const text = document.getElementById('rdExportText');
-    const idle = '匯出全部圖片為 zip';
-    rdFallbackWarned = false;
+// 標記這些章節「已備份」（章節存進去之後內容不會再變，所以用整話為單位就夠了）
+async function rdMarkBackedUp(ids) {
+    if (!ids.length) return;
+    await rdRun('chapters', 'readwrite', tx => {
+        const store = tx.objectStore('chapters');
+        ids.forEach(id => {
+            const req = store.get(id);
+            req.onsuccess = () => { if (req.result) store.put({ ...req.result, backedUp: Date.now() }); };
+        });
+    });
+}
+
+// 設定頁的小字：目前有幾話圖片、還有幾話沒備份過
+async function rdUpdateBackupInfo() {
+    const el = document.getElementById('rdBackupInfo');
+    if (!el) return;
     try {
-        // 只匯出清單裡還存在、而且有圖片的漫畫
+        const all = await rdRun('chapters', 'readonly', tx => tx.objectStore('chapters').getAll()) || [];
+        if (!all.length) { el.textContent = '還沒有匯入任何圖片。'; return; }
+        const pending = all.filter(ch => !ch.backedUp);
+        const pages = list => list.reduce((n, ch) => n + (ch.count || 0), 0);
+        el.textContent = `共 ${all.length} 話、${pages(all)} 頁；` + (pending.length ? `還沒備份過：${pending.length} 話、${pages(pending)} 頁。` : '全部都已備份過。');
+    } catch (e) { el.textContent = ''; }
+}
+
+let rdExporting = false;
+
+// mode：'new' 只備份還沒備份過的（匯出成功後才會標記）；'all' 完整備份，全部重新匯出
+async function rdExportAll(mode = 'all') {
+    if (rdExporting) return;
+    const onlyNew = mode === 'new';
+    const text = document.getElementById(onlyNew ? 'rdExportNewText' : 'rdExportAllText');
+    const idle = onlyNew ? '備份新增的圖片' : '備份全部圖片（完整備份）';
+    rdFallbackWarned = false;
+    rdExporting = true;
+    try {
+        // 只匯出清單裡還存在、而且有圖片的漫畫；「新增」模式再濾掉備份過的章節
         const jobs = [];
         for (const comic of comics) {
             if (!rdChapterCount.has(comic.id)) continue;
-            const chapters = await rdGetChapters(comic.id);
+            let chapters = await rdGetChapters(comic.id);
+            if (onlyNew) chapters = chapters.filter(ch => !ch.backedUp);
             if (chapters.length) jobs.push({ comic, chapters });
         }
-        if (!jobs.length) { showMsg('沒有圖片', '還沒有任何漫畫匯入過圖片。'); return; }
+        if (!jobs.length) {
+            showMsg(onlyNew ? '沒有新的圖片' : '沒有圖片', onlyNew
+                ? '所有圖片都已經備份過了。\\n\\n如果想重新備份全部，請按「備份全部圖片（完整備份）」。'
+                : '還沒有任何漫畫匯入過圖片。');
+            return;
+        }
         const total = jobs.reduce((n, j) => n + j.chapters.reduce((m, c) => m + c.count, 0), 0);
         const chapterTotal = jobs.reduce((n, j) => n + j.chapters.length, 0);
         if (total > 65000) throw new Error('頁數太多（超過 65000 頁），請先刪掉一部分。');
@@ -461,7 +499,7 @@ async function rdExportAll() {
                     let folder = safeName(ch.label), n = 2;
                     while (usedFolder.has(folder)) folder = `${safeName(ch.label)} (${n++})`;
                     usedFolder.add(folder);
-                    for (let i = 0; i < ch.count; i++) yield { top, folder, id: ch.id, i };
+                    for (let i = 0; i < ch.count; i++) yield { top, folder, id: ch.id, i, last: i === ch.count - 1 };
                 }
             }
         })();
@@ -470,16 +508,21 @@ async function rdExportAll() {
         const dosNow = new Date();
         const dosTime = (dosNow.getHours() << 11) | (dosNow.getMinutes() << 5) | (dosNow.getSeconds() >> 1);
         const dosDate = ((dosNow.getFullYear() - 1980) << 9) | ((dosNow.getMonth() + 1) << 5) | dosNow.getDate();
-        let next = pages.next(), done = 0, partNo = 0, savedPages = 0;
+        // 檔名帶日期，每次備份的檔案不會互相覆蓋
+        const stamp = `${dosNow.getFullYear()}${String(dosNow.getMonth() + 1).padStart(2, '0')}${String(dosNow.getDate()).padStart(2, '0')}`;
+        const baseName = `MANGAKI_圖片_${onlyNew ? '新增' : '全部'}_${stamp}`;
+        let next = pages.next(), done = 0, partNo = 0, savedPages = 0, savedChapters = 0;
 
         while (!next.done) {
             partNo++;
             let parts = [], central = [], offset = 0, bytes = 0;
+            const finished = new Set();   // 這個檔案裡已經完整收進去的章節
             while (!next.done && bytes < RD_EXPORT_PART_BYTES) {
                 const pg = next.value;
                 text.textContent = `打包中（${++done}/${total}）…`;
                 const rec = await rdRun('pages', 'readonly', tx => tx.objectStore('pages').get(rdPageKey(pg.id, pg.i)));
                 next = pages.next();
+                if (pg.last) finished.add(pg.id);
                 if (!rec) continue;
                 const data = new Uint8Array(rec.buf || await rec.blob.arrayBuffer());
                 const name = enc.encode(`${pg.top}/${pg.folder}/${String(pg.i + 1).padStart(4, '0')}.${EXT_OF_TYPE[rec.type] || 'jpg'}`);
@@ -514,22 +557,29 @@ async function rdExportAll() {
             const blob = new Blob(parts, { type: 'application/zip' });
             parts = null;
             const single = partNo === 1 && next.done;
-            const name = single ? 'MANGAKI_圖片.zip' : `MANGAKI_圖片_${String(partNo).padStart(2, '0')}.zip`;
+            const name = single ? `${baseName}.zip` : `${baseName}_${String(partNo).padStart(2, '0')}.zip`;
             text.textContent = idle;
             // 分享／下載要由「剛按下的按鈕」觸發，iOS 才允許，所以每個檔案都再問一次
             const head1 = single
-                ? `${jobs.length} 部漫畫、${chapterTotal} 話、${central.length} 頁，共 ${(bytes / 1048576).toFixed(1)} MB。`
-                : `第 ${partNo} 個檔案：${central.length} 頁，${(bytes / 1048576).toFixed(1)} MB。\n${next.done ? '這是最後一個。' : '後面還有，儲存完會繼續打包下一個。'}`;
-            const ok = await showConfirm(single ? '打包完成' : `分卷匯出（${partNo}）`, `${head1}\n\n按「儲存」選擇要存到哪裡。\n檔名：${name}`, { okText: '儲存', cancelText: '停止' });
+                ? `${onlyNew ? '新增的' : '全部的'} ${jobs.length} 部漫畫、${chapterTotal} 話、${central.length} 頁，共 ${(bytes / 1048576).toFixed(1)} MB。`
+                : `第 ${partNo} 個檔案：${central.length} 頁，${(bytes / 1048576).toFixed(1)} MB。\\n${next.done ? '這是最後一個。' : '後面還有，儲存完會繼續打包下一個。'}`;
+            const ok = await showConfirm(single ? '打包完成' : `分卷匯出（${partNo}）`, `${head1}\\n\\n按「儲存」選擇要存到哪裡。\\n檔名：${name}`, { okText: '儲存', cancelText: '停止' });
             if (!ok) return;
             if (!(await rdSaveFile(blob, name, 'MANGAKI 圖片'))) return;
             savedPages += central.length;
+            // 這個檔案存好了，裡面收滿的章節才算「已備份」；中途取消的不會被誤標
+            await rdMarkBackedUp([...finished]);
+            savedChapters += finished.size;
         }
-        if (partNo > 1) showMsg('匯出完成', `共 ${partNo} 個 zip、${savedPages} 頁。\n\n匯入時可以一次選全部檔案。`);
+        showMsg('備份完成', `${partNo > 1 ? `共 ${partNo} 個 zip、` : ''}${savedChapters} 話、${savedPages} 頁已備份。` +
+            (partNo > 1 ? '\\n\\n匯入時可以一次選全部檔案。' : '') +
+            (onlyNew ? '\\n\\n之後再按「備份新增的圖片」，只會備份新匯入的。' : ''));
     } catch (e) {
         showMsg('匯出失敗', e && e.name === 'QuotaExceededError' ? '記憶體或空間不足，請減少圖片後再匯出。' : (e.message || '無法打包'));
     } finally {
+        rdExporting = false;
         text.textContent = idle;
+        rdUpdateBackupInfo();
     }
 }
 
