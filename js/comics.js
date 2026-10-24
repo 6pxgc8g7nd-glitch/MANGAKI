@@ -155,10 +155,13 @@ function renderPagination(totalPages) {
     const container = document.getElementById('paginationContainer');
     if (!container) return;
 
+    const info = document.getElementById('paginationInfo');
     if (totalPages <= 1) {
         container.innerHTML = '';
+        if (info) info.textContent = '';
         return;
     }
+    if (info) info.textContent = `第 ${currentPage} / ${totalPages} 頁　·　共 ${getFilteredComics().length} 部`;
 
     const nav = (label, target, disabled, aria) =>
         `<button class="pg-btn pg-nav" aria-label="${aria}" ${disabled ? 'disabled' : `onclick="changePage(${target})"`}><i class="fa-solid ${label}"></i></button>`;
@@ -166,7 +169,9 @@ function renderPagination(totalPages) {
     const slots = pageSlots(currentPage, totalPages).map(p =>
         p === '…'
             ? `<button class="pg-btn pg-gap" aria-label="跳到指定頁" onclick="openPageJump(${totalPages})">…</button>`
-            : `<button class="pg-btn${p === currentPage ? ' is-current' : ''}" onclick="changePage(${p})">${p}</button>`
+            : (p === currentPage
+                ? `<button class="pg-btn is-current" aria-current="page" aria-label="目前第 ${p} 頁">${p}</button>`
+                : `<button class="pg-btn" aria-label="第 ${p} 頁" onclick="changePage(${p})">${p}</button>`)
     ).join('');
 
     container.innerHTML =
@@ -240,13 +245,17 @@ function renderCategories() {
 function renderCatPagination(total) {
     const box = document.getElementById('catPagination');
     if (!box) return;
-    if (total <= 1) { box.innerHTML = ''; return; }
+    const info = document.getElementById('catPaginationInfo');
+    if (total <= 1) { box.innerHTML = ''; if (info) info.textContent = ''; return; }
+    if (info) info.textContent = `第 ${catPage} / ${total} 頁`;
     const nav = (icon, target, disabled, aria) =>
         `<button class="pg-btn pg-nav" aria-label="${aria}" ${disabled ? 'disabled' : `onclick="changeCatPage(${target})"`}><i class="fa-solid ${icon}"></i></button>`;
     const slots = pageSlots(catPage, total).map(p =>
         p === '…'
             ? `<button class="pg-btn pg-gap" aria-label="跳到指定頁" onclick="openPageJump(${total}, catPage, changeCatPage)">…</button>`
-            : `<button class="pg-btn${p === catPage ? ' is-current' : ''}" onclick="changeCatPage(${p})">${p}</button>`
+            : (p === catPage
+                ? `<button class="pg-btn is-current" aria-current="page" aria-label="目前第 ${p} 頁">${p}</button>`
+                : `<button class="pg-btn" aria-label="第 ${p} 頁" onclick="changeCatPage(${p})">${p}</button>`)
     ).join('');
     box.innerHTML = nav('fa-chevron-left', catPage - 1, catPage === 1, '上一頁') + slots + nav('fa-chevron-right', catPage + 1, catPage === total, '下一頁');
 }

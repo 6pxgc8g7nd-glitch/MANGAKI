@@ -264,20 +264,24 @@ main > section[data-enter="left"]:not(.hidden)  { animation: enterFromLeft  .32s
 
 
 
-/* 頁碼列 */
-#paginationContainer { gap: 4px; flex-wrap: nowrap; }
+/* 頁碼列：手指好按的大小（高 42、最小寬 38），7 個按鈕加 2 個省略號在窄螢幕也放得下 */
+#paginationContainer, #catPagination { gap: 4px; flex-wrap: nowrap; }
 .pg-btn {
-    min-width: 30px; height: 34px; padding: 0 4px; flex: 0 1 auto;
+    min-width: 38px; height: 42px; padding: 0 6px; flex: 0 1 auto;
     display: flex; align-items: center; justify-content: center;
     background: #ffffff; color: var(--ink);
-    border: 2px solid var(--ink); border-radius: 10px;
-    font-size: 14px; font-weight: 900;
-    box-shadow: 2px 2px 0 var(--ink);
+    border: 2.5px solid var(--ink); border-radius: 12px;
+    font-size: 15px; font-weight: 900; line-height: 1;
+    box-shadow: 2px 3px 0 var(--ink);
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    transition: transform .08s, box-shadow .08s;
 }
-.pg-btn:active:not(:disabled) { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
-.pg-btn.is-current { background: var(--yellow); color: var(--red); }
-.pg-btn.pg-gap { background: transparent; border-color: transparent; box-shadow: none; min-width: 20px; padding: 0; letter-spacing: 1px; }
+.pg-btn:active:not(:disabled):not(.is-current) { transform: translate(2px, 3px); box-shadow: 0 0 0 var(--ink); }
+.pg-btn.is-current { background: var(--yellow); color: var(--red); box-shadow: 2px 3px 0 var(--red); cursor: default; }
+.pg-btn.pg-gap { background: transparent; border-color: transparent; box-shadow: none; min-width: 22px; padding: 0; letter-spacing: 1px; color: #6b6b6b; }
+.pg-btn.pg-gap:active { transform: none; box-shadow: none; }
 .pg-btn:disabled { opacity: .3; box-shadow: none; }
+.pg-info { text-align: center; font-size: 11px; font-weight: 800; color: #6b6b6b; padding-bottom: 8px; min-height: 14px; }
 .page-jump-item { justify-content: center; padding: 10px 0; }
 .page-jump-item i { display: none; }
 
