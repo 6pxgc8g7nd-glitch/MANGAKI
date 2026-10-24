@@ -247,7 +247,7 @@
                         <input type="checkbox" id="assistToggle" checked onchange="setAssistEnabled(this.checked)" class="accent-[#a6051a] w-4 h-4">
                         <span>顯示懸浮按鈕</span>
                     </label>
-                    <p class="text-[10px] text-neutral-500">可拖曳、會吸附左右邊緣；點一下展開：一鍵遮蔽、回到頂端、新增漫畫、立即備份。每個頁面都會顯示；進入閱讀器時會換成上一話、下一話、切換模式、離開閱讀。新增漫畫與遮蔽只能從這顆按鈕進入，關閉後就沒有入口。</p>
+                    <p class="text-[10px] text-neutral-500">可拖曳、會吸附左右邊緣；點一下展開：一鍵遮蔽、回到頂端、新增漫畫、立即備份。每個頁面都會顯示，閱讀器內不顯示。新增漫畫與遮蔽只能從這顆按鈕進入，關閉後就沒有入口。</p>
                 </div>
                 <div class="bg-[#ffffff] rounded-xl p-3.5 shadow-lg border border-[#e5e5e5]/50 space-y-3">
                     <div class="flex items-center justify-between">
@@ -429,6 +429,7 @@
             <div id="rdBar" class="absolute top-0 inset-x-0 flex items-center gap-2 px-3 py-2 bg-black/80 text-xs" style="padding-top: max(0.5rem, env(safe-area-inset-top));">
                 <button onclick="rdClose()" class="p-3" aria-label="返回"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" ><path d="M15 18l-6-6 6-6"/></svg></button>
                 <span id="rdBarTitle" class="flex-1 truncate font-bold"></span>
+                <button id="rdModeBtn" onclick="rdToggleMode()" class="p-3" aria-label="切換閱讀模式"></button>
             </div>
             <div id="rdFoot" class="absolute bottom-0 inset-x-0 px-4 pt-2 bg-black/80 text-xs" style="padding-bottom: max(0.5rem, env(safe-area-inset-bottom));">
                 <input type="range" id="rdSlider" min="1" max="1" value="1" step="1" oninput="rdSeek(Number(this.value) - 1)" class="w-full" style="accent-color:#ffd400; height:28px;" aria-label="閱讀進度">

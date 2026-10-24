@@ -19,7 +19,7 @@ async function rdOpen(chIdx, startAt) {
     const view = document.getElementById('readerView');
     const fresh = view.classList.contains('hidden');
     view.classList.remove('hidden');
-    if (typeof assistRefresh === 'function') assistRefresh();   // 懸浮按鈕改成閱讀器版本
+    if (typeof assistRefresh === 'function') assistRefresh();   // 進入閱讀器：隱藏懸浮按鈕
     document.body.style.overflow = 'hidden';
     rdResetZoom();
     if (fresh) {
@@ -65,6 +65,13 @@ function rdClose() {
     document.body.style.overflow = '';
     if (typeof assistRefresh === 'function') assistRefresh();
     rdRenderList();
+}
+
+// 圖示 = 目前的模式：上下箭頭是捲動，雙頁是翻頁
+const RD_ICON_SCROLL = '<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M7 9l5-5 5 5"/><path d="M7 15l5 5 5-5"/></svg>';
+const RD_ICON_PAGED = '<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="8" height="14" rx="1"/><rect x="13" y="5" width="8" height="14" rx="1"/></svg>';
+function rdUpdateButtons() {
+    document.getElementById('rdModeBtn').innerHTML = rdCfg.mode === 'scroll' ? RD_ICON_SCROLL : RD_ICON_PAGED;
 }
 
 function rdSaveCfg() { try { localStorage.setItem(RD_CFG_KEY, JSON.stringify(rdCfg)); } catch (e) {} }
@@ -174,6 +181,7 @@ function rdScrollScreen(dir) {
 
 async function rdRender() {
     if (!rd) return;
+    rdUpdateButtons();
     rdShowPageNo();
     const scroll = document.getElementById('rdScroll');
     const paged = document.getElementById('rdPaged');
