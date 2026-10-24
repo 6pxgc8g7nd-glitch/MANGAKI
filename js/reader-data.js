@@ -12,7 +12,7 @@ const rdChapterCount = new Map();   // 漫畫 id → 已匯入的話數（讓點
 function rdFlagsChanged() {
     try {
         renderCategories();
-        if (activeGenreFilter === READER_KEY) renderComics();
+        if (activeGenreFilter.includes(READER_KEY)) renderComics();
     } catch (e) {}
 }
 

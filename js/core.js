@@ -69,7 +69,7 @@ function loadComics() {
 let comics = loadComics();
 
 let activeComicId = null;
-let activeGenreFilter = '全部';
+let activeGenreFilter = [];   // 已選的標籤（可多個）；空陣列＝全部
 // 特殊分類「漫畫」：把匯入過圖片、可以用內建閱讀的漫畫整理在一起（不是使用者自己輸入的分類）
 const READER_KEY = '__reader__';
 const genreLabel = g => g === READER_KEY ? '漫畫' : g;

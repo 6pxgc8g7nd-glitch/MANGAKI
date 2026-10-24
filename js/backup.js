@@ -309,7 +309,7 @@ try {
     comics.forEach(c => unmarkTitleDeleted(c.title));   // 還原回來的漫畫，不再算「刪除過」
 
     // 重置分類
-    activeGenreFilter = '全部';
+    activeGenreFilter = [];
     currentPage = 1;
 
     // 更新畫面

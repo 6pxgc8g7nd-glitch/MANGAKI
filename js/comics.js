@@ -32,20 +32,81 @@ function switchTab(tabName) {
 }
 function goHome() {
     currentPage = 1;
-    activeGenreFilter = '全部';
+    activeGenreFilter = [];
     activeStatusFilter = '全部';
     switchTab('home');
 }
 
+// 分類頁：點標籤＝選取／取消（可多選）；點「全部」＝清掉篩選回首頁。選好後按上方的「查看」
 function filterByGenre(genre) {
-    activeGenreFilter = genre;
+    if (genre === '全部') {
+        activeGenreFilter = [];
+        currentPage = 1;
+        switchTab('home');
+        return;
+    }
+    const i = activeGenreFilter.indexOf(genre);
+    if (i >= 0) activeGenreFilter.splice(i, 1); else activeGenreFilter.push(genre);
+    renderCategories();
+}
+
+function showSelectedGenres() {
     currentPage = 1;
     switchTab('home');
 }
 
+function clearSelectedGenres() {
+    activeGenreFilter = [];
+    renderCategories();
+}
+
+// 同時符合所有已選標籤
+const comicHasGenre = (c, g) => g === READER_KEY ? rdChapterCount.has(c.id) : parseGenres(c.genre).includes(g);
+
+// 長按標籤：把這個標籤從所有漫畫上移除（漫畫本身不會刪）
+async function deleteGenreTag(g) {
+    if (g === '全部' || g === READER_KEY || g === '未分類') {
+        showMsg('無法刪除', g === '未分類' ? '「未分類」是沒有標籤的漫畫，不是真的標籤。' : '這個是系統標籤，無法刪除。');
+        return;
+    }
+    const hit = comics.filter(c => parseGenres(c.genre).includes(g));
+    const ok = await showConfirm('刪除標籤', `要刪除標籤「${g}」嗎？\n會從 ${hit.length} 部漫畫上移除這個標籤，漫畫本身不會被刪除。`, { danger: true, okText: '刪除' });
+    if (!ok) return;
+    hit.forEach(c => { c.genre = parseGenres(c.genre).filter(x => x !== g).join('、'); });
+    activeGenreFilter = activeGenreFilter.filter(x => x !== g);
+    saveComics();
+    renderCategories();
+}
+
+function initGenreGestures() {
+    const grid = document.getElementById('genreGrid');
+    let timer = null, startX = 0, startY = 0, fired = false;
+    const cancel = () => { clearTimeout(timer); timer = null; };
+    grid.addEventListener('pointerdown', e => {
+        const card = e.target.closest('[data-genre]');
+        if (!card) return;
+        fired = false; startX = e.clientX; startY = e.clientY;
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            timer = null; fired = true;
+            if (navigator.vibrate) navigator.vibrate(15);
+            deleteGenreTag(card.dataset.genre);
+        }, LONG_PRESS_MS);
+    });
+    grid.addEventListener('pointermove', e => {
+        if (timer && Math.hypot(e.clientX - startX, e.clientY - startY) > MOVE_TOLERANCE) cancel();
+    });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => grid.addEventListener(t, cancel));
+    grid.addEventListener('contextmenu', e => e.preventDefault());
+    // 長按後放開不要當成「點一下」
+    grid.addEventListener('click', e => {
+        if (fired) { fired = false; e.stopImmediatePropagation(); e.preventDefault(); }
+    }, true);
+}
+
 function getFilteredComics() {
     const list = comics.filter(c =>
-        (activeGenreFilter === '全部' || (activeGenreFilter === READER_KEY ? rdChapterCount.has(c.id) : parseGenres(c.genre).includes(activeGenreFilter))) &&
+        activeGenreFilter.every(g => comicHasGenre(c, g)) &&
         (activeStatusFilter === '全部' || (c.status || '連載中') === activeStatusFilter)
     );
     // 不再依更新日期排序：維持新增的順序（最新新增的在最前面）
@@ -66,7 +127,7 @@ function renderStatusTabs() {
 }
 
 function clearGenreFilter() {
-    activeGenreFilter = '全部';
+    activeGenreFilter = [];
     currentPage = 1;
     renderComics();
 }
@@ -75,10 +136,10 @@ function renderComics() {
     const container = document.getElementById('comicListContainer');
     const filterBannerContainer = document.getElementById('filterBannerContainer');
 
-    if (activeGenreFilter !== '全部') {
+    if (activeGenreFilter.length) {
         filterBannerContainer.innerHTML = `
             <div class="bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3 py-2 flex items-center justify-between text-xs shadow-inner mb-2.5">
-                <span class="text-neutral-600">分類篩選：<strong class="text-neutral-900">${escapeHtml(genreLabel(activeGenreFilter))}</strong></span>
+                <span class="text-neutral-600">分類篩選：<strong class="text-neutral-900">${activeGenreFilter.map(g => escapeHtml(genreLabel(g))).join(' ＋ ')}</strong></span>
                 <button onclick="clearGenreFilter()" class="text-[#a6051a] hover:text-[#8a0416] p-1" aria-label="清除篩選">
                     <i class="fa-solid fa-xmark text-sm"></i>
                 </button>
@@ -206,7 +267,7 @@ function renderCategories() {
 
     genreGrid.innerHTML = genres.map(g => {
         const count = g === '全部' ? comics.length : g === READER_KEY ? comics.filter(c => rdChapterCount.has(c.id)).length : comics.filter(c => parseGenres(c.genre).includes(g)).length;
-        const isSelected = activeGenreFilter === g;
+        const isSelected = g === '全部' ? !activeGenreFilter.length : activeGenreFilter.includes(g);
         const activeStyle = isSelected ? 'border-[#a6051a] bg-[#f0f0f0] ring-1 ring-[#a6051a]/40' : 'border-[#a6051a]/40 hover:border-[#a6051a]';
 
         return `
@@ -217,6 +278,17 @@ function renderCategories() {
         `;
     }).join('');
     renderCatPagination(totalCatPages);
+
+    const bar = document.getElementById('catSelBar');
+    if (bar) {
+        const n = activeGenreFilter.length;
+        const hits = n ? comics.filter(c => activeGenreFilter.every(g => comicHasGenre(c, g))).length : 0;
+        bar.classList.toggle('hidden', !n);
+        bar.innerHTML = n ? `
+            <span class="text-xs text-neutral-700 flex-1 min-w-0 truncate">已選 <strong>${n}</strong> 個標籤（同時符合）</span>
+            <button onclick="clearSelectedGenres()" class="cat-sel-btn">清除</button>
+            <button onclick="showSelectedGenres()" class="cat-sel-btn cat-sel-go">查看 ${hits} 部 <i class="fa-solid fa-chevron-right"></i></button>` : '';
+    }
 }
 
 function renderCatPagination(total) {

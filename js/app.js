@@ -175,6 +175,7 @@ window.onload = function() {
     initCustomSelects();
     initLinkEditor(document.getElementById('addLinks'), []);
     initCardGestures();
+    initGenreGestures();
     initSettingsLongPress();
     initDuplicateCheck();
     rdCheckCrashedExport();
