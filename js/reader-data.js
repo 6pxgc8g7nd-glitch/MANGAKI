@@ -336,7 +336,7 @@ async function rdImportBatch(input) {
         const ignored = plan.filter(c => !c.comic && isTitleDeleted(c.title));
         const active = plan.filter(c => !ignored.includes(c));
         if (!active.length) {
-            showMsg('沒有要匯入的漫畫', `這個備份裡的 ${ignored.length} 部漫畫都是你刪除過的，所以略過了：${ignored.slice(0, 5).map(c => c.title).join('、')}${ignored.length > 5 ? '…' : ''}\n\n如果想把它們找回來，到設定頁的圖片備份按「清除已刪除記錄」再匯入。`);
+            showMsg('沒有要匯入的漫畫', `這個備份裡的 ${ignored.length} 部漫畫都是你刪除過或略過的，所以略過了：${ignored.slice(0, 5).map(c => c.title).join('、')}${ignored.length > 5 ? '…' : ''}\n\n如果想把它們找回來，到設定頁的圖片備份按「清除已刪除記錄」再匯入。`);
             return;
         }
         const matched = active.filter(c => c.comic), missing = active.filter(c => !c.comic);
@@ -344,12 +344,14 @@ async function rdImportBatch(input) {
         const pageCount = active.reduce((n, c) => n + c.chapters.reduce((m, ch) => m + ch.items.length, 0), 0);
         let summary = `找到 ${active.length} 部漫畫、${chapterCount} 話、共 ${pageCount} 頁。\n已配對 ${matched.length} 部`;
         if (missing.length) summary += `，找不到 ${missing.length} 部：${missing.slice(0, 5).map(c => c.title).join('、')}${missing.length > 5 ? '…' : ''}`;
-        if (ignored.length) summary += `\n（另有 ${ignored.length} 部是你刪除過的漫畫，已自動略過）`;
+        if (ignored.length) summary += `\n（另有 ${ignored.length} 部是你刪除過或略過的漫畫，已自動略過）`;
         if (!(await showConfirm('批次匯入', summary + '。\n\n要繼續嗎？', { okText: '繼續' }))) return;
 
         let create = false;
         if (missing.length) {
-            create = await showConfirm('找不到的漫畫', `要把這 ${missing.length} 部建立成新漫畫嗎？\n\n選「略過」會只匯入已配對的。`, { okText: '建立新漫畫', cancelText: '略過' });
+            create = await showConfirm('找不到的漫畫', `要把這 ${missing.length} 部建立成新漫畫嗎？\n\n選「略過」會只匯入已配對的，而且之後匯入備份時不會再問這幾部。`, { okText: '建立新漫畫', cancelText: '略過' });
+            // 選了略過就記住這些名稱，之後匯入不再詢問（設定頁可以清除記錄）
+            if (!create) missing.forEach(c => markTitleDeleted(c.title));
         }
         const targets = active.filter(c => c.comic || create);
         if (!targets.length) return;
@@ -488,11 +490,11 @@ function rdUpdateDeletedInfo() {
     if (!el) return;
     const n = deletedTitles().length;
     el.classList.toggle('hidden', n === 0);
-    el.querySelector('span').textContent = `已記住 ${n} 部你刪除過的漫畫，匯入備份時不會再詢問。`;
+    el.querySelector('span').textContent = `已記住 ${n} 部你刪除過或選擇略過的漫畫，匯入備份時不會再詢問。`;
 }
 
 function rdClearDeleted() {
-    showConfirm('清除已刪除記錄', '清除後，匯入備份時又會再問你要不要建立這些刪除過的漫畫。\n\n要清除嗎？', { okText: '清除' }).then(ok => {
+    showConfirm('清除已刪除記錄', '清除後，匯入備份時又會再問你要不要建立這些刪除過或略過的漫畫。\n\n要清除嗎？', { okText: '清除' }).then(ok => {
         if (!ok) return;
         saveDeletedTitles([]);
         rdUpdateDeletedInfo();
