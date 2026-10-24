@@ -264,24 +264,23 @@ main > section[data-enter="left"]:not(.hidden)  { animation: enterFromLeft  .32s
 
 
 
-/* 頁碼列：手指好按的大小（高 42、最小寬 38），7 個按鈕加 2 個省略號在窄螢幕也放得下 */
-#paginationContainer, #catPagination { gap: 4px; flex-wrap: nowrap; }
+/* 頁面切換：上一頁／第 N / 總頁數 頁 ▾／下一頁（三顆大按鈕，手指好按、窄螢幕也不會擠不下） */
+#paginationContainer, #catPagination { gap: 8px; flex-wrap: nowrap; max-width: 430px; margin-left: auto; margin-right: auto; }
 .pg-btn {
-    min-width: 38px; height: 42px; padding: 0 6px; flex: 0 1 auto;
-    display: flex; align-items: center; justify-content: center;
+    flex: 1 1 0; min-width: 0; height: 46px; padding: 0 8px; gap: 6px;
+    display: flex; align-items: center; justify-content: center; white-space: nowrap;
     background: #ffffff; color: var(--ink);
-    border: 2.5px solid var(--ink); border-radius: 12px;
-    font-size: 15px; font-weight: 900; line-height: 1;
+    border: 2.5px solid var(--ink); border-radius: 14px;
+    font-size: 14px; font-weight: 900; line-height: 1;
     box-shadow: 2px 3px 0 var(--ink);
     touch-action: manipulation; -webkit-tap-highlight-color: transparent;
     transition: transform .08s, box-shadow .08s;
 }
-.pg-btn:active:not(:disabled):not(.is-current) { transform: translate(2px, 3px); box-shadow: 0 0 0 var(--ink); }
-.pg-btn.is-current { background: var(--yellow); color: var(--red); box-shadow: 2px 3px 0 var(--red); cursor: default; }
-.pg-btn.pg-gap { background: transparent; border-color: transparent; box-shadow: none; min-width: 22px; padding: 0; letter-spacing: 1px; color: #6b6b6b; }
-.pg-btn.pg-gap:active { transform: none; box-shadow: none; }
+.pg-btn i { font-size: 12px; }
+.pg-btn.pg-main { flex: 1.5 1 0; background: var(--yellow); color: var(--red); font-size: 15px; box-shadow: 2px 3px 0 var(--red); }
+.pg-caret { font-size: 11px; opacity: .8; }
+.pg-btn:active:not(:disabled) { transform: translate(2px, 3px); box-shadow: 0 0 0 var(--ink); }
 .pg-btn:disabled { opacity: .3; box-shadow: none; }
-.pg-info { text-align: center; font-size: 11px; font-weight: 800; color: #6b6b6b; padding-bottom: 8px; min-height: 14px; }
 .page-jump-item { justify-content: center; padding: 10px 0; }
 .page-jump-item i { display: none; }
 

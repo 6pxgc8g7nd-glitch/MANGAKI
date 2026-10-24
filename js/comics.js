@@ -142,42 +142,19 @@ function renderComics() {
     renderPagination(totalPages);
 }
 
-// 先提供簡單的「上一頁／下一頁」分頁
-// 頁碼列：上一頁、頁碼（含省略號）、下一頁；省略號可點開「跳到第幾頁」
-function pageSlots(cur, total) {
-    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-    if (cur <= 3) return [1, 2, 3, 4, '…', total];
-    if (cur >= total - 2) return [1, '…', total - 3, total - 2, total - 1, total];
-    return [1, '…', cur - 1, cur, cur + 1, '…', total];
+// 頁面切換：「上一頁」「第 N / 總頁數 頁 ▾」「下一頁」三顆大按鈕；點中間的頁碼會開「跳到指定頁」的選單
+function pagerHtml(cur, total, goFn, jumpCall) {
+    const prev = cur <= 1 ? 'disabled' : `onclick="${goFn}(${cur - 1})"`;
+    const next = cur >= total ? 'disabled' : `onclick="${goFn}(${cur + 1})"`;
+    return `<button class="pg-btn pg-side" aria-label="上一頁" ${prev}><i class="fa-solid fa-chevron-left"></i><span>上一頁</span></button>` +
+        `<button class="pg-btn pg-main" aria-label="目前第 ${cur} 頁，共 ${total} 頁，點一下跳到指定頁" onclick="${jumpCall}"><span>第 ${cur} / ${total} 頁</span><span class="pg-caret">▾</span></button>` +
+        `<button class="pg-btn pg-side" aria-label="下一頁" ${next}><span>下一頁</span><i class="fa-solid fa-chevron-right"></i></button>`;
 }
 
 function renderPagination(totalPages) {
     const container = document.getElementById('paginationContainer');
     if (!container) return;
-
-    const info = document.getElementById('paginationInfo');
-    if (totalPages <= 1) {
-        container.innerHTML = '';
-        if (info) info.textContent = '';
-        return;
-    }
-    if (info) info.textContent = `第 ${currentPage} / ${totalPages} 頁　·　共 ${getFilteredComics().length} 部`;
-
-    const nav = (label, target, disabled, aria) =>
-        `<button class="pg-btn pg-nav" aria-label="${aria}" ${disabled ? 'disabled' : `onclick="changePage(${target})"`}><i class="fa-solid ${label}"></i></button>`;
-
-    const slots = pageSlots(currentPage, totalPages).map(p =>
-        p === '…'
-            ? `<button class="pg-btn pg-gap" aria-label="跳到指定頁" onclick="openPageJump(${totalPages})">…</button>`
-            : (p === currentPage
-                ? `<button class="pg-btn is-current" aria-current="page" aria-label="目前第 ${p} 頁">${p}</button>`
-                : `<button class="pg-btn" aria-label="第 ${p} 頁" onclick="changePage(${p})">${p}</button>`)
-    ).join('');
-
-    container.innerHTML =
-        nav('fa-chevron-left', currentPage - 1, currentPage === 1, '上一頁') +
-        slots +
-        nav('fa-chevron-right', currentPage + 1, currentPage === totalPages, '下一頁');
+    container.innerHTML = totalPages <= 1 ? '' : pagerHtml(currentPage, totalPages, 'changePage', `openPageJump(${totalPages})`);
 }
 
 // 頁數很多時：直接選要去的頁碼
@@ -245,19 +222,7 @@ function renderCategories() {
 function renderCatPagination(total) {
     const box = document.getElementById('catPagination');
     if (!box) return;
-    const info = document.getElementById('catPaginationInfo');
-    if (total <= 1) { box.innerHTML = ''; if (info) info.textContent = ''; return; }
-    if (info) info.textContent = `第 ${catPage} / ${total} 頁`;
-    const nav = (icon, target, disabled, aria) =>
-        `<button class="pg-btn pg-nav" aria-label="${aria}" ${disabled ? 'disabled' : `onclick="changeCatPage(${target})"`}><i class="fa-solid ${icon}"></i></button>`;
-    const slots = pageSlots(catPage, total).map(p =>
-        p === '…'
-            ? `<button class="pg-btn pg-gap" aria-label="跳到指定頁" onclick="openPageJump(${total}, catPage, changeCatPage)">…</button>`
-            : (p === catPage
-                ? `<button class="pg-btn is-current" aria-current="page" aria-label="目前第 ${p} 頁">${p}</button>`
-                : `<button class="pg-btn" aria-label="第 ${p} 頁" onclick="changeCatPage(${p})">${p}</button>`)
-    ).join('');
-    box.innerHTML = nav('fa-chevron-left', catPage - 1, catPage === 1, '上一頁') + slots + nav('fa-chevron-right', catPage + 1, catPage === total, '下一頁');
+    box.innerHTML = total <= 1 ? '' : pagerHtml(catPage, total, 'changeCatPage', `openPageJump(${total}, catPage, changeCatPage)`);
 }
 
 function changeCatPage(page) {
