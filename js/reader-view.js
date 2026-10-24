@@ -67,11 +67,13 @@ function rdClose() {
     rdRenderList();
 }
 
-// 圖示 = 目前的模式：上下箭頭是捲動，雙頁是翻頁
-const RD_ICON_SCROLL = '<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M7 9l5-5 5 5"/><path d="M7 15l5 5 5-5"/></svg>';
-const RD_ICON_PAGED = '<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="8" height="14" rx="1"/><rect x="13" y="5" width="8" height="14" rx="1"/></svg>';
+// 圖示 = 目前的模式：直式長頁加上下箭頭是捲動，攤開的書是翻頁
+const RD_ICON_SCROLL = '<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2.5" width="14" height="19" rx="3"/><path d="M12 7v10"/><path d="M9 9.5L12 7l3 2.5"/><path d="M9 14.5L12 17l3-2.5"/></svg>';
+const RD_ICON_PAGED = '<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.8C9.9 5.2 6.9 4.6 3.5 5.2v12.2c3.4-.6 6.4 0 8.5 1.6 2.1-1.6 5.1-2.2 8.5-1.6V5.2c-3.4-.6-6.4 0-8.5 1.6z"/><path d="M12 6.8V19"/></svg>';
 function rdUpdateButtons() {
-    document.getElementById('rdModeBtn').innerHTML = rdCfg.mode === 'scroll' ? RD_ICON_SCROLL : RD_ICON_PAGED;
+    const modeBtn = document.getElementById('rdModeBtn');
+    modeBtn.innerHTML = rdCfg.mode === 'scroll' ? RD_ICON_SCROLL : RD_ICON_PAGED;
+    modeBtn.setAttribute('aria-label', rdCfg.mode === 'scroll' ? '目前是上下捲動，點一下改成左右翻頁' : '目前是左右翻頁，點一下改成上下捲動');
 }
 
 function rdSaveCfg() { try { localStorage.setItem(RD_CFG_KEY, JSON.stringify(rdCfg)); } catch (e) {} }
