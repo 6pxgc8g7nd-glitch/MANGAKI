@@ -490,7 +490,7 @@ function rdUpdateDeletedInfo() {
     if (!el) return;
     const n = deletedTitles().length;
     el.classList.toggle('hidden', n === 0);
-    el.querySelector('span').textContent = `已記住 ${n} 部你刪除過或選擇略過的漫畫，匯入備份時不會再詢問。`;
+    el.querySelector('span').textContent = `已記住 ${n} 部刪除或略過的漫畫（匯入時不再詢問）`;
 }
 
 function rdClearDeleted() {
@@ -520,7 +520,7 @@ async function rdExportAll(mode = 'all') {
     if (rdExporting) return;
     const onlyNew = mode === 'new';
     const text = document.getElementById(onlyNew ? 'rdExportNewText' : 'rdExportAllText');
-    const idle = onlyNew ? '備份新增的圖片' : '備份全部圖片（完整備份）';
+    const idle = onlyNew ? '備份新增' : '完整備份（全部圖片）';
     rdFallbackWarned = false;
     rdExporting = true;
     const partBytes = rdPartMB() * 1024 * 1024;
@@ -535,7 +535,7 @@ async function rdExportAll(mode = 'all') {
         }
         if (!jobs.length) {
             showMsg(onlyNew ? '沒有新的圖片' : '沒有圖片', onlyNew
-                ? '所有圖片都已經備份過了。\\n\\n如果想重新備份全部，請按「備份全部圖片（完整備份）」。'
+                ? '所有圖片都已經備份過了。\\n\\n如果想重新備份全部，請按「完整備份」。'
                 : '還沒有任何漫畫匯入過圖片。');
             return;
         }
@@ -631,7 +631,7 @@ async function rdExportAll(mode = 'all') {
         }
         showMsg('備份完成', `${partNo > 1 ? `共 ${partNo} 個 zip、` : ''}${savedChapters} 話、${savedPages} 頁已備份。` +
             (partNo > 1 ? '\\n\\n匯入時可以一次選全部檔案。' : '') +
-            (onlyNew ? '\\n\\n之後再按「備份新增的圖片」，只會備份新匯入的。' : ''));
+            (onlyNew ? '\\n\\n之後再按「備份新增」，只會備份新匯入的。' : ''));
     } catch (e) {
         showMsg('匯出失敗', e && e.name === 'QuotaExceededError' ? '記憶體或空間不足，請減少圖片後再匯出。' : (e.message || '無法打包'));
     } finally {

@@ -6,7 +6,7 @@
 const AUTO_UPDATE_KEY = 'mangaki_auto_update';
 // 這份程式碼自己的版本代碼；每次 commit 前由 tools/stamp.py 依內容自動更新，
 // 並寫進 version.json。比對「正在執行的程式」與「伺服器最新版」就能發現舊版。
-const APP_BUILD = '3c8b502e';
+const APP_BUILD = '85270fe4';
 const RELOAD_TRY_KEY = 'mangaki_reload_try';
 let updateReloading = false;
 
