@@ -279,7 +279,6 @@ main > section[data-enter="left"]:not(.hidden)  { animation: enterFromLeft  .32s
 .pg-btn i { font-size: 18px; }
 .pg-btn.pg-side { flex: 1 1 0; }
 .pg-btn.pg-main { flex: 2.4 1 0; background: var(--yellow); color: var(--red); font-size: 15px; box-shadow: 2px 3px 0 var(--red); }
-.pg-caret { font-size: 11px; opacity: .8; }
 .pg-btn:active:not(:disabled) { transform: translate(2px, 3px); box-shadow: 0 0 0 var(--ink); }
 .pg-btn:disabled { opacity: .3; box-shadow: none; }
 .page-jump-item { justify-content: center; padding: 10px 0; }

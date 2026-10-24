@@ -147,7 +147,7 @@ function pagerHtml(cur, total, goFn, jumpCall) {
     const prev = cur <= 1 ? 'disabled' : `onclick="${goFn}(${cur - 1})"`;
     const next = cur >= total ? 'disabled' : `onclick="${goFn}(${cur + 1})"`;
     return `<button class="pg-btn pg-side" aria-label="上一頁" ${prev}><i class="fa-solid fa-chevron-left"></i></button>` +
-        `<button class="pg-btn pg-main" aria-label="目前第 ${cur} 頁，共 ${total} 頁，點一下跳到指定頁" onclick="${jumpCall}"><span>第 ${cur} / ${total} 頁</span><span class="pg-caret">▾</span></button>` +
+        `<button class="pg-btn pg-main" aria-label="目前第 ${cur} 頁，共 ${total} 頁，點一下跳到指定頁" onclick="${jumpCall}"><span>第 ${cur} / ${total} 頁</span></button>` +
         `<button class="pg-btn pg-side" aria-label="下一頁" ${next}><i class="fa-solid fa-chevron-right"></i></button>`;
 }
 
