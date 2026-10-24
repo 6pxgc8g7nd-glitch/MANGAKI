@@ -239,6 +239,7 @@
                         <span id="rdExportAllText">備份全部圖片（完整備份）</span>
                     </button>
                     <p id="rdBackupInfo" class="text-[10px] font-bold text-neutral-600"></p>
+                    <p id="rdDeletedInfo" class="hidden text-[10px] text-neutral-500"><span></span> <button type="button" onclick="rdClearDeleted()" class="underline">清除記錄</button></p>
                     <p class="text-[10px] text-neutral-500">「備份新增的圖片」只匯出還沒備份過的話數（匯出成功後才會標記），日常用這個就好；每個備份檔最大約 1GB（手機記憶體不夠導致網頁當掉時，下次會自動改小一半）；「備份全部圖片」會重新匯出所有圖片，建議偶爾做一次完整備份。zip 結構：漫畫名稱 / 第幾話 / 圖片，匯出的檔案可直接再匯入，還原時請一次選全部的 zip。資料夾名稱和清單裡的漫畫名稱相同就會自動配對，找不到的可以選擇建立新漫畫；已有同名章節會略過。</p>
                 </div>
 

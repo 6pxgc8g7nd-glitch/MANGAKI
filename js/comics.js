@@ -28,7 +28,7 @@ function switchTab(tabName) {
     scrollMainTop();
     if(tabName === 'home') renderComics();
     if(tabName === 'categories') renderCategories();
-    if(tabName === 'settings') { ghRenderSettings(); renderUpdateInfo(); if (typeof rdUpdateBackupInfo === 'function') rdUpdateBackupInfo(); }
+    if(tabName === 'settings') { ghRenderSettings(); renderUpdateInfo(); if (typeof rdUpdateBackupInfo === 'function') { rdUpdateBackupInfo(); rdUpdateDeletedInfo(); } }
 }
 function goHome() {
     currentPage = 1;
@@ -283,6 +283,7 @@ function handleAddNewComic(e) {
     };
 
     comics.unshift(newComic);
+    unmarkTitleDeleted(newComic.title);   // 你又新增了同名漫畫，就不算「刪除過」了
     saveComics();
     document.getElementById('addComicForm').reset();
     checkDuplicates('add');   // 清掉紅字
@@ -385,6 +386,7 @@ async function deleteCurrentComic() {
 
     if (!(await showConfirm('刪除漫畫', `確定要刪除「${comic.title}」嗎？\n\n刪除後無法復原。`, { danger: true, okText: '刪除' }))) return;
 
+    markTitleDeleted(comic.title);   // 記住名稱：之後匯入備份時不再問要不要建立
     rdDeleteComic(activeComicId);
     comics = comics.filter(c => c.id !== activeComicId);
     saveComics();

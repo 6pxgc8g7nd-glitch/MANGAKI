@@ -105,6 +105,36 @@ function parseProgress(value) {
 }
 
 
+// ===== 刪除過的漫畫名稱 =====
+// 刪掉一部漫畫後記住它的名稱：之後匯入備份 zip 時，裡面還有這部也不會再問「要不要建立」。
+// 之後你又新增、還原了同名的漫畫，記錄會自動解除。
+const DELETED_KEY = 'mangaki_deleted_titles';
+
+function deletedTitles() {
+    try {
+        const a = JSON.parse(localStorage.getItem(DELETED_KEY));
+        return Array.isArray(a) ? a.filter(x => typeof x === 'string') : [];
+    } catch (e) { return []; }
+}
+
+function saveDeletedTitles(list) {
+    try { localStorage.setItem(DELETED_KEY, JSON.stringify(list.slice(-500))); } catch (e) {}
+}
+
+function markTitleDeleted(title) {
+    const n = normTitle(title);
+    if (!n) return;
+    const list = deletedTitles();
+    if (!list.includes(n)) { list.push(n); saveDeletedTitles(list); }
+}
+
+function unmarkTitleDeleted(title) {
+    const n = normTitle(title), list = deletedTitles();
+    if (list.includes(n)) saveDeletedTitles(list.filter(x => x !== n));
+}
+
+const isTitleDeleted = title => deletedTitles().includes(normTitle(title));
+
 function parseGenres(genreStr) {
     if (!genreStr || genreStr.trim() === '') return ['未分類'];
     // 逗號（半形、全形、頓號）或任何空白（含全形空格）都可以分隔；重複的分類只算一次
