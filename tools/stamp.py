@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""依所有原始檔（index.html、css/style.css、js/*.js）的內容產生版本代碼，
+"""依所有原始檔（index.html、sw.js、manifest.json、css/style.css、js/*.js）的內容產生版本代碼，
 寫回 js/update.js 的 APP_BUILD 與 version.json。
 每次 commit 前執行；內容沒變時代碼也不變。"""
 import hashlib, json, pathlib, re, sys
 
 root = pathlib.Path(__file__).resolve().parent.parent
 # 順序固定，版本代碼才穩定（index.html 的 <script> 載入順序也是這個順序）
-files = [root / 'index.html', root / 'css' / 'style.css'] + sorted((root / 'js').glob('*.js'))
+files = [root / 'index.html', root / 'sw.js', root / 'manifest.json', root / 'css' / 'style.css'] + sorted((root / 'js').glob('*.js'))
 holder = root / 'js' / 'update.js'
 pattern = re.compile(r"const APP_BUILD = '[^']*';")
 if not pattern.search(holder.read_text(encoding='utf-8')):

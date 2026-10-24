@@ -1,12 +1,26 @@
 // MANGAKI service worker：網路優先（自動取得最新版），離線時用快取
-const CACHE = 'mangaki-v6';
+const CACHE = 'mangaki-v7';
 const PRECACHE = ['./', './index.html', './manifest.json', './icon.png', './tailwind.css', './css/style.css',
     './js/core.js', './js/privacy.js', './js/ui.js', './js/comics.js', './js/backup.js', './js/github.js', './js/reader-data.js', './js/reader-view.js', './js/update.js', './js/app.js'];
+
+// 轉址過的回應（response.redirected）不能直接拿來當頁面回應：Safari／Chrome 會拒絕，
+// 顯示「Response served by service worker has redirections」。Cloudflare 會把 /index.html 轉址到 /，
+// 所以每個要交給瀏覽器或存進快取的回應，都先複製成一份沒有轉址標記的。
+function clean(res) {
+    if (!res || !res.redirected) return Promise.resolve(res);
+    return res.blob().then(body => new Response(body, { status: res.status, statusText: res.statusText, headers: res.headers }));
+}
 
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE)
-            .then(cache => cache.addAll(PRECACHE))
+            // 逐一抓取、洗乾淨再存；個別檔案失敗不會讓整個安裝失敗
+            .then(cache => Promise.all(PRECACHE.map(url =>
+                fetch(url, { cache: 'reload' })
+                    .then(clean)
+                    .then(res => (res && res.ok ? cache.put(url, res) : null))
+                    .catch(() => null)
+            )))
             .then(() => self.skipWaiting())
     );
 });
@@ -35,6 +49,7 @@ self.addEventListener('fetch', event => {
         // 自己的檔案：每次先問網路（略過瀏覽器 HTTP 快取），失敗才用快取
         event.respondWith(
             fetch(req, { cache: 'no-cache' })
+                .then(clean)
                 .then(res => {
                     if (res.ok) {
                         const copy = res.clone();
