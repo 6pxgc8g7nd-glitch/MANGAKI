@@ -19,7 +19,6 @@ async function rdOpen(chIdx, startAt) {
     const view = document.getElementById('readerView');
     const fresh = view.classList.contains('hidden');
     view.classList.remove('hidden');
-    if (typeof assistRefresh === 'function') assistRefresh();   // 進入閱讀器：隱藏懸浮按鈕
     document.body.style.overflow = 'hidden';
     rdResetZoom();
     if (fresh) {
@@ -63,7 +62,6 @@ function rdClose() {
     rdRelease();
     document.getElementById('readerView').classList.add('hidden');
     document.body.style.overflow = '';
-    if (typeof assistRefresh === 'function') assistRefresh();
     rdRenderList();
 }
 

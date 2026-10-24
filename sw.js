@@ -1,7 +1,7 @@
 // MANGAKI service worker：網路優先（自動取得最新版），離線時用快取
-const CACHE = 'mangaki-v5';
+const CACHE = 'mangaki-v6';
 const PRECACHE = ['./', './index.html', './manifest.json', './icon.png', './tailwind.css', './css/style.css',
-    './js/core.js', './js/privacy.js', './js/ui.js', './js/comics.js', './js/backup.js', './js/github.js', './js/reader-data.js', './js/reader-view.js', './js/update.js', './js/assist.js', './js/app.js'];
+    './js/core.js', './js/privacy.js', './js/ui.js', './js/comics.js', './js/backup.js', './js/github.js', './js/reader-data.js', './js/reader-view.js', './js/update.js', './js/app.js'];
 
 self.addEventListener('install', event => {
     event.waitUntil(
