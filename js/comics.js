@@ -330,7 +330,6 @@ function openEditModal() {
     document.getElementById('editInputGenre').value = comic.genre;
     initLinkEditor(document.getElementById('editLinks'), getLinks(comic));
     document.getElementById('editInputCoverUrl').value = comic.coverUrl || '';
-    document.getElementById('editInputProgress').value = comic.progress > 0 ? comic.progress : '';
     syncCustomSelects();
 
     const statusRadios = document.querySelectorAll('input[name="editInputStatus"]');
@@ -358,7 +357,6 @@ function handleUpdateComic(e) {
     comics[comicIndex].links = editedLinks;
     comics[comicIndex].url = latestUrl(editedLinks);
     comics[comicIndex].coverUrl = safeUrl(document.getElementById('editInputCoverUrl').value.trim());
-    comics[comicIndex].progress = parseProgress(document.getElementById('editInputProgress').value);
     delete comics[comicIndex].updateDay;      // 舊資料裡的更新日期欄位一併清掉
     delete comics[comicIndex].updatedAt;
 
