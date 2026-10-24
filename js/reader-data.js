@@ -565,7 +565,10 @@ async function rdExportAll(mode = 'all') {
         const dosTime = (dosNow.getHours() << 11) | (dosNow.getMinutes() << 5) | (dosNow.getSeconds() >> 1);
         const dosDate = ((dosNow.getFullYear() - 1980) << 9) | ((dosNow.getMonth() + 1) << 5) | dosNow.getDate();
         // 檔名帶日期，每次備份的檔案不會互相覆蓋
-        const stamp = `${dosNow.getFullYear()}${String(dosNow.getMonth() + 1).padStart(2, '0')}${String(dosNow.getDate()).padStart(2, '0')}`;
+        // 檔名帶「日期＋時間（到秒）」：同一天備份很多次，檔名也不會重複，存到「檔案」時不會被問要不要取代舊的。
+        // 同一次備份的所有分卷共用同一個時間，後面再加 _01、_02，排序就是正確的。
+        const p2 = n => String(n).padStart(2, '0');
+        const stamp = `${dosNow.getFullYear()}${p2(dosNow.getMonth() + 1)}${p2(dosNow.getDate())}_${p2(dosNow.getHours())}${p2(dosNow.getMinutes())}${p2(dosNow.getSeconds())}`;
         const baseName = `MANGAKI_圖片_${onlyNew ? '新增' : '全部'}_${stamp}`;
         let next = pages.next(), done = 0, partNo = 0, savedPages = 0, savedChapters = 0;
 
@@ -615,7 +618,7 @@ async function rdExportAll(mode = 'all') {
             parts = null;
             rdMarkPacking(false);         // 打包完成，之後只是等你按儲存
             const single = partNo === 1 && next.done;
-            const name = single ? `${baseName}.zip` : `${baseName}_${String(partNo).padStart(2, '0')}.zip`;
+            const name = single ? `${baseName}.zip` : `${baseName}_${p2(partNo)}.zip`;
             text.textContent = idle;
             // 分享／下載要由「剛按下的按鈕」觸發，iOS 才允許，所以每個檔案都再問一次
             const head1 = single
