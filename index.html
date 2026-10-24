@@ -130,11 +130,11 @@
                         </label>
                         <div class="grid grid-cols-2 gap-2">
                             <label class="flex items-center justify-center space-x-1.5 bg-[#fafafa] border border-[#a6051a]/40 rounded-xl py-2.5 text-xs cursor-pointer hover:bg-[#e5e5e5] transition shadow-inner">
-                                <input type="radio" name="inputStatus" value="連載中" checked class="accent-[#a6051a]" onchange="toggleAddUpdated()">
+                                <input type="radio" name="inputStatus" value="連載中" checked class="accent-[#a6051a]">
                                 <span class="text-neutral-900 font-bold">連載中</span>
                             </label>
                             <label class="flex items-center justify-center space-x-1.5 bg-[#fafafa] border border-[#a6051a]/40 rounded-xl py-2.5 text-xs cursor-pointer hover:bg-[#e5e5e5] transition shadow-inner">
-                                <input type="radio" name="inputStatus" value="已完結" class="accent-[#a6051a]" onchange="toggleAddUpdated()">
+                                <input type="radio" name="inputStatus" value="已完結" class="accent-[#a6051a]">
                                 <span class="text-neutral-900 font-bold">已完結</span>
                             </label>
                         </div>
@@ -155,14 +155,6 @@
                             <span>封面網址</span>
                         </label>
                         <input type="url" id="inputCoverUrl" placeholder="" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
-                    </div>
-
-                    <div id="addUpdatedWrap">
-                        <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-calendar-week text-[#a6051a] text-[10px]"></i>
-                            <span>更新星期</span>
-                        </label>
-                        <select id="inputUpdated" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner"><option value="">不指定</option><option value="1">每週一更新</option><option value="2">每週二更新</option><option value="3">每週三更新</option><option value="4">每週四更新</option><option value="5">每週五更新</option><option value="6">每週六更新</option><option value="0">每週日更新</option></select>
                     </div>
 
                     <button type="submit" class="w-full bg-[#a6051a] hover:bg-[#8a0416] active:scale-95 text-white font-bold py-2.5 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-xs">
@@ -371,13 +363,6 @@
                             <span>閱讀進度（第幾話）</span>
                         </label>
                         <input type="number" id="editInputProgress" min="0" step="1" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-neutral-600 mb-1 flex items-center space-x-1">
-                            <i class="fa-solid fa-calendar-week text-[#a6051a] text-[10px]"></i>
-                            <span>更新星期</span>
-                        </label>
-                        <select id="editInputUpdated" class="w-full bg-[#fafafa] border border-[#a6051a]/40 rounded-xl px-3.5 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-[#a6051a] transition shadow-inner"><option value="">不指定</option><option value="1">每週一更新</option><option value="2">每週二更新</option><option value="3">每週三更新</option><option value="4">每週四更新</option><option value="5">每週五更新</option><option value="6">每週六更新</option><option value="0">每週日更新</option></select>
                     </div>
                     <div class="flex space-x-2 pt-1">
                         <button type="button" onclick="closeEditModal()" class="flex-1 bg-[#fafafa] hover:bg-[#e5e5e5] active:scale-95 text-neutral-900 font-bold py-2 rounded-xl transition text-xs border border-[#a6051a]/40">取消</button>

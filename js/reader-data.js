@@ -346,7 +346,7 @@ async function rdImportBatch(input) {
         if (!targets.length) return;
         if (create) {
             missing.forEach((c, i) => {
-                c.comic = { id: String(Date.now() + i), title: c.title, genre: '未分類', status: '連載中', links: [], url: '', coverUrl: '', progress: 0, updateDay: null };
+                c.comic = { id: String(Date.now() + i), title: c.title, genre: '未分類', status: '連載中', links: [], url: '', coverUrl: '', progress: 0 };
                 comics.unshift(c.comic);
             });
             saveComics();

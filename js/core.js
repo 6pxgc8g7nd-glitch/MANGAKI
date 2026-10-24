@@ -1,4 +1,4 @@
-// 資料與基礎工具：儲存、讀取、進度與更新星期的計算
+// 資料與基礎工具：儲存、讀取、進度的計算
 
 // 舊名稱（toptoon_*）的儲存資料搬到新名稱（mangaki_*）；新的已存在就不覆蓋，確認寫入後才刪舊的
 (function migrateStorageKeys() {
@@ -52,7 +52,7 @@ function loadComics() {
         if (Array.isArray(parsed)) {
             // 內頁圖片功能已移除：丟掉舊的 albums 欄位，以及只有圖片、沒有網址的集數
             return parsed.filter(c => c && typeof c === 'object' && typeof c.id === 'string').map(c => {
-                const { albums, ...rest } = c;
+                const { albums, updateDay, updatedAt, ...rest } = c;   // 舊的 albums／更新日期欄位一併丟掉
                 if (Array.isArray(rest.links)) rest.links = rest.links.filter(l => l && l.url).map(l => ({ label: l.label || '', url: l.url }));
                 return rest;
             });
@@ -104,31 +104,6 @@ function parseProgress(value) {
     return Math.min(n, 99999);
 }
 
-
-// 更新星期（0=週日 … 6=週六；null=未指定）
-const WEEKDAY_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
-
-function parseUpdateDay(value) {
-    if (value === null || value === undefined || value === '') return null;
-    const n = Number(value);
-    return Number.isInteger(n) && n >= 0 && n <= 6 ? n : null;
-}
-
-// 相容舊版的「更新日期」：由日期推算星期
-function getUpdateDay(comic) {
-    const day = parseUpdateDay(comic.updateDay);
-    if (day !== null) return day;
-    if (typeof comic.updatedAt === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(comic.updatedAt)) {
-        const t = new Date(comic.updatedAt + 'T00:00:00');
-        if (!isNaN(t.getTime())) return t.getDay();
-    }
-    return null;
-}
-
-// 距離最近一次更新幾天（0 = 今天更新）
-function daysSinceUpdate(day) {
-    return (new Date().getDay() - day + 7) % 7;
-}
 
 function parseGenres(genreStr) {
     if (!genreStr || genreStr.trim() === '') return ['未分類'];

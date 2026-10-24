@@ -171,21 +171,6 @@ typeof comic.progress !== 'number'
 return false;
     }
 
-    if (
-comic.updatedAt !== undefined &&
-typeof comic.updatedAt !== 'string'
-    ) {
-return false;
-    }
-
-    if (
-comic.updateDay !== undefined &&
-comic.updateDay !== null &&
-typeof comic.updateDay !== 'number'
-    ) {
-return false;
-    }
-
     return true;
 }
 
@@ -316,8 +301,7 @@ try {
             links: getLinks(comic),
             url: latestUrl(getLinks(comic)),
             coverUrl: safeUrl(comic.coverUrl),
-            progress: parseProgress(comic.progress),
-            updateDay: getUpdateDay(comic)
+            progress: parseProgress(comic.progress)
         }));
 
 

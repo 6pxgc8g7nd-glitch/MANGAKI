@@ -48,19 +48,8 @@ function getFilteredComics() {
         (activeGenreFilter === '全部' || (activeGenreFilter === READER_KEY ? rdChapterCount.has(c.id) : parseGenres(c.genre).includes(activeGenreFilter))) &&
         (activeStatusFilter === '全部' || (c.status || '連載中') === activeStatusFilter)
     );
-    // 連載中排在前面，依「最近一次更新」由近到遠（今天更新的最前面）；
-    // 沒指定星期的排在最後。已完結維持新增順序（排序是穩定的）
-    const isOngoing = c => (c.status || '連載中') === '連載中';
-    const recency = c => {
-        const day = getUpdateDay(c);
-        return day === null ? 99 : daysSinceUpdate(day);
-    };
-    return list.sort((a, b) => {
-        const oa = isOngoing(a), ob = isOngoing(b);
-        if (oa !== ob) return oa ? -1 : 1;
-        if (!oa) return 0;
-        return recency(a) - recency(b);
-    });
+    // 不再依更新日期排序：維持新增的順序（最新新增的在最前面）
+    return list;
 }
 
 function setStatusFilter(status) {
@@ -280,24 +269,16 @@ function handleAddNewComic(e) {
         links: addLinksValue,
         url: latestUrl(addLinksValue),
         coverUrl: safeUrl(document.getElementById('inputCoverUrl').value.trim()),
-        progress: 0,
-        updateDay: statusInput && statusInput.value === '已完結' ? null : parseUpdateDay(document.getElementById('inputUpdated').value)
+        progress: 0
     };
 
     comics.unshift(newComic);
     saveComics();
     document.getElementById('addComicForm').reset();
-    toggleAddUpdated();
     initLinkEditor(document.getElementById('addLinks'), []);
     syncCustomSelects();
     showMsg('新增成功', '已成功將漫畫加入追蹤清單！');
     switchTab('home');
-}
-
-// 已完結不需要更新星期，直接隱藏
-function toggleAddUpdated() {
-    const checked = document.querySelector('input[name="inputStatus"]:checked');
-    document.getElementById('addUpdatedWrap').classList.toggle('hidden', !!checked && checked.value === '已完結');
 }
 
 function openComicModal(id) {
@@ -321,7 +302,7 @@ function openComicModal(id) {
 
     document.getElementById('modalTitle').innerText = comic.title;
     document.getElementById('modalReadBtn').classList.toggle('hidden', privacyMode);
-    document.getElementById('modalGenre').innerText = `分類：${(comic.genre || '').trim() || '未分類'} | 狀態：${comic.status || '連載中'}` + (getUpdateDay(comic) !== null ? ` | 更新：每週${WEEKDAY_NAMES[getUpdateDay(comic)]}` : '');
+    document.getElementById('modalGenre').innerText = `分類：${(comic.genre || '').trim() || '未分類'} | 狀態：${comic.status || '連載中'}`;
 
     const urlBox = document.getElementById('modalUrlBox');
     const urlLink = document.getElementById('modalUrlLink');
@@ -350,8 +331,6 @@ function openEditModal() {
     initLinkEditor(document.getElementById('editLinks'), getLinks(comic));
     document.getElementById('editInputCoverUrl').value = comic.coverUrl || '';
     document.getElementById('editInputProgress').value = comic.progress > 0 ? comic.progress : '';
-    const editDay = getUpdateDay(comic);
-    document.getElementById('editInputUpdated').value = editDay === null ? '' : String(editDay);
     syncCustomSelects();
 
     const statusRadios = document.querySelectorAll('input[name="editInputStatus"]');
@@ -380,7 +359,7 @@ function handleUpdateComic(e) {
     comics[comicIndex].url = latestUrl(editedLinks);
     comics[comicIndex].coverUrl = safeUrl(document.getElementById('editInputCoverUrl').value.trim());
     comics[comicIndex].progress = parseProgress(document.getElementById('editInputProgress').value);
-    comics[comicIndex].updateDay = parseUpdateDay(document.getElementById('editInputUpdated').value);
+    delete comics[comicIndex].updateDay;      // 舊資料裡的更新日期欄位一併清掉
     delete comics[comicIndex].updatedAt;
 
     saveComics();
