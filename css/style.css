@@ -276,8 +276,9 @@ main > section[data-enter="left"]:not(.hidden)  { animation: enterFromLeft  .32s
     touch-action: manipulation; -webkit-tap-highlight-color: transparent;
     transition: transform .08s, box-shadow .08s;
 }
-.pg-btn i { font-size: 12px; }
-.pg-btn.pg-main { flex: 1.5 1 0; background: var(--yellow); color: var(--red); font-size: 15px; box-shadow: 2px 3px 0 var(--red); }
+.pg-btn i { font-size: 18px; }
+.pg-btn.pg-side { flex: 1 1 0; }
+.pg-btn.pg-main { flex: 2.4 1 0; background: var(--yellow); color: var(--red); font-size: 15px; box-shadow: 2px 3px 0 var(--red); }
 .pg-caret { font-size: 11px; opacity: .8; }
 .pg-btn:active:not(:disabled) { transform: translate(2px, 3px); box-shadow: 0 0 0 var(--ink); }
 .pg-btn:disabled { opacity: .3; box-shadow: none; }
