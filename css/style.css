@@ -405,3 +405,6 @@ main > section[data-enter="left"]:not(.hidden)  { animation: enterFromLeft  .32s
 
 /* 彈窗背景去掉模糊，改成網點 */
 #comicModal, #editModal, #msgModal, #confirmModal, #optionSheet { backdrop-filter: none !important; background: rgba(17,17,17,0.55) !important; }
+
+/* 設定按鈕可長按（顯示隱藏的設定）：不要跳出系統的選取／預覽選單 */
+#nav-settings { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }

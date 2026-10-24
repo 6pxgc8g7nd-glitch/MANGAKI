@@ -136,11 +136,46 @@ function initCardGestures() {
     });
 }
 
+// 「GitHub 自動備份」平常是隱藏的：長按上方的「設定」按鈕才會顯示（再長按一次就收起來）。
+// 只是隱藏畫面，自動備份本身照常在背景運作。
+function initSettingsLongPress() {
+    const btn = document.getElementById('nav-settings');
+    const card = document.getElementById('ghCard');
+    if (!btn || !card) return;
+    let timer = null, startX = 0, startY = 0, fired = false;
+
+    const cancel = () => { clearTimeout(timer); timer = null; };
+    btn.addEventListener('pointerdown', e => {
+        fired = false;
+        startX = e.clientX; startY = e.clientY;
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            timer = null;
+            fired = true;
+            if (navigator.vibrate) navigator.vibrate(15);
+            const show = card.classList.contains('hidden');
+            card.classList.toggle('hidden', !show);
+            switchTab('settings');
+            if (show) card.scrollIntoView({ block: 'center' });
+        }, LONG_PRESS_MS);
+    });
+    btn.addEventListener('pointermove', e => {
+        if (timer && Math.hypot(e.clientX - startX, e.clientY - startY) > MOVE_TOLERANCE) cancel();
+    });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => btn.addEventListener(t, cancel));
+    btn.addEventListener('contextmenu', e => e.preventDefault());
+    // 長按放開時不要再當成一般點擊（否則會又執行一次切換分頁）；capture 階段先於按鈕原本的 onclick
+    btn.addEventListener('click', e => {
+        if (fired) { fired = false; e.preventDefault(); e.stopImmediatePropagation(); }
+    }, true);
+}
+
 // Initialize on load
 window.onload = function() {
     initCustomSelects();
     initLinkEditor(document.getElementById('addLinks'), []);
     initCardGestures();
+    initSettingsLongPress();
     renderComics();
     rdRefreshFlags();
 };
