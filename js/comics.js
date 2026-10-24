@@ -5,7 +5,6 @@ const TAB_ORDER = ['home', 'categories', 'add', 'settings'];
 let currentTab = 'home';
 
 function switchTab(tabName) {
-    if (tabName === 'home') homeSeed = Math.random();   // 每次切到首頁都重新洗牌
     document.querySelectorAll('.app-container > main > section').forEach(sec => {
         sec.classList.add('hidden');
         delete sec.dataset.enter;
@@ -49,27 +48,22 @@ function getFilteredComics() {
         (activeGenreFilter === '全部' || (activeGenreFilter === READER_KEY ? rdChapterCount.has(c.id) : parseGenres(c.genre).includes(activeGenreFilter))) &&
         (activeStatusFilter === '全部' || (c.status || '連載中') === activeStatusFilter)
     );
-    // 隨機排列：同一個種子（homeSeed）排出來的順序固定，所以換頁、編輯後重繪都不會亂跳
-    const rank = c => {
-        let h = (2166136261 ^ Math.floor(homeSeed * 4294967296)) >>> 0;
-        const id = String(c.id);
-        for (let k = 0; k < id.length; k++) { h ^= id.charCodeAt(k); h = Math.imul(h, 16777619) >>> 0; }
-        h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13;
-        return h >>> 0;
+    // 連載中排在前面，依「最近一次更新」由近到遠（今天更新的最前面）；
+    // 沒指定星期的排在最後。已完結維持新增順序（排序是穩定的）
+    const isOngoing = c => (c.status || '連載中') === '連載中';
+    const recency = c => {
+        const day = getUpdateDay(c);
+        return day === null ? 99 : daysSinceUpdate(day);
     };
-    // 「連載中」分頁維持原本的排序：依最近一次更新由近到遠（今天更新的最前面），沒指定星期的排最後
-    if (activeStatusFilter === '連載中') {
-        const recency = c => {
-            const day = getUpdateDay(c);
-            return day === null ? 99 : daysSinceUpdate(day);
-        };
-        return list.sort((a, b) => recency(a) - recency(b));
-    }
-    return list.sort((a, b) => rank(a) - rank(b));
+    return list.sort((a, b) => {
+        const oa = isOngoing(a), ob = isOngoing(b);
+        if (oa !== ob) return oa ? -1 : 1;
+        if (!oa) return 0;
+        return recency(a) - recency(b);
+    });
 }
 
 function setStatusFilter(status) {
-    homeSeed = Math.random();
     activeStatusFilter = status;
     currentPage = 1;
     renderComics();

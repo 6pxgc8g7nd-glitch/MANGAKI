@@ -69,7 +69,6 @@ function loadComics() {
 let comics = loadComics();
 
 let activeComicId = null;
-let homeSeed = Math.random();   // 首頁的亂數種子：每次切換都換一個，同一次瀏覽中換頁、重繪順序不變
 let activeGenreFilter = '全部';
 // 特殊分類「漫畫」：把匯入過圖片、可以用內建閱讀的漫畫整理在一起（不是使用者自己輸入的分類）
 const READER_KEY = '__reader__';
